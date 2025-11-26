@@ -54,6 +54,17 @@ pat2025[pat2025== ""] <- NA # transformation des cases vides en NA
 
 ```
 
+
+# Comment sont structurées les données ? 
+
+La collecte de données a lieu deux fois par an. Nous avons accès aux deux collectes de données des années 2024 et 2025. 
+
+Il y a un fichier Excel pour la description du PAT (2 par an sur 2 ans => 4 ), et un fichier par axe thématique (il y en a 9 au total, donc a 9 * 2 années * 2 fichiers par an = 36 fichiers). 
+Chaque ligne de chaque fichier correspond à un PAT unique (= 462 lignes).
+
+Les bases de données contiennent des variables dont nous essayerons de comprendre l'intérêt pour la qualification des PAT. 
+
+
 # Répartition des PAT entre niveaux 1 (émergents) et 2 (opérationnel)
 
 ```{r}
@@ -102,7 +113,7 @@ La colonnes "étapes clés conduites et réalisées fait référence aux 6 étap
   - Second plan d'action établi par une délibération (n°5), 
   - Trois ou plus, plans d'actions établis par délibération (n°6)
 
-=> le niveau "concertation" correspond aux projets qui ne sont pas encore de niveau 1, ils correspondent à une "labellisation en attente"
+=> le niveau "concertation" devrat correspond aux projets "en attente",  pourtant on peut voir qu'un correspond à une "labellisation niveau 1".
 
 # exemple sur R (ligne 125)
 ```{r}
@@ -113,10 +124,127 @@ pat2025[123,c(79:80)]
 => Théoriquement, le niveau "Premier plan d'action établi par une délibération" devrait correspondre aux PAT de niveau au moins égal à 1, et les PAT de niveaux 2 doivent au moins satisfaire le niveau "Second plan d'action établi par une délibération". 
 
 # exemples sur R (lignes ) et contre exemples 
+```{r}
 
+```
+
+On voulait réaliser un graphique de la distribution des PAT selon leur dernière étape d'avancement réalisée, en fonction de leur niveau, afin de voir à quelles étapes se situent les PAT de niveau 1 et de niveau 2.
+
+```{r}
+n_et_e<- as.data.frame(cbind(niveau = pat2025$niveaux_de_labelisation, 
+                             steps = pat2025$les_etapes_cles_conduites_et_realisees ))
+
+summary(n_et_e)
+
+trans_etapes <- function(etapes){
+  
+  for (j in 1:length(etapes)){
+    if (is.na(etapes[j])) {
+      etapes[j] <- ""
+      next
+    }
+    
+    virg <- str_count(string = etapes[j], pattern = ",") # compte le nombre de virgules => virg + 1 = nombre d'étapes 
+    etapes[j] <- str_split_i(string = etapes[j], pattern= ", ", i = virg+1) # couper un espace après la virgule et garder le dernier élément (de num virg + 1)
+    # conserve la dernière étape
+  
+    if (etapes[j]=="plans d'actions établis par délibération"){
+     etapes[j]<- "Trois ou plus, plans d'actions établis par délibération"
+    } 
+  }
+  # Transformation en nombre
+  etapes <- case_when(
+    etapes == "Concertation" ~ 1,
+         etapes == "Stratégie du projet construite et validée" ~ 2,
+         etapes == "Premier plan d'action établi par une délibération" ~ 3,
+         etapes == "Mise en oeuvre du premier plan d'action" ~ 4,
+         etapes == "Second plan d'action établi par une délibération" ~ 5,
+         etapes == "Trois ou plus, plans d'actions établis par délibération" ~ 6,
+         etapes == "" ~ NA
+  )
+}
+
+n_et_e$steps <- as.factor(trans_etapes(n_et_e$steps))
+n_et_e$niveau <- as.factor(n_et_e$niveau)
+
+
+
+
+n_et_e %>% ggplot() +
+  aes(x = steps, group = niveau, fill = niveau) +
+  geom_bar(col="black") +
+  scale_fill_manual(values = c("#F2C799","#F0921E","#C75318")) +
+  labs(fill = "Niveau du PAT")+
+  ylab("Nombre de PAT") +
+  xlab("Avancement du PAT") +
+  scale_x_discrete(labels = c(
+    "Concertation",
+    "Stratégie construite",
+    "Premier plan d'action établi",
+    "Mise en oeuvre 1er plan",
+    "Second plan d'action établi","≥3 plans établis"
+  ))+
+  ggtitle(label = "Etape d'avancement la plus avancée réalisée par PAT selon leur niveau - Novembre 2025")+
+  theme(panel.background = element_rect(fill="white"),
+        plot.title = element_text(face="bold",hjust=0.2,size=15), 
+        axis.title.x = element_text(size=14,face="bold"),
+        axis.title.y = element_text(size=14,face="bold"),
+        panel.grid.major = element_line(colour = "grey85"),
+        axis.ticks.x = element_blank(),
+        axis.text.x = element_text(vjust=0.65,angle=50,size=12,colour="black"))
+```
+
+
+# Quelles sont les variables les plus importantes ? Pourquoi chaque variable a -t-elle été enregistrée ?
+
+On a cherché à comprendre au sein du fichier de description des PAT, pourquoi chacune des variables a été demandée dans le questionnaire
+
+On a : 
+- étudié les taux de NA pour chaque variable 
+- cherché à comprendre quelles variables pourraient être sélectionnées comme variables illustratives pour qualifier nos PAT 
+- chercher à comprendre quelle dimension de variabilité se cache derrière chacune de ces variables sélectionnées. 
+
+La liste des variables du fichier "description" se trouve dans le fichier "modele de données" dans la base France PAT. Ce fichier n'est pas à jour, les variables ayant évolué depuis 2024. 
+
+Voici les variables qui manquaient : 
+Nombre de communes du territoires 
+Sau en hectare 
+Pourcentage_de_la_surface_des_prairies_permanentes
+Pourcentage_de_la_surface_des_cultures_de_legumineuses
+metres_de_haie_par_hectare_de_sau
+Microgrammes_de_produits_phytopharmaceutiques_par_litre_deau
+Milligrammes_de_nitrates_par_litre_deau
+M3_deau_utilise_pour_lirragation
+Evolution_de_lirrigation_depuis_5_ans
+Metres_de_haie_par_hectare_de_sau
+Nombre_denseignes_de_distribution
+Nombre_denseignes_de_distribution_de_gms
+Nombre_demplois_dans_la_transformation
+nombre_de_cantines_inscrites
+Evolution_du_nombre_demplois_dans_la_transformation_entre_2018_et_2023
+Nombre_de_restaurants_collectifs_sur_le_territoire_qui_ont_fait_leur_teledeclaration_sur_ma_cantine
+nombre_dassociations_luttant_contre_la_precarite_alimentaire
+nombre_dassociations_luttant_contre_la_precarite_alimentaire_par_10km2
+nombre_dassociations_luttant_contre_la_precarite_alimentaire_par_1000habitants
+
+
+Taux de NA 
+```{r}
+library(VIM)
+NA_graph <- aggr(x=pat2025,numbers=T,sortVar=F, plot= F) 
+res.na <- NA_graph$count
+```
 
 
 # Description des PAT
+
+La colonne "description_libre_des_enjeux_par_le_porteur" est une variable très intéressante, dans laquelle le porteur de projet résume les enjeux de ce projet alimentaire pour son territoire. 
+Cette donnée textuelle caractérise donc les PAT. Elle porte un facteur de variabilité individuelle puisque les PAT sont décrits par leur porteur de projet. 
+
+Cette donnée sera mise en lien avec d'autres données textuelles, notamment les variables "objectifs_strategiques" afin de comprendre en quelles proportions les enjeux développés sont traduits ensuites en objectifs dans le PAT. 
+
+On s'est demandés combien de PAT n'avaient pas de description. 
+On s'est ensuite demandés combien de PAT n'avaient pas de description selon leur niveau de labellisation.
 
 ```{r}
 pat2025$description_presente <- ifelse(is.na(pat2025$descriptions_libre_des_enjeux_du_territoire_par_le_porteur),"Absente","Présente")
@@ -137,7 +265,16 @@ pat2025 %>%
         panel.background = element_rect(fill="white"),
         plot.title = element_text(size=16,face="bold",hjust=0.5))
 ```
+
+
 # Engagement des PAT dans leurs thématiques
+
+Chaque PAT décide de s'impliquer ou non dans chaque axe thématique et chaque axe thématique est défini par un certain nombre d'actions. Il y a au total 44 actions identifiés sur tous les axes thématiques. 
+
+Chaque PAT réalise entre 0 et 5 actions pour chaque action de chaque axe thématique. 
+
+On a cherché à comprendre sur quels axes thématiques chaque PAT est le plus impliqué en comptant le nombre d'actions mis en place par chaque PAT (en 2025 sur la déclaration de novembre) pour chaque action de chaque axe thématique. 
+
 ```{r}
 culture_2025 <- read.csv("data/Axes/pats-axe-culturel-et-gastronomie-20250710-win1252.csv", header=TRUE, sep = ";", fileEncoding = "latin1", dec = ".")
 
@@ -233,4 +370,6 @@ pat2025$annee_de_signature_de_la_convention<- as.factor(pat2025$annee_de_signatu
 summary(pat2025$annee_de_signature_de_la_convention)
 ```
 
-Voici la répartition des PAT par année de signature. 
+Voici la répartition des PAT par année de signature. On s'est demandé si elle était représentative du nombre de nouveaux PAT signés chaque année. 
+
+
