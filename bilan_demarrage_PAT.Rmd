@@ -3,3 +3,10 @@ title: "Bilan de Démarrage du Projet PAT"
 author: "Erwan Gouhier, Anna Mathieu"
 date: "`r Sys.Date()`"
 ---
+
+Importation données 
+```{r}
+pat2025 <- read.csv("data/pats-20250710-win1252.csv", header = T, sep = ";", fileEncoding = "latin1", dec = ".")
+
+```
+
