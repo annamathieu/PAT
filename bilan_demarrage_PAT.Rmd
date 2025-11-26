@@ -22,7 +22,7 @@ summary(pat2025$niveaux_de_labelisation)
 
 pat2025 %>% 
   ggplot() +
-  geom_bar(aes(x=niveaux_de_labelisation)) +
+  geom_bar(aes(x=niveaux_de_labelisation,fill=niveaux_de_labelisation)) +
   geom_text(
         stat = "count",
         aes(x = niveaux_de_labelisation,
@@ -34,11 +34,13 @@ pat2025 %>%
         vjust = -0.2
     )+
   scale_x_discrete(labels = c("NA","En attente","Niveau 1","Niveau 2"))+
+  scale_fill_discrete(palette = c("gray","#F2C799","#F5821E","#C75318"))+
   xlab("Niveau de labellisation") +
   ylab("Nombre de PAT") +
   ggtitle(label = "Repartition des PAT - Novembre 2025") +
   theme(axis.text.x = element_text(size=10,colour = "black"),
-        panel.background = element_rect(fill="white"))
+        panel.background = element_rect(fill="white"),
+        legend.position = "none")
 ```
 
 
