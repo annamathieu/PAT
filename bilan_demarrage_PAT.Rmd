@@ -192,6 +192,7 @@ n_et_e %>% ggplot() +
         panel.grid.major = element_line(colour = "grey85"),
         axis.ticks.x = element_blank(),
         axis.text.x = element_text(vjust=0.65,angle=50,size=12,colour="black"))
+
 ```
 
 
@@ -235,6 +236,7 @@ NA_graph <- aggr(x=pat2025,numbers=T,sortVar=F, plot= F)
 res.na <- NA_graph$count
 ```
 
+![Texte Alternatif](images/variables_illus.png)
 
 # Description des PAT
 
