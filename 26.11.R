@@ -39,6 +39,17 @@ trans_etapes <- function(etapes){
   if (etapes[i]=="plans d'actions établis par délibération"){
     etapes[i]<- "Trois ou plus, plans d'actions établis par délibération" } }
   
+  # Transformation en nombre
+  +   etapes <- case_when(
+    +     etapes == "Concertation" ~ 1,
+    +     etapes == "Stratégie du projet construite et validée" ~ 2,
+    +     etapes == "Premier plan d'action établi par une délibération" ~ 3,
+    +     etapes == "Mise en oeuvre du premier plan d'action" ~ 4,
+    +     etapes == "Second plan d'action établi par une délibération" ~ 5,
+    +     etapes == "Trois ou plus, plans d'actions établis par délibération" ~ 6,
+    +     etapes == "" ~ NA,
+    +   )
+  
   return(etapes)  }  
 
 
