@@ -23,6 +23,7 @@ library(tidyverse)
 library(tidyr)
 library(dplyr)
 library(ggplot2)
+library(stringr)
 ```
 
 
@@ -127,4 +128,80 @@ pat2025 %>%
         panel.background = element_rect(fill="white"),
         plot.title = element_text(face="bold",hjust=0.5))
 ```
+# Engagement des PAT dans leurs thématiques
+```{r}
+culture_2025 <- read.csv("data/Axes/pats-axe-culturel-et-gastronomie-20250710-win1252.csv", header=TRUE, sep = ";", fileEncoding = "latin1", dec = ".")
 
+
+score_engagement <- function(dta,axe){
+  #On récupère les différente catégorie (elles ont au moins une réponse donc _1_est_ressource est       forcément présent pour chaque catégorie)
+  
+  dta[dta==""] <- NA
+  
+  categorie <- grepl("_1_est_ressource", colnames(dta), fixed = TRUE)
+  
+  #On extrait les noms des catégories
+  nom_categories <- str_replace_all(colnames(dta)[categorie],"_1_est_ressource","")
+  
+  #Création du data frame des engagements
+  dta_engagement <- data.frame(id = as.character(dta$id))
+    
+  for (i in 1:length(nom_categories)){
+    #On extrait les sous catégories pour chaque chaque catégorie (e.g sensibilisation_enfant_1, ...enfant_2, etc. appartiennent à la catégorie sensibilisation_enfant)
+    sous_categories <- grep(paste0(".*", nom_categories[i], ".*", "descriptif"), colnames(dta), value=TRUE)
+    
+    #Tableau pour chaque catégorie avec toutes les sous_catégories dedans
+    tab_categories <- dta[sous_categories]
+    
+    #On définie le score d'engagement comme le nombre de descriptif, donc d'actions mises en place 
+    engagement <- apply(tab_categories, MARGIN = 1,function(x) sum(!is.na(x)))
+    
+    #On stock le score d'engagement pour chaque catégorie
+    dta_engagement[[paste(axe,nom_categories[i],"engagement",sep="_")]] <- engagement
+}
+return(dta_engagement)
+}
+
+#### On charge tous les axes thématiques####
+economique_2025 <- read.csv("data/Axes/pats-axe-economie-alimentaire-20250710-win1252.csv", header=TRUE, sep = ";", fileEncoding = "latin1", dec = ".")
+
+education_2025 <- read.csv("data/Axes/pats-axe-education-alimentaire-20250710-win1252.csv", header=TRUE, sep = ";", fileEncoding = "latin1", dec = ".")
+
+environnement_2025 <- read.csv("data/Axes/pats-axe-environnement-20250710-win1252.csv", header=TRUE, sep = ";", fileEncoding = "latin1", dec = ".")
+
+gouvernance_2025 <- read.csv("data/Axes/pats-axe-gouvernance-20250710-win1252.csv", header=TRUE, sep = ";", fileEncoding = "latin1", dec = ".")
+
+just_sociale_2025 <- read.csv("data/Axes/pats-axe-justice-sociale-20250710-win1252.csv", header=TRUE, sep = ";", fileEncoding = "latin1", dec = ".")
+
+nutri_sante_2025 <- read.csv("data/Axes/pats-axe-nutrition-et-sante-20250710-win1252.csv", header=TRUE, sep = ";", fileEncoding = "latin1", dec = ".")
+
+resto_2025 <- read.csv("data/Axes/pats-axe-restauration-collective-20250710-win1252.csv", header=TRUE, sep = ";", fileEncoding = "latin1", dec = ".")
+
+urbanisme_2025 <- read.csv("data/Axes/pats-axe-urbanisme-20250710-win1252.csv", header=TRUE, sep = ";", fileEncoding = "latin1", dec = ".")
+
+#### On calcule les scores pour chaque axe ####
+
+score_culturel <- score_engagement(culture_2025,axe = "culturel")
+score_economique <- score_engagement(economique_2025,axe = "economique")
+score_education <- score_engagement(education_2025,axe = "education")
+score_environnement <- score_engagement(environnement_2025,axe = "environnement")
+score_gouvernance <- score_engagement(gouvernance_2025,axe = "gouvernance")
+score_justice_sociale <- score_engagement(just_sociale_2025,axe = "justice_sociale")
+score_nutri_sante <- score_engagement(nutri_sante_2025,axe = "nutri_sante")
+score_resto <- score_engagement(resto_2025,axe = "restauration")
+score_urbanisme <- score_engagement(urbanisme_2025,axe = "urbanisme")
+
+#### On merge tout au document qui contient les descriptions de chaque PAT ####
+pat2025 <- pat2025 %>% 
+  left_join(score_culturel,by="id") %>%
+  left_join(score_economique,by="id") %>%
+  left_join(score_education,by="id") %>%
+  left_join(score_environnement,by="id") %>%
+  left_join(score_gouvernance,by="id") %>%
+  left_join(score_justice_sociale,by="id") %>%
+  left_join(score_nutri_sante,by="id") %>%
+  left_join(score_resto,by="id") %>%
+  left_join(score_urbanisme,by="id")
+  
+
+```
