@@ -115,7 +115,7 @@ La colonnes "étapes clés conduites et réalisées fait référence aux 6 étap
 
 => le niveau "concertation" devrat correspond aux projets "en attente",  pourtant on peut voir qu'un correspond à une "labellisation niveau 1".
 
-# exemple sur R (ligne 125)
+## exemple sur R (ligne 125)
 ```{r}
 pat2025[123,c(79:80)]
 ```
@@ -123,7 +123,7 @@ pat2025[123,c(79:80)]
 
 => Théoriquement, le niveau "Premier plan d'action établi par une délibération" devrait correspondre aux PAT de niveau au moins égal à 1, et les PAT de niveaux 2 doivent au moins satisfaire le niveau "Second plan d'action établi par une délibération". 
 
-# exemples sur R (lignes ) et contre exemples 
+## exemples sur R (lignes ) et contre exemples 
 ```{r}
 
 ```
@@ -266,12 +266,31 @@ pat2025 %>%
         plot.title = element_text(size=16,face="bold",hjust=0.5))
 ```
 
+Il y a t-il un lien entre les ‘descriptions_des_enjeux_par_le_porteur’ et les ‘objectifs_strategiques’ ? Peut-on associer ces descriptions aux objectifs en faisant du matching de texte ? (correspondance entre enjeux et obj en %) 
+
+# Objectif stratégiques des PAT 
+
+Est-il intéressant de garder les 5 colonnes de ‘objectifs_strategiques’ ? 
+Comment la réponse a cette question est-elle interprétée (différemment?) par les porteurs de projet?
+Certains porteurs ont tout mis dans la 1e colonnes, tous les PAT n’ont pas le même nombre d’objectifs (3, 4, 5, 6 ….) 
+
+```{r}
+pat2025[26,c(146:150)] # exemple d'un remplissage "normal"
+pat2025[44,c(146:150)] # exemple d'un remplissage "tout dans la même case"
+pat2025[27, c(146:150)] # exemple d'un remplissage "< 5 axes"
+
+```
+Il y a t-il un ordonnancement des objectifs stratégiques de 1 à 5, du plus vers le moins important ? 
+
+
 
 # Engagement des PAT dans leurs thématiques
 
 Chaque PAT décide de s'impliquer ou non dans chaque axe thématique et chaque axe thématique est défini par un certain nombre d'actions. Il y a au total 44 actions identifiés sur tous les axes thématiques. 
 
 Chaque PAT réalise entre 0 et 5 actions pour chaque action de chaque axe thématique. 
+
+Comment mettre en valeur les actions réalisées par les PAT pour chaque axe thématique (nom, résultat attendu, résultat obtenu) ? 
 
 On a cherché à comprendre sur quels axes thématiques chaque PAT est le plus impliqué en comptant le nombre d'actions mis en place par chaque PAT (en 2025 sur la déclaration de novembre) pour chaque action de chaque axe thématique. 
 
@@ -372,4 +391,21 @@ summary(pat2025$annee_de_signature_de_la_convention)
 
 Voici la répartition des PAT par année de signature. On s'est demandé si elle était représentative du nombre de nouveaux PAT signés chaque année. 
 
+
+
+# Que peut on faire de la colonne "methodes_devaluations_1" ? Il y a t-il des indicateurs / mesures de réussite du PAT ? 
+
+“Pour les PAT candidats au niveau 2, il y a selon les directives du ministère de l'Agriculture et de la Souveraineté Alimentaire[6], les candidats doivent élaborer une feuille de route annexée au pland'actions du PAT, s'engageant à suivre au moins un indicateur d’évaluation pour chaque thématique de la Stratégie Nationale Alimentation, Nutrition et Climat (SNANC) et à fixer un objectif quantitatif par indicateur sélectionné.
+
+=> ces indicateurs ne sont pas obligatoirement définis dans la catégorie “mesures d’évaluation” ce qui rend difficile la comparaison des PAT entre eux 
+=> pas d’accès à leurs objectifs et la quantification (résultats du PAT) 
+
+C'est une faiblesse importante de la base. 
+
+On peut cependant utiliser les "resultats atteints" et "resultats attendus" de chaque action.
+
+
+# Comment mesure t - on le niveau de “difficulté” des objectifs fixés par un PAT ? 
+# Peut-on représenter une évolution temporelle des PAT au cours du temps ?
+# Peut on représenter une distribution du niveau d’avancement des PAT en fonction de la date_de_signature_de_la_convention’ => année de démarrage du PAT ? 
 
