@@ -24,6 +24,8 @@ library(tidyr)
 library(dplyr)
 library(ggplot2)
 library(stringr)
+library(stringr) # faire des comptages 
+library(utils)
 ```
 
 
@@ -205,3 +207,23 @@ pat2025 <- pat2025 %>%
   
 
 ```
+
+
+
+
+# Repartition des PAT par ancienneté 
+
+```{r}
+# construction distribution 
+sum(!is.na(pat2025$annee_de_signature_de_la_convention))/462
+```
+62 % des PAT n'ont pas leur année de signature de la convention indiquée. On associe cette information à l'ancienneté du PAT. 
+
+Peut on compléter cette information en la cherchant sur le web pour les PAT pour lesquels elle manque ? 
+
+```{r}
+pat2025$annee_de_signature_de_la_convention<- as.factor(pat2025$annee_de_signature_de_la_convention)
+summary(pat2025$annee_de_signature_de_la_convention)
+```
+
+Voici la répartition des PAT par année de signature. 
