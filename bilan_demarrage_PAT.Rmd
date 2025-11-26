@@ -168,8 +168,6 @@ n_et_e$steps <- as.factor(trans_etapes(n_et_e$steps))
 n_et_e$niveau <- as.factor(n_et_e$niveau)
 
 
-
-
 n_et_e %>% ggplot() +
   aes(x = steps, group = niveau, fill = niveau) +
   geom_bar(col="black") +
@@ -192,6 +190,7 @@ n_et_e %>% ggplot() +
         panel.grid.major = element_line(colour = "grey85"),
         axis.ticks.x = element_blank(),
         axis.text.x = element_text(vjust=0.65,angle=50,size=12,colour="black"))
+
 ```
 
 
