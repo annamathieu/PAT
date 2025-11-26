@@ -277,6 +277,8 @@ NA_graph <- aggr(x=pat2025,numbers=T,sortVar=F, plot= F)
 res.na <- NA_graph$count
 ```
 
+![Texte Alternatif](images/variables_illus.png)
+
 # Description des PAT
 
 La colonne "description_libre_des_enjeux_par_le_porteur" est une
@@ -313,6 +315,28 @@ pat2025 %>%
         panel.background = element_rect(fill="white"),
         plot.title = element_text(size=16,face="bold",hjust=0.5))
 ```
+
+Il y a t-il un lien entre les ‘descriptions_des_enjeux_par_le_porteur’
+et les ‘objectifs_strategiques’ ? Peut-on associer ces descriptions aux
+objectifs en faisant du matching de texte ? (correspondance entre enjeux
+et obj en %)
+
+# Objectif stratégiques des PAT
+
+Est-il intéressant de garder les 5 colonnes de ‘objectifs_strategiques’
+? Comment la réponse a cette question est-elle interprétée
+(différemment?) par les porteurs de projet? Certains porteurs ont tout
+mis dans la 1e colonnes, tous les PAT n’ont pas le même nombre
+d’objectifs (3, 4, 5, 6 ….)
+
+```{r}
+pat2025[26,c(146:150)] # exemple d'un remplissage "normal" 
+pat2025[44,c(146:150)] # exemple d'un remplissage "tout dans la même case" 
+pat2025[27, c(146:150)] # exemple d'un remplissage "< 5 axes" 
+```
+
+Il y a t-il un ordonnancement des objectifs stratégiques de 1 à 5, du
+plus vers le moins important ?
 
 # Engagement des PAT dans leurs thématiques
 
@@ -425,3 +449,29 @@ summary(pat2025$annee_de_signature_de_la_convention)
 
 Voici la répartition des PAT par année de signature. On s'est demandé si
 elle était représentative du nombre de nouveaux PAT signés chaque année.
+
+# Que peut on faire de la colonne "methodes_devaluations_1" ? Il y a t-il des indicateurs / mesures de réussite du PAT ?
+
+“Pour les PAT candidats au niveau 2, il y a selon les directives du
+ministère de l'Agriculture et de la Souveraineté Alimentaire[6], les
+candidats doivent élaborer une feuille de route annexée au pland'actions
+du PAT, s'engageant à suivre au moins un indicateur d’évaluation pour
+chaque thématique de la Stratégie Nationale Alimentation, Nutrition et
+Climat (SNANC) et à fixer un objectif quantitatif par indicateur
+sélectionné.
+
+=\> ces indicateurs ne sont pas obligatoirement définis dans la
+catégorie “mesures d’évaluation” ce qui rend difficile la comparaison
+des PAT entre eux =\> pas d’accès à leurs objectifs et la quantification
+(résultats du PAT)
+
+C'est une faiblesse importante de la base.
+
+On peut cependant utiliser les "resultats atteints" et "resultats
+attendus" de chaque action.
+
+# Comment mesure t - on le niveau de “difficulté” des objectifs fixés par un PAT ?
+
+# Peut-on représenter une évolution temporelle des PAT au cours du temps ?
+
+# Peut on représenter une distribution du niveau d’avancement des PAT en fonction de la date_de_signature_de_la_convention’ =\> année de démarrage du PAT ?
