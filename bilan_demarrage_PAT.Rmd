@@ -3,10 +3,42 @@ title: "Bilan de Démarrage du Projet PAT"
 author: "Erwan Gouhier, Anna Mathieu"
 date: "`r Sys.Date()`"
 ---
+# Introduction
 
-Importation données 
+
+
+# Importation données 
 ```{r}
+library(tidyverse)
 pat2025 <- read.csv("data/pats-20250710-win1252.csv", header = T, sep = ";", fileEncoding = "latin1", dec = ".")
 
 ```
+
+# Répartition des PAT entre niveaux 1 (= émergents) et 2 (= opérationnel ) 
+
+```{r}
+pat2025$niveaux_de_labelisation <- as.factor(pat2025$niveaux_de_labelisation)
+summary(pat2025$niveaux_de_labelisation)
+
+pat2025 %>% 
+  ggplot() +
+  geom_bar(aes(x=niveaux_de_labelisation)) +
+  geom_text(
+        stat = "count",
+        aes(x = niveaux_de_labelisation,
+            label = after_stat(count)
+        ),
+        position = position_dodge(),
+        color = "black",
+        size = 5,
+        vjust = -0.2
+    )+
+  scale_x_discrete(labels = c("NA","En attente","Niveau 1","Niveau 2"))+
+  xlab("Niveau de labellisation") +
+  ylab("Nombre de PAT") +
+  ggtitle(label = "Repartition des PAT - Novembre 2025") +
+  theme(axis.text.x = element_text(size=10,colour = "black"),
+        panel.background = element_rect(fill="white"))
+```
+
 
