@@ -31,29 +31,34 @@ n_et_e<- as.data.frame(cbind(niveau = pat2025$niveaux_de_labelisation,
 summary(n_et_e)
 
 trans_etapes <- function(etapes){
-  for (i in 1:length(etapes)){
-  virg <- str_count(string = etapes[i], pattern = ",") # compte le nombre de virgules => virg + 1 = nombre d'étapes 
-  etapes[i] <- str_split_i(string = etapes[i], pattern= ", ", i = virg+1) # couper un espace après la virgule et garder le dernier élément (de num virg + 1)
-  # conserve la dernière étape
   
-  if (etapes[i]=="plans d'actions établis par délibération"){
-    etapes[i]<- "Trois ou plus, plans d'actions établis par délibération" } }
+  for (j in 1:length(etapes)){
+    if (is.na(etapes[j])) {
+      etapes[j] <- ""
+      next
+    }
+    
+    virg <- str_count(string = etapes[j], pattern = ",") # compte le nombre de virgules => virg + 1 = nombre d'étapes 
+    etapes[j] <- str_split_i(string = etapes[j], pattern= ", ", i = virg+1) # couper un espace après la virgule et garder le dernier élément (de num virg + 1)
+    # conserve la dernière étape
   
+    if (etapes[j]=="plans d'actions établis par délibération"){
+     etapes[j]<- "Trois ou plus, plans d'actions établis par délibération"
+    } 
+  }
   # Transformation en nombre
-  +   etapes <- case_when(
-    +     etapes == "Concertation" ~ 1,
-    +     etapes == "Stratégie du projet construite et validée" ~ 2,
-    +     etapes == "Premier plan d'action établi par une délibération" ~ 3,
-    +     etapes == "Mise en oeuvre du premier plan d'action" ~ 4,
-    +     etapes == "Second plan d'action établi par une délibération" ~ 5,
-    +     etapes == "Trois ou plus, plans d'actions établis par délibération" ~ 6,
-    +     etapes == "" ~ NA,
-    +   )
-  
-  return(etapes)  }  
+  etapes <- case_when(
+    etapes == "Concertation" ~ 1,
+         etapes == "Stratégie du projet construite et validée" ~ 2,
+         etapes == "Premier plan d'action établi par une délibération" ~ 3,
+         etapes == "Mise en oeuvre du premier plan d'action" ~ 4,
+         etapes == "Second plan d'action établi par une délibération" ~ 5,
+         etapes == "Trois ou plus, plans d'actions établis par délibération" ~ 6,
+         etapes == "" ~ NA
+  )
+}
 
-
-n_et_e$steps <- trans_etapes(n_et_e$steps)
+n_et_e$steps <- as.factor(trans_etapes(n_et_e$steps))
 n_et_e$niveau <- as.factor(n_et_e$niveau)
 
 
@@ -61,24 +66,25 @@ n_et_e$niveau <- as.factor(n_et_e$niveau)
 
 n_et_e %>% ggplot() +
   aes(x = steps, group = niveau, fill = niveau) +
-  geom_bar() +
+  geom_bar(col="black") +
   scale_fill_manual(values = c("#F2C799","#F0921E","#C75318")) +
   labs(fill = "Niveau du PAT")+
   ylab("Nombre de PAT") +
   xlab("Avancement du PAT") +
   scale_x_discrete(labels = c(
-    "Concertation" = "Concertation",
-    "Stratégie du projet construite et validée" = "Stratégie construite",
-    "Premier plan d'action établi par une délibération" = "Premier plan d'action établi",
-    "Mise en oeuvre du premier plan d'action" = "Mise en oeuvre 1er plan",
-    "Second plan d'action établi par une délibération" = "Second plan d'action établi",
-    "Trois ou plus, plans d'actions établis par délibération" = "≥3 plans établis"
-  ))
-    ggtitle(label = "Etapes d'avancement la plus avancée réalisées par PAT selon leur niveau - Novembre 2025")+
+    "Concertation",
+    "Stratégie construite",
+    "Premier plan d'action établi",
+    "Mise en oeuvre 1er plan",
+    "Second plan d'action établi","≥3 plans établis"
+  ))+
+  ggtitle(label = "Etape d'avancement la plus avancée réalisée par PAT selon leur niveau - Novembre 2025")+
   theme(panel.background = element_rect(fill="white"),
-        plot.title = element_text(face="bold",hjust=0.2), 
-        axis.title.x = element_text(), 
-        # axis.ticks.x = element_blank(), 
-        axis.text.x = element_text(vjust = 0.5))
+        plot.title = element_text(face="bold",hjust=0.2,size=15), 
+        axis.title.x = element_text(size=14,face="bold"),
+        axis.title.y = element_text(size=14,face="bold"),
+        panel.grid.major = element_line(colour = "grey85"),
+        axis.ticks.x = element_blank(),
+        axis.text.x = element_text(vjust=0.65,angle=50,size=12,colour="black"))
 
 
