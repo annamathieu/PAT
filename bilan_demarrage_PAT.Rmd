@@ -48,7 +48,7 @@ L’objectif de ce projet est d'analyser la base de données FRANCE PAT, afin de
 ```{r}
 library(tidyverse)
 pat2025 <- read.csv("data/pats-20250710-win1252.csv", header = T, sep = ";", fileEncoding = "latin1", dec = ".")
-pat2025[pat2025== ""] <- NA
+pat2025[pat2025== ""] <- NA # transformation des cases vides en NA
 
 ```
 
@@ -81,6 +81,35 @@ pat2025 %>%
         legend.position = "none",
         plot.title = element_text(face="bold",hjust=0.5))
 ```
+
+# Quel Indicateur d'ancienneté/avancement des PAT utilisés ?
+
+Dans la base de données, il y a deux colonnes qui peuvent être utilisées pour définir le niveau d'ancienneté des PAT : 
+- "les_etapes_cles_conduites_et_realisees"	
+- "niveaux_de_labelisation"
+
+La colonnes "étapes clés conduites et réalisées fait référence aux 6 étapes d'avancement des PAT : 
+  - Concertation (n°1), 
+  - Stratégie du projet construite et validée (n°2), 
+  - Premier plan d'action établi par une délibération (n°3), 
+  - Mise en oeuvre du premier plan d'action (n°4), 
+  - Second plan d'action établi par une délibération (n°5), 
+  - Trois ou plus, plans d'actions établis par délibération (n°6)
+
+=> le niveau "concertation" correspond aux projets qui ne sont pas encore de niveau 1, ils correspondent à une "labellisation en attente"
+
+# exemple sur R (ligne 125)
+```{r}
+pat2025[123,c(79:80)]
+```
+
+
+=> Théoriquement, le niveau "Premier plan d'action établi par une délibération" devrait correspondre aux PAT de niveau au moins égal à 1, et les PAT de niveaux 2 doivent au moins satisfaire le niveau "Second plan d'action établi par une délibération". 
+
+# exemples sur R (lignes ) et contre exemples 
+
+
+
 # Description des PAT
 
 ```{r}
