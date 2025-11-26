@@ -62,7 +62,7 @@ summary(pat2025$niveaux_de_labelisation)
 
 pat2025 %>% 
   ggplot() +
-  geom_bar(aes(x=niveaux_de_labelisation,fill=niveaux_de_labelisation)) +
+  geom_bar(aes(x=niveaux_de_labelisation,fill=niveaux_de_labelisation),col="black") +
   geom_text(
         stat = "count",
         aes(x = niveaux_de_labelisation,
@@ -78,10 +78,14 @@ pat2025 %>%
   xlab("Niveau de labellisation") +
   ylab("Nombre de PAT") +
   ggtitle(label = "Repartition des PAT - Novembre 2025") +
-  theme(axis.text.x = element_text(size=10,colour = "black"),
+  theme(axis.text.x = element_text(size=12,colour = "black"),
+        axis.text.y = element_text(size=12,colour = "black"),
+        axis.title.x =  element_text(size=14,face="bold"),
+        axis.title.y =  element_text(size=14,face="bold"),
         panel.background = element_rect(fill="white"),
         legend.position = "none",
-        plot.title = element_text(face="bold",hjust=0.5))
+        panel.grid.major = element_line(colour = "grey85"),
+        plot.title = element_text(size=16,face="bold",hjust=0.5))
 ```
 
 # Quel Indicateur d'ancienneté/avancement des PAT utilisés ?
@@ -126,9 +130,12 @@ pat2025 %>%
   ggtitle(label = "Description des PAT - Novembre 2025")+
   scale_x_discrete(labels = c("En attente","Niveau 1","Niveau 2","NA"))+
   scale_fill_discrete(name = "Description",palette = c("seashell3","tan1"))+
-  theme(axis.text.x = element_text(size=10,colour = "black"),
+  theme(axis.text.x = element_text(size=12,colour = "black"),
+        axis.text.y = element_text(size=12,colour = "black"),
+        axis.title.x =  element_text(size=14,face="bold"),
+        axis.title.y =  element_text(size=14,face="bold"),
         panel.background = element_rect(fill="white"),
-        plot.title = element_text(face="bold",hjust=0.5))
+        plot.title = element_text(size=16,face="bold",hjust=0.5))
 ```
 # Engagement des PAT dans leurs thématiques
 ```{r}
