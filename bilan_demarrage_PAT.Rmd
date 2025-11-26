@@ -47,10 +47,11 @@ L’objectif de ce projet est d'analyser la base de données FRANCE PAT, afin de
 ```{r}
 library(tidyverse)
 pat2025 <- read.csv("data/pats-20250710-win1252.csv", header = T, sep = ";", fileEncoding = "latin1", dec = ".")
+pat2025[pat2025== ""] <- NA
 
 ```
 
-# Répartition des PAT entre niveaux 1 (émergents) et 2 (opérationnel )
+# Répartition des PAT entre niveaux 1 (émergents) et 2 (opérationnel)
 
 ```{r}
 pat2025$niveaux_de_labelisation <- as.factor(pat2025$niveaux_de_labelisation)
@@ -69,12 +70,32 @@ pat2025 %>%
         size = 5,
         vjust = -0.2
     )+
-  scale_x_discrete(labels = c("NA","En attente","Niveau 1","Niveau 2"))+
-  scale_fill_discrete(palette = c("gray","#F2C799","#F5821E","#C75318"))+
+  scale_x_discrete(labels = c("En attente","Niveau 1","Niveau 2","NA"))+
+  scale_fill_discrete(palette = c("#F2C799","#F5821E","#C75318","gray"))+
   xlab("Niveau de labellisation") +
   ylab("Nombre de PAT") +
   ggtitle(label = "Repartition des PAT - Novembre 2025") +
   theme(axis.text.x = element_text(size=10,colour = "black"),
         panel.background = element_rect(fill="white"),
-        legend.position = "none")
+        legend.position = "none",
+        plot.title = element_text(face="bold",hjust=0.5))
 ```
+# Description des PAT
+
+```{r}
+pat2025$description_presente <- ifelse(is.na(pat2025$descriptions_libre_des_enjeux_du_territoire_par_le_porteur),"Absente","Présente")
+
+pat2025 %>% 
+  ggplot() +
+  geom_bar(aes(x=niveaux_de_labelisation,fill=description_presente,),
+           color="black",position = "stack") +
+  xlab("Niveau de labellisation") +
+  ylab("Nombre de PAT")+
+  ggtitle(label = "Description des PAT - Novembre 2025")+
+  scale_x_discrete(labels = c("En attente","Niveau 1","Niveau 2","NA"))+
+  scale_fill_discrete(name = "Description",palette = c("seashell3","tan1"))+
+  theme(axis.text.x = element_text(size=10,colour = "black"),
+        panel.background = element_rect(fill="white"),
+        plot.title = element_text(face="bold",hjust=0.5))
+```
+
