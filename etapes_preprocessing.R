@@ -67,7 +67,7 @@ txt_filter1 <- str_replace_all(string=txt, filter1,"")
 # filtre 2 
 ### Fusion avec les stopwords de Xplortext extrais ###
 fr_stopwords_2 <- unlist(str_extract_all("à ai aie aient aies ait as au aura aurai auraient aurais aurait auras aurez auriez aurions aurons auront aux avaient avais avait avec avez aviez avions avons ayant ayez ayons c ce ceci cela celà ces cet cette d dans de des du elle en es est et étaient étais était étant été étée étées êtes étés étiez étions eu eue eues eûmes eurent eus eusse eussent eusses eussiez eussions eut eût eûtes eux fûmes furent fus fusse fussent fusses fussiez fussions fut fût fûtes ici il ils j je l la le les leur leurs lui m ma mais me même mes moi mon n ne nos notre nous on ont ou par pas pour qu que quel quelle quelles quels qui s sa sans se sera serai seraient serais serait seras serez seriez serions serons seront ses soi soient sois soit sommes son sont soyez soyons suis sur t ta te tes toi ton tu un une vos votre vous y plusieurs d’accord hélas peut-être donc pourtant autour derrière dessous dessus
-devant parmi vers durant pendant depuis afin malgré sauf dès lorsque parce pendant pourquoi dedans loin partout aujourd'hui aussitôt autrefois avant-hier bientôt d'abord déjà demain en ce moment hier enfin longtemps maintenant quelquefois soudain souvent assez aussi autant davantage presque debout mieux sinon brusquement exactement doucement facilement heureusement lentement sagement seulement tranquillement st", boundary("word")))
+devant parmi vers durant pendant depuis afin malgré sauf dès lorsque parce pendant pourquoi dedans loin partout aujourhui aussitôt autrefois avant-hier bientôt d'abord déjà demain en ce moment hier enfin longtemps maintenant quelquefois soudain souvent assez aussi autant davantage presque debout mieux sinon brusquement exactement doucement facilement heureusement lentement sagement seulement tranquillement st", boundary("word")))
 
 filter2 <- paste0("\\b(", paste(fr_stopwords_2, collapse = "|"), ")\\b")
 
@@ -100,7 +100,7 @@ tokens_df <- data.frame(
 
 #######################################################
 
-# Etape 5 : Lemmatisation 
+# Etape 5 : Lemmatisation  avec lemmar 
 
 install.packages("remotes")
 remotes::install_github("trinker/lemmar")
@@ -111,6 +111,25 @@ hash_lemma_fr$token <- tolower(hash_lemma_fr$token)
 hash_lemma_fr$lemma <- tolower(hash_lemma_fr$lemma)
 
 res.lemmat <- left_join(x=tokens_df, y = hash_lemma_fr, by = join_by(x$token==y$token))
+
+# perf 1ere lemmat
+length(unique(res.lemmat$token[which(is.na(res.lemmat$lemma))]))
+
+
+
+# autre lemm
+
+library(dplyr)
+library(mixr)
+library(remotes)
+remotes::install_github("lvaudor/mixr")
+
+lexique382=mixr::get_lexicon(language = "fr")
+res.lemmat <- left_join(x=tokens_df, y = hash_lemma_fr, by = join_by(x$token==y$token))
+res.lemmat <- left_join(x=res.lemmat, y = lexique382, by = join_by(x$token==y$word))
+
+#Indicateur du nombre du mots qui nous manque
+unique(res.lemmat$token[which(is.na(res.lemmat$lemma.y))])
 
 
 
