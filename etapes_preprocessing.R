@@ -1,3 +1,8 @@
+library(topicmodels)
+library(tidytext)
+library(stringr)
+library(quanteda)
+library(udpipe)
 
 #############################################################
 # ETAPE 1 : bonne importation 
@@ -115,31 +120,37 @@ res.lemmat <- left_join(x=tokens_df, y = hash_lemma_fr, by = join_by(x$token==y$
 
 # perf 1ere lemmat
 length(unique(res.lemmat$token[which(is.na(res.lemmat$lemma))]))
-
+# dim : 62063 * 2 => n'ajoute pas de doublons 
 
 
 # 2 : lemmatisation avec mixr 
-
-
 library(dplyr)
 library(mixr)
 library(remotes)
-remotes::install_github("lvaudor/mixr")
-
-
-unique(res.lemmat$token[which(is.na(res.lemmat$lemma))])
+# remotes::install_github("lvaudor/mixr")
 
 lexique382 <- mixr::get_lexicon(language = "fr")
-res.lemmat <- left_join(x=tokens_df, y = hash_lemma_fr, by = join_by(x$token==y$token))
-res.lemmat <- left_join(x=res.lemmat, y = lexique382, by = join_by(x$token==y$word))
+
+# retirer les doublons dans lexique382
+
+lexique382_unique <- lexique382[!duplicated(lexique382$word), ]
+
+# champ, recul, recréer, chalonnais en doubles
+
+res.lemmat <- left_join(x=res.lemmat, y = lexique382_unique, by = join_by(x$token==y$word), keep = F, 
+                        relationship = "many-to-one")
 
 
 lemma3 <- read.delim("data/lemmatization-fr.txt", header = TRUE, stringsAsFactors = FALSE)
 colnames(lemma3) <- c("lemma","token")
+lemma3_unique <- lemma3[!duplicated(lemma3$token), ]
+
+
 #Indicateur du nombre du mots qui nous manque
 unique(res.lemmat$token[which(is.na(res.lemmat$lemma.y))])
 
 
-res.lemmat <- left_join(x= res.lemmat, y = lemma3, by = join_by(x$token==y$token))
+res.lemmat <- left_join(x= res.lemmat, y = lemma3_unique, by = join_by(x$token==y$token), 
+                        keep = F, relationship = "many-to-one")
 
 
