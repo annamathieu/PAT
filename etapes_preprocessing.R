@@ -154,3 +154,18 @@ res.lemmat <- left_join(x= res.lemmat, y = lemma3_unique, by = join_by(x$token==
                         keep = F, relationship = "many-to-one")
 
 
+#######################################################
+
+# Etape 6 : Nettoyage du tableau issu de la lemmatisation 
+
+
+
+
+
+
+
+
+
+
+
+
