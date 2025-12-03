@@ -100,8 +100,9 @@ tokens_df <- data.frame(
 
 #######################################################
 
-# Etape 5 : Lemmatisation  avec lemmar 
+# Etape 5 : Lemmatisation 
 
+# 1 : lemmatisation avec lemmar 
 install.packages("remotes")
 remotes::install_github("trinker/lemmar")
 library(lemmar)
@@ -119,7 +120,7 @@ length(unique(res.lemmat$token[which(is.na(res.lemmat$lemma))]))
 
 
 
-# autre lemm
+# 2 : lemmatisation avec mixr 
 
 
 library(dplyr)
