@@ -18,6 +18,8 @@ pat2025$descriptions_libre_des_enjeux_du_territoire_par_le_porteur <- gsub("’"
 # install.packages("kableExtra")
 # install.packages("flextable")
 
+# install.packages("Xplortext")
+
 # 2- load packages
 library(kableExtra) 
 library(DT)
@@ -31,6 +33,9 @@ library(SnowballC)
 library(lda)
 library(ldatuning)
 library(flextable)
+
+library(FactoMineR)
+library(Xplortext)
 
 
 # 3- Data Preprocessing 
@@ -59,7 +64,7 @@ villes <- as.character(chartr(                        # on retire les accents
   new = "AACEEEEIIOUUUaaceeeeiiouuu",
   x= villes))
 villes <- gsub(pattern = "-",, replacement = " ", x = villes, fixed = TRUE)
-
+villes<- villes[-c(1:5)]
 
 
 # retirer les apostre
