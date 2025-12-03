@@ -113,8 +113,6 @@ hash_lemma_fr$lemma <- tolower(hash_lemma_fr$lemma)
 
 res.lemmat <- left_join(x=tokens_df, y = hash_lemma_fr, by = join_by(x$token==y$token))
 
-<<<<<<< HEAD
-=======
 # perf 1ere lemmat
 length(unique(res.lemmat$token[which(is.na(res.lemmat$lemma))]))
 
