@@ -112,7 +112,21 @@ hash_lemma_fr$lemma <- tolower(hash_lemma_fr$lemma)
 
 res.lemmat <- left_join(x=tokens_df, y = hash_lemma_fr, by = join_by(x$token==y$token))
 
+library(dplyr)
+library(mixr)
+library(remotes)
+remotes::install_github("lvaudor/mixr")
 
+unique(res.lemmat$token[which(is.na(res.lemmat$lemma))])
+lexique382=mixr::get_lexicon(language = "fr")
+res.lemmat <- left_join(x=tokens_df, y = hash_lemma_fr, by = join_by(x$token==y$token))
+res.lemmat <- left_join(x=res.lemmat, y = lexique382, by = join_by(x$token==y$word))
+
+
+lemma3 <- read.delim("data/lemmatization-fr.txt", header = TRUE, stringsAsFactors = FALSE)
+colnames(lemma3) <- c("token","lemma")
+#Indicateur du nombre du mots qui nous manque
+unique(res.lemmat$token[which(is.na(res.lemmat$lemma.y))])
 
 
 
