@@ -88,3 +88,31 @@ toks <- tokens(txt_final,
 
 
 #######################################################
+
+# Etape 5 : créer df à partir des tokens 
+
+tokens_df <- data.frame(
+  doc = rep(names(toks), lengths(toks)),
+  token = unlist(toks)
+)
+
+
+
+#######################################################
+
+# Etape 5 : Lemmatisation 
+
+install.packages("remotes")
+remotes::install_github("trinker/lemmar")
+library(lemmar)
+
+data("hash_lemma_fr")
+hash_lemma_fr$token <- tolower(hash_lemma_fr$token)
+hash_lemma_fr$lemma <- tolower(hash_lemma_fr$lemma)
+
+res.lemmat <- left_join(x=tokens_df, y = hash_lemma_fr, by = join_by(x$token==y$token))
+
+
+
+
+
