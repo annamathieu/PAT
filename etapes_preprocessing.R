@@ -61,7 +61,22 @@ txt <- str_replace_all(txt, c("l'"="","d'"="","l’" = "", "d’" = ""))
 
 ###########################################################
 
-# Etape 3 : Retirer les stop words
+# Etape 3 : Gérer les nombres + espaces 
+
+gestion_nombres <- function(text) {
+  text <- gsub("\\.", " ", x =  text, perl = TRUE)                   # mettre des espaces à la place des points
+  text <- gsub("(?<=[0-9])(?=[[\\p{L}])|(?<=[[\\p{L}])(?=[0-9])", " ", x =  text, perl = TRUE)   # mettre des espaces s'il y a un chiffre avant une lettre minuscule (ex : 2007menaces) ou si il y a un chiffre après une lettre minuscule (ex : covid19)
+  text <- gsub("(?<=[0-9])-(?=[[\\p{L}])|(?<=[[\\p{L}])-(?=[0-9])|(?<=[0-9])-(?=[0-9])", " ", text, perl = TRUE) # chiffre'-'lettre ou lettre'-'chiffre ou chiffre'-'chiffre
+  text <- gsub(" -", " ", x = text)                                  # supprimer les tirets en début de mots
+  return(text)
+  
+}
+
+txt <- gestion_nombres(txt)
+
+###########################################################
+
+# Etape 4 : Retirer les stop words
 
 # FILTRE 1 
 
@@ -77,7 +92,7 @@ txt_filter1 <- str_replace_all(string=txt, filter1,"")
 # filtre 2 
 ### Fusion avec les stopwords de Xplortext extrais ###
 fr_stopwords_2 <- unlist(str_extract_all("plus à ai aie aient aies ait as au aura aurai auraient aurais aurait auras aurez auriez aurions aurons auront aux avaient avais avait avec avez aviez avions avons ayant ayez ayons c ce ceci cela celà ces cet cette d dans de des du elle en es est et étaient étais était étant été étée étées êtes étés étiez étions eu eue eues eûmes eurent eus eusse eussent eusses eussiez eussions eut eût eûtes eux fûmes furent fus fusse fussent fusses fussiez fussions fut fût fûtes ici il ils j je l la le les leur leurs lui m ma mais me même mes moi mon n ne nos notre nous on ont ou par pas pour qu que quel quelle quelles quels qui s sa sans se sera serai seraient serais serait seras serez seriez serions serons seront ses soi soient sois soit sommes son sont soyez soyons suis sur t ta te tes toi ton tu un une vos votre vous y plusieurs d’accord hélas peut-être donc pourtant autour derrière dessous dessus
-devant parmi vers durant pendant depuis afin malgré sauf dès lorsque parce pendant pourquoi dedans loin partout aujourhui aussitôt autrefois avant-hier bientôt d'abord déjà demain en ce moment hier enfin longtemps maintenant quelquefois soudain souvent assez aussi autant davantage presque debout mieux sinon brusquement exactement doucement facilement heureusement lentement sagement seulement tranquillement st pat paat où paatfin", boundary("word")))
+devant parmi vers durant pendant depuis afin malgré sauf dès lorsque parce pendant pourquoi dedans loin partout aujourhui aussitôt autrefois avant-hier bientôt d'abord déjà demain en ce moment hier enfin longtemps maintenant quelquefois soudain souvent assez aussi autant davantage presque debout mieux sinon brusquement exactement doucement facilement heureusement lentement sagement seulement tranquillement st où paatfin er ème eme ha km nd aa lys hem", boundary("word")))
 
 filter2 <- paste0("\\b(", paste(fr_stopwords_2, collapse = "|"), ")\\b")
 
@@ -88,7 +103,7 @@ txt_final <- str_squish(txt_filter2)
 
 #######################################################
 
-# Etape 4 : TOKENISATION 
+# Etape 5 : TOKENISATION 
 
 toks <- tokens(txt_final,
                what = "word",
@@ -99,7 +114,7 @@ toks <- tokens(txt_final,
 
 #######################################################
 
-# Etape 5 : créer df à partir des tokens 
+# Etape 6 : créer df à partir des tokens 
 
 tokens_df <- data.frame(
   doc = rep(names(toks), lengths(toks)),
@@ -110,7 +125,7 @@ tokens_df <- data.frame(
 
 #######################################################
 
-# Etape 5 : Lemmatisation 
+# Etape 7 : Lemmatisation 
 
 # 1 : lemmatisation avec lemmar 
 # install.packages("remotes")
