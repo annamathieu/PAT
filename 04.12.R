@@ -12,10 +12,53 @@ gestion_nombres <- function(text) {
 
 }
 
-
 # filtres
 
 test = gestion_nombres(test)
 test
+
+
+#######################################################################
+
+# fonction pour le tri de res lemmat 
+
+
+tri.reslemmat <- function(base) {
+  
+  # créer une nouvelle colonne lem.f contenant le lemma disponible 
+  # d'abord on regarde si il y a qqch dans lemma y : prio n°1
+    base$lem.f <- ifelse(test = !is.na(base$lemma.y), yes = base$lemma.y,
+                       
+                       # sinon : on va prendre le lemma de lemma x 
+                       no = ifelse(test = !is.na(base$lemma.x), yes = base$lemma.x,
+                                   
+                                   # sinon : on va prendre le lemma de lemma 
+                                   no = ifelse(test = !is.na(base$lemma), yes = base$lemma,
+                                     
+                                          # sinon on prend le token lui même    
+                                          base$token)))
+  
+    # on conserve les colonnes : doc et lem final 
+  base = base[,c(1,7)] 
+    
+  return(base)
+}
+
+
+testbase <- res.lemmat 
+
+testbase <- tri.reslemmat(base = testbase)
+
+sum(is.na(testbase$lem.f))
+
+
+
+#######################################################################
+
+# fonction pour associer les noms des pat avec les n° des PAT 
+
+
+
+
 
 
