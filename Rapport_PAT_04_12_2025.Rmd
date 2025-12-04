@@ -1,0 +1,363 @@
+---
+title: "Bilan analyse textuel - LDA - Projet PAT"
+author: "Erwan Gouhier, Anna Mathieu"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 3
+    number_sections: true
+    toc_float: true
+    self_contained: true
+    df_print: paged
+    highlight: tango
+    tabset: true
+editor_options: 
+  markdown: 
+    wrap: 80
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r packages, include=F}
+library(topicmodels)
+library(tidytext)
+library(stringr)
+library(quanteda)
+library(udpipe)
+library(tidyverse)
+library(dplyr)
+library(remotes)
+
+# Ces 2 packages sont obtenus en les téléchargeant depuis GitHub
+
+# remotes::install_github("lvaudor/mixr")
+library(mixr)
+# remotes::install_github("trinker/lemmar")
+library(lemmar)
+```
+
+# Introduction
+
+Nous avons voulu réaliser une LDA (Latent Dirichlet Analysis) pour avoir un
+aperçu des thèmes abordés par les descriptions de nos PAT. Un travail de
+pré-traitement des données à donc été réalisé car les données ne sont pas
+utilisables en l'état.
+
+On retrouve par exemple des débuts et des fins de phrases fusionnées (ex: "Zoom
+sur les filières déficitairesDans le" - PAT du département de la Savoie), des
+mots mal-ortographiés...etc
+
+Un travail de lemmatisation en plusieurs temps a également été réalisé afin
+d'obtenir quelque chose de plus facilement interprétable.
+
+# Importation des données
+
+```{r}
+pat2025 <- read.csv("data/pats-20250710-win1252.csv", header = T, sep = ";", fileEncoding = "CP1252", dec = ".") # CP1252 permet de gérer les apostrophes non détectées 
+pat2025[pat2025== ""] <- NA # Transformation des cases vides en NA
+```
+
+# Filtrage des données
+
+Nous avons réalisé plusieurs filtres pour nettoyer nos données
+
+## Changement des apostrophes
+
+Il existe plusieurs types d'apostrophes, nous nous sommes rendus compte que
+l'apostrophe que nous pouvions réaliser avec nos claviers d'ordinateurs
+\<\<'\>\> sont différents de ceux présents dans nos descriptions \<\<’\>\>, ils
+ne sont donc pas reconnus si on veut les filtrer, pour des facilités d'écriture
+nous les avons remplacé.
+
+```{r}
+pat2025$descriptions_libre_des_enjeux_du_territoire_par_le_porteur <- gsub("’", "'", pat2025$descriptions_libre_des_enjeux_du_territoire_par_le_porteur, fixed = TRUE)
+```
+
+## Liens vers des sites internet
+
+Un autre filtre que nous avons mis en place consiste en la suppression des
+chaines de caractères continues qui commencent par "https" et "www" qui
+contiennent par la suite des caractères dans un ordre aléatoire qui parasite nos
+tokens si on ne les enlève pas.
+
+```{r}
+#On retire les URL
+pat2025$descriptions_libre_des_enjeux_du_territoire_par_le_porteur <- gsub("https?://\\S+", "", pat2025$descriptions_libre_des_enjeux_du_territoire_par_le_porteur)
+pat2025$descriptions_libre_des_enjeux_du_territoire_par_le_porteur <- gsub("www.\\S+", "", pat2025$descriptions_libre_des_enjeux_du_territoire_par_le_porteur)
+
+```
+
+## Saut de lignes
+
+Comme dit dans l'introduction certains textes ont des problèmes de retour à la
+ligne ce qui revient à fusionner des mots. On suppose que c'est dû à la mise en
+forme des descriptions dans les cellules d'Excel. On réduit ensuite les espaces
+multiples en 1 seul espace grâce à la fonction str_squish.
+
+```{r}
+# gérer le pb des sauts de lignes non pris en compte
+textdata$text <- gsub("(?<=[a-z])(?=[A-Z])", " ", x =  textdata$text, perl = TRUE) # décole les MAJ collées à des minuscules (précédées par des minuscules)
+
+# supp db espace doubles ou +
+textdata$text <- str_squish(textdata$text)
+txt <- textdata$text
+```
+
+## Noms des communes
+
+Nous avons ensuite décidé d'enlever le nom des communes. On considère qu'elle ne
+porte pas d'information direct sur les PAT et on préfère donc les enlever. Pour
+filtrer le nom des communes, nous avons extrait les noms à partir de la colonne
+communes_nom.
+
+Comme certaines villes sont également référencées par des parties de leur nom
+comme Saint-Nazaire parfois écrit "St Nazaire", on extrait tout les noms en
+majuscules des noms de communes. Le fait de laisser les mots en majuscules nous
+permet d'éviter de supprimer des mots communs. Un exemple illustratif dans un
+cas général pourrait être une ville comme Collonges-la-Rouge, avec notre méthode
+si Collonges-la-Rouge est écrit sans les tirets on supprimera le mot "Rouge"
+mais on gardera le mot "rouge".
+
+Pour appliquer ces filtres on a besoin de la fonction escape_regex qui permet
+d'utiliser str_replace_all avec des chaines de caractères qui contiennent des
+caractères spéciaux. On applique également un filtre strict avec le notation
+"\\\\b", ainsi le mot "Port" ne retirera pas "Port" contenu dans le mot
+"Portrait" en début de phrase dans la description du PAT de Redon.
+
+```{r}
+escape_regex <- function(x) {
+  str_replace_all(x, "([\\.\\+\\*\\?\\^\\$\\(\\)\\[\\]\\{\\}\\|\\\\])", "\\\\\\1")
+}
+
+
+villes <- unlist(strsplit(pat2025$communes_nom, split = ", ")) #On récupère les noms des villes tels que donnés 
+
+villes_maj <- gsub(pattern = "-",, replacement = " ", x = villes, fixed = TRUE) 
+villes_maj <- unlist(strsplit(villes_maj, split = " "))
+villes_maj <- grep("^[A-Z]", villes_maj, value = TRUE) #On récupère les mots en majuscules dans les noms des villes 
+
+villes_filtre <- c(villes,villes_maj)
+
+villes_filtre <- escape_regex(villes_filtre) #Pour permettre d'appliquer le filtre avec les charactères spéciaux
+villes_filtre <- paste0("\\b(", paste(villes_filtre, collapse = "|"), ")\\b") #Empêcher de reconnaitres des noms de ville en début de phrase "Port" --> "Portrait"
+
+##### Application du filtre #####
+
+txt_clean <- str_replace_all(string=txt, villes_filtre,"")  # application du villes des filtres des villes: retire les noms de villes
+txt <- tolower(txt_clean)  # passe le texte en minuscules pour la suite
+```
+
+Après tout cela on peut enfin passer nos descriptions en miniscules pour filtrer
+les mots outils et procéder à la lemmatisation
+
+## Apostrophes
+
+On supprime les apostrophes.
+
+```{r}
+#Filtre apostrophes
+txt <- str_replace_all(txt, c("l'"="","d'"="","l’" = "", "d’" = "")) # suppression des apostrophes
+
+```
+
+## Chiffres, tirets et points
+
+On veut supprimer les points qui vont être directement adjacent à certains mots.
+Ensuite on peut observer certaines valeurs chiffrées dans les descriptions avec
+des tirets entre eux ou alors directement adjacents à certains mots. On supprime
+également les tirets avec un mot juste après, dans les descriptions cela
+représente les énumérations de fait.
+
+La fonction gestion_nombres fait donc dans l'ordre : - une suppression des
+points - une séparation des nombres collés à des lettres - une suppression des
+tirets entre des nombres et d'autres élements (nombres ou mots) - une suppresion
+des tirets en début de phrase
+
+```{r}
+
+gestion_nombres <- function(text) {
+  text <- gsub("\\.", " ", x =  text, perl = TRUE)                   # mettre des espaces à la place des points
+  text <- gsub("(?<=[0-9])(?=[[\\p{L}])|(?<=[[\\p{L}])(?=[0-9])", " ", x =  text, perl = TRUE)   # mettre des espaces s'il y a un chiffre avant une lettre minuscule (ex : 2007menaces) ou si il y a un chiffre après une lettre minuscule (ex : covid19)
+  text <- gsub("(?<=[0-9])-(?=[[\\p{L}])|(?<=[[\\p{L}])-(?=[0-9])|(?<=[0-9])-(?=[0-9])", " ", text, perl = TRUE) # chiffre'-'lettre ou lettre'-'chiffre ou chiffre'-'chiffre
+  text <- gsub(" -", " ", x = text)                                  # supprimer les tirets en début de mots
+  return(text)
+}
+
+txt <- gestion_nombres(txt)
+```
+
+## Stopwords
+
+Pour les stops words, nous nous sommes basées sur 2 listes de stopwords que nous
+avons fusionnées. La première est une liste obtenue sur le GitHub
+"Stopwords-Iso" au lien suivant :
+<https://github.com/stopwords-iso/stopwords-fr/tree/master>
+
+La seconde est issu du package Xplortext avec quelques rajouts personnels que
+nous avons trouvé en regardant les mots que nous obtenions après tokenisation.
+
+Nous avons tenté de fusionner les listes, mais quand nous le faisions le filtre
+ne fonctionnait pas. Nous avons donc décidé d'appliquer les 2 filtres
+successivement, ce qui nous donnait un résultat satisfaisant. On applique à
+nouveau un filtrage strict avec la notation "\\\\b"
+
+```{r}
+#Premier filtre
+
+fr_stopwords <- read.table("data/stopwords-fr.txt")
+# from : https://github.com/stopwords-iso/stopwords-fr/blob/master/stopwords-fr.txtas.character(chartr(                        # on retire les accents 
+fr_stopwords <- as.character(fr_stopwords$V1)
+filter1 <- paste0("\\b(", paste(fr_stopwords, collapse = "|"), ")\\b")
+txt_filter1 <- str_replace_all(string=txt, filter1,"")
+```
+
+```{r}
+#Second filtre
+
+r_stopwords_2 <- unlist(str_extract_all("plus à ai aie aient aies ait as au aura aurai auraient aurais aurait auras aurez auriez aurions aurons auront aux avaient avais avait avec avez aviez avions avons ayant ayez ayons c ce ceci cela celà ces cet cette d dans de des du elle en es est et étaient étais était étant été étée étées êtes étés étiez étions eu eue eues eûmes eurent eus eusse eussent eusses eussiez eussions eut eût eûtes eux fûmes furent fus fusse fussent fusses fussiez fussions fut fût fûtes ici il ils j je l la le les leur leurs lui m ma mais me même mes moi mon n ne nos notre nous on ont ou par pas pour qu que quel quelle quelles quels qui s sa sans se sera serai seraient serais serait seras serez seriez serions serons seront ses soi soient sois soit sommes son sont soyez soyons suis sur t ta te tes toi ton tu un une vos votre vous y plusieurs d’accord hélas peut-être donc pourtant autour derrière dessous dessus
+devant parmi vers durant pendant depuis afin malgré sauf dès lorsque parce pendant pourquoi dedans loin partout aujourhui aussitôt autrefois avant-hier bientôt d'abord déjà demain en ce moment hier enfin longtemps maintenant quelquefois soudain souvent assez aussi autant davantage presque debout mieux sinon brusquement exactement doucement facilement heureusement lentement sagement seulement tranquillement st où paatfin er ème eme ha km nd aa lys hem", boundary("word")))
+
+filter2 <- paste0("\\b(", paste(fr_stopwords_2, collapse = "|"), ")\\b")
+txt_filter2 <- str_replace_all(string=txt_filter1, filter2,"") 
+
+txt_final <- str_squish(txt_filter2)
+```
+
+Une fois tous ces filtres réalisés, nous pouvons passer à la tokenisation
+
+# Tokenisation
+
+Pour réaliser la tokenisation, nous utilisons la fonction tokens du package
+"quanteda". On lui fournit nos descriptions filtées en lui indiquant que nous
+voulons que la tokenisation se face par mot. On lui ajoute les filtres
+remove_punct/symbols/numbers pour enlever les potentiels symboles et chiffres
+qui aurait échappé à nos précédents filtres.
+
+```{r}
+toks <- tokens(txt_final,
+               what = "word",
+               remove_punct = TRUE,
+               remove_symbols = TRUE,
+               remove_numbers = TRUE)
+```
+
+Nous mettons en suite en forme nos tokens en colonne en les associant aux
+descriptions des PAT dont ils proviennent.
+
+```{r}
+tokens_df <- data.frame(
+  doc = rep(names(toks), lengths(toks)),
+  token = unlist(toks)
+)
+```
+
+## Lemmatisation
+
+Pour finir la préparation de notre jeu de données, nous lemmatisons nos tokens.
+Pour cela nous nous basons comme pour les stopwords sur différentes bases de
+lemmatisation : - hash_lemmar_fr qui provient du package lemmar - lexique382 qui
+provient du package mixr - une liste obtenue sur un le GitHub de l'utilisateur
+michmech : <https://github.com/michmech/lemmatization-lists/tree/master>
+
+Nous allons associer chaque mot à sa version lemmatisé dans chacune des bases,
+puis nous allons superposer les bases pour avoir un maximum de mots lémmatisés.
+
+```{r}
+# Lemmatisation par hash_lemma_fr
+
+hash_lemma_fr$token <- tolower(hash_lemma_fr$token)
+hash_lemma_fr$lemma <- tolower(hash_lemma_fr$lemma)
+res.lemmat <- left_join(x=tokens_df, y = hash_lemma_fr, by = join_by(x$token==y$token))
+
+# Performance de la première lemmatisation
+length(unique(res.lemmat$token[which(is.na(res.lemmat$lemma))]))
+# dim : 62063 * 2 => n'ajoute pas de doublons 
+```
+
+Dans notre code nous avons initialement réalisé nos 3 lemmatisations et regarder
+les tokens pour lesquels aucune lemmatisation n'a été faite car les tokens
+n'étaient présents dans aucune des bases que nous avions. Nous avons donc créer
+une base de lemmatisation que nous avons fusionner avec lexique382 pour éviter
+les problèmes de duplication de lignes.
+
+```{r}
+### Code illustratif à ne pas lancer ###
+
+# Tous les tokens qui n'ont pas été lémmatisés
+#res.lemmat.NA <- res.lemmat %>% filter_at(vars(lemma.x,lemma.y,lemma),all_vars(is.na(.)))
+
+# On enregistre que la colonne token
+#res.lemmat.NAB <- data.frame(x=unique(res.lemmat.NA$token))  
+# write.csv2(x=res.lemmat.NAB,"data/lemma_complet.csv",fileEncoding = "latin1") # exportation en CSV 
+
+### Code à lancer ###
+
+lexique382 <- mixr::get_lexicon(language = "fr")
+
+#Importation de notre base de lemmatisation
+
+lemma_complet <- read.csv(file = "data/lemma_complet.csv", fileEncoding = "latin1", header = T, sep = ";")
+lemma_complet[lemma_complet== ""] <- NA
+
+#Fusion des 2 bases
+lexique382 <- rbind(lexique382, lemma_complet)
+lexique382_unique <- lexique382[!duplicated(lexique382$word), ] #supp des doublons : champ, recul, recréer, chalonnais en doubles
+
+#Lemmatisation avec lexique382 + notre base
+res.lemmat <- left_join(x=res.lemmat, y = lexique382_unique, by = join_by(x$token==y$word), keep = F, 
+                        relationship = "many-to-one")
+
+```
+
+On répète la même chose avec notre dernière base de lemmatisation.
+
+```{r}
+lemma3 <- read.delim("data/lemmatization-fr.txt", header = TRUE, stringsAsFactors = FALSE)
+colnames(lemma3) <- c("lemma","token")
+lemma3_unique <- lemma3[!duplicated(lemma3$token), ]
+
+res.lemmat <- left_join(x= res.lemmat, y = lemma3_unique, by = join_by(x$token==y$token), 
+                        keep = F, relationship = "many-to-one")
+```
+
+Après cela on obtient un tableau de données avec 6 colonnes. - lemma.x
+correspond à hash_lemma_fr - lemma.y à lexique382 - lemma à notre base de github
+
+```{r}
+head(res.lemmat)
+```
+
+On regardant les lemmatisation proposées, nous avons conclus que lexique382
+était la meilleure base que nous avions, puis hash_lemma_fr et la base trouvée
+sur GitHub. Nous avons donc réalisé une fonction pour fusionner en prenant en
+compte cet ordre de priorité
+
+```{r}
+
+tri.reslemmat <- function(base) {
+  
+  # créer une nouvelle colonne lem.f contenant le lemma disponible 
+  # d'abord on regarde si il y a qqch dans lemma y : prio n°1
+  base$lem.f <- ifelse(test = !is.na(base$lemma.y), yes = base$lemma.y,
+                       
+                       # sinon : on va prendre le lemma de lemma x 
+                       no = ifelse(test = !is.na(base$lemma.x), yes = base$lemma.x,
+                                   
+                                   # sinon : on va prendre le lemma de lemma 
+                                   no = ifelse(test = !is.na(base$lemma), yes = base$lemma,
+                                               
+                                               # sinon on met un na    
+                                               NA)))
+  
+  base = base[,c(1,7)]  # on conserve les colonnes : doc et lem final 
+  base = drop_na(base) # on retire les lignes avec NA
+  
+  return(base)
+}
+
+
+res.lemmat <- tri.reslemmat(base = res.lemmat)
+```
