@@ -176,7 +176,7 @@ res.lemmat <- left_join(x= res.lemmat, y = lemma3_unique, by = join_by(x$token==
 
 #######################################################
 
-# Etape 6 : Nettoyage du tableau issu de la lemmatisation 
+# Etape 8 : Nettoyage du tableau issu de la lemmatisation 
 
 
 tri.reslemmat <- function(base) {
