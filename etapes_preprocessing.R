@@ -16,6 +16,10 @@ pat2025 <- read.csv("data/pats-20250710-win1252.csv", header = T, sep = ";", fil
 pat2025[pat2025== ""] <- NA # transformation des cases vides en NA
 pat2025$descriptions_libre_des_enjeux_du_territoire_par_le_porteur <- gsub("’", "'", pat2025$descriptions_libre_des_enjeux_du_territoire_par_le_porteur, fixed = TRUE)
 
+#On retire les URL
+pat2025$descriptions_libre_des_enjeux_du_territoire_par_le_porteur <- gsub("https?://\\S+", "", pat2025$descriptions_libre_des_enjeux_du_territoire_par_le_porteur)
+
+
 # df pour desc 
 textdata <- as.data.frame(cbind(doc_id = pat2025$nom_administratif, text = pat2025$descriptions_libre_des_enjeux_du_territoire_par_le_porteur))
 
@@ -71,7 +75,7 @@ txt_filter1 <- str_replace_all(string=txt, filter1,"")
 
 # filtre 2 
 ### Fusion avec les stopwords de Xplortext extrais ###
-fr_stopwords_2 <- unlist(str_extract_all("à ai aie aient aies ait as au aura aurai auraient aurais aurait auras aurez auriez aurions aurons auront aux avaient avais avait avec avez aviez avions avons ayant ayez ayons c ce ceci cela celà ces cet cette d dans de des du elle en es est et étaient étais était étant été étée étées êtes étés étiez étions eu eue eues eûmes eurent eus eusse eussent eusses eussiez eussions eut eût eûtes eux fûmes furent fus fusse fussent fusses fussiez fussions fut fût fûtes ici il ils j je l la le les leur leurs lui m ma mais me même mes moi mon n ne nos notre nous on ont ou par pas pour qu que quel quelle quelles quels qui s sa sans se sera serai seraient serais serait seras serez seriez serions serons seront ses soi soient sois soit sommes son sont soyez soyons suis sur t ta te tes toi ton tu un une vos votre vous y plusieurs d’accord hélas peut-être donc pourtant autour derrière dessous dessus
+fr_stopwords_2 <- unlist(str_extract_all("plus à ai aie aient aies ait as au aura aurai auraient aurais aurait auras aurez auriez aurions aurons auront aux avaient avais avait avec avez aviez avions avons ayant ayez ayons c ce ceci cela celà ces cet cette d dans de des du elle en es est et étaient étais était étant été étée étées êtes étés étiez étions eu eue eues eûmes eurent eus eusse eussent eusses eussiez eussions eut eût eûtes eux fûmes furent fus fusse fussent fusses fussiez fussions fut fût fûtes ici il ils j je l la le les leur leurs lui m ma mais me même mes moi mon n ne nos notre nous on ont ou par pas pour qu que quel quelle quelles quels qui s sa sans se sera serai seraient serais serait seras serez seriez serions serons seront ses soi soient sois soit sommes son sont soyez soyons suis sur t ta te tes toi ton tu un une vos votre vous y plusieurs d’accord hélas peut-être donc pourtant autour derrière dessous dessus
 devant parmi vers durant pendant depuis afin malgré sauf dès lorsque parce pendant pourquoi dedans loin partout aujourhui aussitôt autrefois avant-hier bientôt d'abord déjà demain en ce moment hier enfin longtemps maintenant quelquefois soudain souvent assez aussi autant davantage presque debout mieux sinon brusquement exactement doucement facilement heureusement lentement sagement seulement tranquillement st pat paat où paatfin", boundary("word")))
 
 filter2 <- paste0("\\b(", paste(fr_stopwords_2, collapse = "|"), ")\\b")
