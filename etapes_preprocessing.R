@@ -179,7 +179,29 @@ res.lemmat <- left_join(x= res.lemmat, y = lemma3_unique, by = join_by(x$token==
 # Etape 6 : Nettoyage du tableau issu de la lemmatisation 
 
 
+tri.reslemmat <- function(base) {
+  
+  # créer une nouvelle colonne lem.f contenant le lemma disponible 
+  # d'abord on regarde si il y a qqch dans lemma y : prio n°1
+  base$lem.f <- ifelse(test = !is.na(base$lemma.y), yes = base$lemma.y,
+                       
+                       # sinon : on va prendre le lemma de lemma x 
+                       no = ifelse(test = !is.na(base$lemma.x), yes = base$lemma.x,
+                                   
+                                   # sinon : on va prendre le lemma de lemma 
+                                   no = ifelse(test = !is.na(base$lemma), yes = base$lemma,
+                                               
+                                               # sinon on prend le token lui même    
+                                               base$token)))
+  
+  # on conserve les colonnes : doc et lem final 
+  base = base[,c(1,7)] 
+  
+  return(base)
+}
 
+
+res.lemmat <- tri.reslemmat(base = res.lemmat)
 
 
 
