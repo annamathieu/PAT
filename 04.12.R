@@ -59,6 +59,86 @@ sum(is.na(testbase$lem.f))
 
 
 
+#######################################################################
+
+library(topicmodels)  # For LDA
+library(tm)          # For DocumentTermMatrix
+library(slam)
+
+# df avec les mots regroupés par fréquence 
+df_lda <- testbase %>%
+  group_by(doc, lem.f) %>%
+  summarise(freq = n(), .groups = 'drop')
+
+# Get unique documents and terms
+docs <- unique(df_lda$doc)
+terms <- unique(df_lda$lem.f)
+
+# Create mappings
+doc_to_idx <- setNames(seq_along(docs), docs)
+term_to_idx <- setNames(seq_along(terms), terms)
+
+# Map to indices
+i <- as.integer(doc_to_idx[df_lda$doc])
+j <- as.integer(term_to_idx[df_lda$lem.f])
+v <- as.integer(df_lda$freq)  # IMPORTANT: must be integer
+
+# Create simple_triplet_matrix
+stm <- simple_triplet_matrix(
+  i = i, 
+  j = j, 
+  v = v,
+  nrow = length(docs),
+  ncol = length(terms),
+  dimnames = list(docs, terms)
+)
+
+# Fit LDA model
+lda_model <- LDA(stm, k = 9, method = "Gibbs")
 
 
 
+
+tidy_model_beta <- tidy(lda_model, matrix = "beta")
+
+# proba que chaque mot soit tiré dans un topic 
+tidy_model_beta %>% 
+  filter(term == "social")
+
+tidy_model_beta %>% 
+  filter(term == "education")
+
+tidy_model_beta %>% 
+  filter(term == "production")
+
+tidy_model_beta %>% 
+  filter(term == "végétal")
+
+tidy_model_beta %>% 
+  filter(term == "environnement")
+
+
+
+# mots qui participent le + à chaque topic 
+
+tidy_model_beta %>%
+  group_by(topic) %>%
+  top_n(8, beta) %>%
+  ungroup() %>%
+  arrange(topic, -beta) %>%
+  ggplot(aes(reorder(term, beta), beta, fill = factor(topic))) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~ topic, scales = "free") +
+  scale_fill_viridis_d() + 
+  coord_flip() + 
+  labs(x = "Topic", 
+       y = "beta score", 
+       title = "Topic modeling of 4 PAT description")
+
+
+# vecteurs de répartition des axes dans chaque PAT 
+tidy_model_gamma <- tidy(lda_model, matrix = "gamma")
+tidy_model_gamma
+
+# modifier la str de ce doc 
+# => 
