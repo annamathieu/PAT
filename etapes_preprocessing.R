@@ -5,7 +5,7 @@ library(quanteda)
 library(udpipe)
 
 #############################################################
-# ETAPE 1 : bonne importation 
+# ETAPE 1 : bonne importation des données 
  # apostrophes 
 
 library(tidyverse)
@@ -52,16 +52,16 @@ villes_filtre <- paste0("\\b(", paste(villes_filtre, collapse = "|"), ")\\b") #E
 
 ##### Application du filtre #####
 
-txt_clean <- str_replace_all(string=txt, villes_filtre,"")
-txt <- tolower(txt_clean)
+txt_clean <- str_replace_all(string=txt, villes_filtre,"")  # application du villes des filtres des villes: retire les noms de villes
+txt <- tolower(txt_clean)  # passe le texte en minuscules 
 
 #Filtre apostrophes
-txt <- str_replace_all(txt, c("l'"="","d'"="","l’" = "", "d’" = ""))
+txt <- str_replace_all(txt, c("l'"="","d'"="","l’" = "", "d’" = "")) # suppression des apostrophes
 
 
 ###########################################################
 
-# Etape 3 : Gérer les nombres + espaces 
+# Etape 3 : Gérer les nombres + points  
 
 gestion_nombres <- function(text) {
   text <- gsub("\\.", " ", x =  text, perl = TRUE)                   # mettre des espaces à la place des points
@@ -82,24 +82,26 @@ txt <- gestion_nombres(txt)
 
 ### Listes des stopwords ###
 fr_stopwords <- read.table("data/stopwords-fr.txt")
+# from : https://github.com/stopwords-iso/stopwords-fr/blob/master/stopwords-fr.txtas.character(chartr(                        # on retire les accents 
+
 fr_stopwords <- as.character(fr_stopwords$V1)
 
 filter1 <- paste0("\\b(", paste(fr_stopwords, collapse = "|"), ")\\b")
 
-txt_filter1 <- str_replace_all(string=txt, filter1,"")
+txt_filter1 <- str_replace_all(string=txt, filter1,"") # on retire tous les stop words issus de cette liste 
 
 
 # filtre 2 
-### Fusion avec les stopwords de Xplortext extrais ###
+### Fusion avec les stopwords de Xplortext extrais ### + autres stop words
 fr_stopwords_2 <- unlist(str_extract_all("plus à ai aie aient aies ait as au aura aurai auraient aurais aurait auras aurez auriez aurions aurons auront aux avaient avais avait avec avez aviez avions avons ayant ayez ayons c ce ceci cela celà ces cet cette d dans de des du elle en es est et étaient étais était étant été étée étées êtes étés étiez étions eu eue eues eûmes eurent eus eusse eussent eusses eussiez eussions eut eût eûtes eux fûmes furent fus fusse fussent fusses fussiez fussions fut fût fûtes ici il ils j je l la le les leur leurs lui m ma mais me même mes moi mon n ne nos notre nous on ont ou par pas pour qu que quel quelle quelles quels qui s sa sans se sera serai seraient serais serait seras serez seriez serions serons seront ses soi soient sois soit sommes son sont soyez soyons suis sur t ta te tes toi ton tu un une vos votre vous y plusieurs d’accord hélas peut-être donc pourtant autour derrière dessous dessus
 devant parmi vers durant pendant depuis afin malgré sauf dès lorsque parce pendant pourquoi dedans loin partout aujourhui aussitôt autrefois avant-hier bientôt d'abord déjà demain en ce moment hier enfin longtemps maintenant quelquefois soudain souvent assez aussi autant davantage presque debout mieux sinon brusquement exactement doucement facilement heureusement lentement sagement seulement tranquillement st où paatfin er ème eme ha km nd aa lys hem", boundary("word")))
 
 filter2 <- paste0("\\b(", paste(fr_stopwords_2, collapse = "|"), ")\\b")
 
-txt_filter2 <- str_replace_all(string=txt_filter1, filter2,"")
+txt_filter2 <- str_replace_all(string=txt_filter1, filter2,"") # on retire tous les stop words issus de cette deuxième liste
 
 
-txt_final <- str_squish(txt_filter2)
+txt_final <- str_squish(txt_filter2) # suppression des espaces doubles/triples/.... 
 
 #######################################################
 
@@ -126,6 +128,8 @@ tokens_df <- data.frame(
 #######################################################
 
 # Etape 7 : Lemmatisation 
+
+# L'objectif est d'obtenir des mots sans pluriels, genres, les verbes sans conjugaison
 
 # 1 : lemmatisation avec lemmar 
 # install.packages("remotes")
@@ -154,12 +158,10 @@ lexique382 <- mixr::get_lexicon(language = "fr")
 # retirer les doublons dans lexique382
 
 lexique382_unique <- lexique382[!duplicated(lexique382$word), ]
-
-# champ, recul, recréer, chalonnais en doubles
+# supp des doublons : champ, recul, recréer, chalonnais en doubles
 
 res.lemmat <- left_join(x=res.lemmat, y = lexique382_unique, by = join_by(x$token==y$word), keep = F, 
                         relationship = "many-to-one")
-
 
 lemma3 <- read.delim("data/lemmatization-fr.txt", header = TRUE, stringsAsFactors = FALSE)
 colnames(lemma3) <- c("lemma","token")
@@ -205,7 +207,9 @@ res.lemmat <- tri.reslemmat(base = res.lemmat)
 
 
 
+#######################################################
 
+# Etape 9 : Topic Modelling avec LDA 
 
 
 
