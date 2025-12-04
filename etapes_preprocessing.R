@@ -157,6 +157,11 @@ lexique382 <- mixr::get_lexicon(language = "fr")
 
 # retirer les doublons dans lexique382
 
+lemma_complet <- read.csv(file = "data/lemma_complet.csv", fileEncoding = "latin1", header = T, sep = ";")
+lemma_complet[lemma_complet== ""] <- NA
+
+lexique382 <- rbind(lexique382, lemma_complet)
+
 lexique382_unique <- lexique382[!duplicated(lexique382$word), ]
 # supp des doublons : champ, recul, recréer, chalonnais en doubles
 
