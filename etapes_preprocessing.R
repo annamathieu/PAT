@@ -193,11 +193,11 @@ tri.reslemmat <- function(base) {
                                    # sinon : on va prendre le lemma de lemma 
                                    no = ifelse(test = !is.na(base$lemma), yes = base$lemma,
                                                
-                                               # sinon on prend le token lui même    
-                                               base$token)))
+                                               # sinon on met un na    
+                                               NA)))
   
-  # on conserve les colonnes : doc et lem final 
-  base = base[,c(1,7)] 
+  base = base[,c(1,7)]  # on conserve les colonnes : doc et lem final 
+  base = drop_na(base) # on retire les lignes avec NA
   
   return(base)
 }
