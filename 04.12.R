@@ -36,10 +36,11 @@ tri.reslemmat <- function(base) {
                                    no = ifelse(test = !is.na(base$lemma), yes = base$lemma,
                                      
                                           # sinon on prend le token lui même    
-                                          base$token)))
+                                          NA)))
   
     # on conserve les colonnes : doc et lem final 
   base = base[,c(1,7)] 
+  base = drop_na(base)
     
   return(base)
 }
@@ -56,6 +57,8 @@ sum(is.na(testbase$lem.f))
 #######################################################################
 
 # fonction pour associer les noms des pat avec les n° des PAT 
+
+
 
 
 
