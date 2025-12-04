@@ -69,7 +69,7 @@ library(tm)          # For DocumentTermMatrix
 library(slam)
 
 # df avec les mots regroupés par fréquence 
-df_lda <- testbase %>%
+df_lda <- res.lemmat %>%
   group_by(doc, lem.f) %>%
   summarise(freq = n(), .groups = 'drop')
 
@@ -97,19 +97,19 @@ stm <- simple_triplet_matrix(
 )
 
 # Fit LDA model
-lda_model <- LDA(stm, k = 9, method = "Gibbs")
-
+lda_model_9 <- LDA(stm, k = 9, method = "Gibbs")
 
 
 
 tidy_model_beta <- tidy(lda_model, matrix = "beta")
 
-# proba que chaque mot soit tiré dans un topic 
+
+# proba que chaque mot soit tiré dans un topic (1 des 9 topics)
 tidy_model_beta %>% 
   filter(term == "social")
 
 tidy_model_beta %>% 
-  filter(term == "education")
+  filter(term == "éducation")
 
 tidy_model_beta %>% 
   filter(term == "production")
@@ -118,7 +118,7 @@ tidy_model_beta %>%
   filter(term == "végétal")
 
 tidy_model_beta %>% 
-  filter(term == "environnement")
+  filter(term == "agriculture-biologique")
 
 
 
@@ -136,12 +136,90 @@ tidy_model_beta %>%
   coord_flip() + 
   labs(x = "Topic", 
        y = "beta score", 
-       title = "Topic modeling of 4 PAT description")
+       title = "Topic modeling of PAT description")
+
+# identification des axes avec 9 axes : 
+
+# 1 — Ruralité                       | => Urbanisme ? 
+# 2 — Alimentation durable           | => Nutrition et santé ? 
+# 3 — Agriculture & Climat           | => Environnement ? 
+# 4 — Agroéconomie                   | => Economie Alimentaire 
+# 5 — Marchés & Consommation         | => Culturel et gasrtronomie 
+# 6 — Restauration collective        | => Restauration collective
+# 7 — Exploitation agricole          | =>
+# 8 — Développement territorial      | => Gouvernance
+# 9 — Qualité alimentaire / Accès    | => Justice sociale
+
+# Education alimentaire ? semble absent
+
+# Tester avec un modèle à une cluster de moins
 
 
 # vecteurs de répartition des axes dans chaque PAT 
 tidy_model_gamma <- tidy(lda_model, matrix = "gamma")
-tidy_model_gamma
+
+# 1 gamma par topic et par texte => cela corresond au % du topic abordé dans chaque texte 
+# probabilité de chaque document d'appartenir à un topic.
 
 # modifier la str de ce doc 
 # => 
+
+tidy_model_gamma <- data.frame(tidy_model_gamma)
+
+tidy_model_gamma_wide <- tidy_model_gamma %>% pivot_wider(
+                               names_from = topic, 
+                               values_from = gamma)
+ 
+
+tidy_model_gamma_wide$document <- gsub("text", "", tidy_model_gamma_wide$document)
+tidy_model_gamma_wide$document <- as.numeric(tidy_model_gamma_wide$document)
+tidy_model_gamma_wide[,c(2:10)] <- 100*round(tidy_model_gamma_wide[,c(2:10)],3)
+
+# pour obtenir des vecteurs de la répartition des 9 clusters (topics) pour chaque PAT
+
+# peut on faire un classfication des PAT selon ces vecteurs ? 
+
+library(FactoMineR)
+
+res.pca <- PCA(tidy_model_gamma_wide, scale.unit = T, quali.sup = 1, ncp = 9)
+res.pca$eig
+
+res.hcpc <- HCPC(res = res.pca, nb.clust = -1, description = T)
+res.hcpc$desc.var
+
+
+#############################################################
+
+# modèle avec 8 clusters 
+
+# modèle
+lda_model_8 <- LDA(stm, k = 8, method = "Gibbs")
+tidy_model_beta_8 <- tidy(lda_model_8, matrix = "beta")
+
+tidy_model_beta_8 %>%
+  group_by(topic) %>%
+  top_n(8, beta) %>%
+  ungroup() %>%
+  arrange(topic, -beta) %>%
+  ggplot(aes(reorder(term, beta), beta, fill = factor(topic))) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~ topic, scales = "free") +
+  scale_fill_viridis_d() + 
+  coord_flip() + 
+  labs(x = "Topic", 
+       y = "beta score", 
+       title = "Topic modeling of PAT description")
+
+# identificaton des clusters / axes 
+
+# 1 — Agro-environnement           | => Environnement ? 
+# 2 — Développement territorial    | => Gouvernance
+# 3 — Marchés locaux               | => Economie Alimentaire 
+# 4 — Production agricole
+# 5 — Alimentation durable         | => Nutrition et santé + Justice sociale 
+# 6 — Ressources & foncier
+# 7 — Restauration collective      | => Restauration collective
+# 8 — Ruralité                     | => Urbanisme 
+
+
+
