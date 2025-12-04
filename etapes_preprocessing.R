@@ -179,7 +179,7 @@ res.lemmat <- left_join(x= res.lemmat, y = lemma3_unique, by = join_by(x$token==
 # on va compléter la base de lemmatisation par nous même 
 res.lemmat.NA <- res.lemmat %>% filter_at(vars(lemma.x,lemma.y,lemma),all_vars(is.na(.)))  # tous les lignes qui ont 100 % de NA sur les 3 colonnes de lemma
 res.lemmat.NAB <- data.frame(x=unique(res.lemmat.NA$token))   # on enregistre que la colonne token  
-# write.csv2(x=res.lemmat.NAB,"lemma_complet.csv",fileEncoding = "latin1") # exportation en CSV 
+# write.csv2(x=res.lemmat.NAB,"data/lemma_complet.csv",fileEncoding = "latin1") # exportation en CSV 
 
 
 
