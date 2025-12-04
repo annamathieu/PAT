@@ -16,8 +16,9 @@ pat2025 <- read.csv("data/pats-20250710-win1252.csv", header = T, sep = ";", fil
 pat2025[pat2025== ""] <- NA # transformation des cases vides en NA
 pat2025$descriptions_libre_des_enjeux_du_territoire_par_le_porteur <- gsub("’", "'", pat2025$descriptions_libre_des_enjeux_du_territoire_par_le_porteur, fixed = TRUE)
 
-#On retire les URL
+#On retire les URL et les sites webs
 pat2025$descriptions_libre_des_enjeux_du_territoire_par_le_porteur <- gsub("https?://\\S+", "", pat2025$descriptions_libre_des_enjeux_du_territoire_par_le_porteur)
+pat2025$descriptions_libre_des_enjeux_du_territoire_par_le_porteur <- gsub("www.\\S+", "", pat2025$descriptions_libre_des_enjeux_du_territoire_par_le_porteur)
 
 
 # df pour desc 
