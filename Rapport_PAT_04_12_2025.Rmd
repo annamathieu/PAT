@@ -701,7 +701,7 @@ head(clust)
 res.hcpc$desc.var
 ```
 
-On représente graphiquement nos PAT selon leur cluster On pourrait ajouter de
+On représente graphiquement nos PAT selon leur cluster. On pourrait ajouter de
 l'information illustrative pour essayer de comprendre cette typologie (si les
 topics ont du sens)
 
@@ -764,9 +764,6 @@ pat_moyen_long %>% ggplot() +
 
 ```
 
-(le set seet ne fonction pas très bien donc les sujets sont bousculés à chaque
-nouveau modèle donc ce graphique n'est pas forcément interprétable en l'état
-mais c'est une idée de résultat que l'on peut obtenir ) : voici ci dessous une
-capture d'écran du même code exécuté *avec les bonnes légendes*
+(le set seed ne fonction pas très bien donc les sujets sont bousculés à chaque nouveau modèle donc ce graphique n'est pas forcément interprétable en l'état mais c'est une idée de résultat que l'on peut obtenir ) : voici ci dessous une capture d'écran du même code exécuté *avec les bonnes légendes*
 
 ![Texte Alternatif](images/prop.jpg)
