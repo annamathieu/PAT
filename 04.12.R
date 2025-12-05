@@ -242,16 +242,95 @@ tidy_model_beta_8 %>%
        y = "beta score", 
        title = "Topic modeling of PAT description")
 
+
 # identificaton des clusters / axes 
 
-# 1 — Agro-environnement           | => Environnement ? 
-# 2 — Développement territorial    | => Gouvernance
-# 3 — Marchés locaux               | => Economie Alimentaire 
-# 4 — Production agricole
-# 5 — Alimentation durable         | => Nutrition et santé + Justice sociale 
-# 6 — Ressources & foncier
-# 7 — Restauration collective      | => Restauration collective
-# 8 — Ruralité                     | => Urbanisme 
+# 1 — Agro-environnement           | => Environnement ?
+# 2 — Ruralité                     | => Urbanisme 
+# 3 — Développement territorial    | => Gouvernance
+# 4 — Alimentation durable         | => Nutrition et santé 
+# 5 — Production agricole
+# 6 — Restauration collective      | => Restauration collective
+# 7 — Economie alimentaire 
+# 8 — Marchés locaux               | => Economie Alimentaire 
+
+# Justice sociale ? Education alimentaire ? 
+
+
+
+#############################################################
+
+# modèle avec 7 clusters 
+
+# modèle
+lda_model_7 <- LDA(stm, k = 7, method = "Gibbs")
+tidy_model_beta_7 <- tidy(lda_model_7, matrix = "beta")
+
+tidy_model_beta_7 %>%
+  group_by(topic) %>%
+  top_n(8, beta) %>%
+  ungroup() %>%
+  arrange(topic, -beta) %>%
+  ggplot(aes(reorder(term, beta), beta, fill = factor(topic))) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~ topic, scales = "free") +
+  scale_fill_viridis_d() + 
+  coord_flip() + 
+  labs(x = "Topic", 
+       y = "beta score", 
+       title = "Topic modeling of PAT description")
+
+
+# 1 - 
+# 2 — Agro-environnement           | => Environnement ?
+# 3 — Production agricole
+# 4 - mix entre Economie alimentaire et restauration collective 
+# 5 — Ruralité                     | => Urbanisme 
+# 6 - Alimentation durable         | => Nutrition et santé 
+# 7 — Développement territorial    | => Gouvernance
+
+
+
+##########################################################
+
+
+
+# modèle avec 10 clusters 
+
+# modèle
+lda_model_10 <- LDA(stm, k = 10, method = "Gibbs")
+tidy_model_beta_10 <- tidy(lda_model_10, matrix = "beta")
+
+tidy_model_beta_10 %>%
+  group_by(topic) %>%
+  top_n(8, beta) %>%
+  ungroup() %>%
+  arrange(topic, -beta) %>%
+  ggplot(aes(reorder(term, beta), beta, fill = factor(topic))) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~ topic, scales = "free") +
+  scale_fill_viridis_d() + 
+  coord_flip() + 
+  labs(x = "Topic", 
+       y = "beta score", 
+       title = "Topic modeling of PAT description")
+
+
+
+
+
+# 1 - Nutrition santé 
+# 2 — Environnement ?
+# 3 — Culture et gastronomie 
+# 4 - Gouvernance 
+# 5 — Resto collective 
+# 6 - Environnement ? 
+# 7 — Ruralité (urbanisme)
+# 8 - Production agricole 
+# 9 - Alimentation durable 
+# 10 - Marchés / Economie Alimentaire 
+
+
 
 
 
