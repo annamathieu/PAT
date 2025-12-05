@@ -181,10 +181,4 @@ pat_moyen_long %>% ggplot() +
   )
 
 
-# Bar plot empilés de y = counts par x = cut,
-# coloré par la variable
-ggplot(df2, aes(x = dose, y = len)) +
-  geom_col(aes(color = supp, fill = supp), position = position_stack()) +
-  scale_color_manual(values = c("#0073C2FF", "#EFC000FF"))+
-  scale_fill_manual(values = c("#0073C2FF", "#EFC000FF"))
 
