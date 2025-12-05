@@ -371,3 +371,402 @@ A la fin nous obtenons un tableau avec 2 colonnes :
 -   le numéro du document
 
 -   les lemmatisation de chaque token de chaque document
+
+# Topic Modelling
+
+On souhaite appliquer un algorithme de topic modelling (ici Latent Dirichlet
+Association) sur les descriptions prétraitées selon la procédure précédemment
+décrite.
+
+On fait l'hypothèse que les description des PAT abordent différents topics, que
+ces topics sont composés de mots, et que chaque description n'est pas composée
+de la même proportion de topics.
+
+A ce stade, on se demande si les topics que l'on peut extraire correspondront
+aux 9 axes thématiques de nos PAT: Gouvernance Économie alimentaire Culturel et
+gastronomie Éducation alimentaire Nutrition et santé Justice sociale
+Environnement Restauration collective Urbanisme
+
+La méthode étant supervisée, il faudra essayer d'optimiser les paramètres de
+l'algorithme (coefficients alpha, beta) ainsi que le nombre de topic (k).
+
+Plus le coefficient alpha est petit, mieux les topics seront séparés, car les
+termes représentatifs de chaque topic seront plus caractéristiques.
+
+```{r, message=F, warning=F}
+library(topicmodels)  # For LDA
+library(tm)          # For DocumentTermMatrix
+library(slam)
+library(ggplot2)
+library(FactoMineR)
+
+```
+
+Il faut créer à partir de notre dataframe res.lemmat un data frame contenant
+trois colonnes : "text", "mot" et "fréquence", contenant la fréquence
+d'apparition de chaque mot dans chaque texte.
+
+```{r}
+# df avec les mots regroupés par fréquence 
+df_lda <- res.lemmat %>%
+  group_by(doc, lem.f) %>%
+  summarise(freq = n(), .groups = 'drop')
+```
+
+Puis on créé 'stm', un objet de la classe 'simple triplet matrix' sur lequel la
+LDA pourra être réalisée.
+
+```{r}
+# Get unique documents and terms
+docs <- unique(df_lda$doc)     # noms des documents
+terms <- unique(df_lda$lem.f)  # liste des termes 
+
+# Create mappings
+doc_to_idx <- setNames(seq_along(docs), docs)
+term_to_idx <- setNames(seq_along(terms), terms)
+
+# Map to indices
+i <- as.integer(doc_to_idx[df_lda$doc])
+j <- as.integer(term_to_idx[df_lda$lem.f])
+v <- as.integer(df_lda$freq)  # integer
+
+# Create simple_triplet_matrix
+stm <- simple_triplet_matrix(
+  i = i, 
+  j = j, 
+  v = v,
+  nrow = length(docs),
+  ncol = length(terms),
+  dimnames = list(docs, terms)
+)
+
+```
+
+```{r}
+set.seed(1234)
+# on fixe la graine 
+```
+
+On créé une fonction qui va réaliser la LDA à partir de k et alpha
+
+```{r}
+lda.fit <- function (k = k, alpha = 50/k) {
+  set.seed(1234)
+  lda_model <- LDA(stm, k = k, method = "Gibbs", control = list(alpha =alpha))
+
+  tidy_model_beta <- tidy(lda_model, matrix = "beta")
+  # coefficients beta
+  # => proba que chaque mot appartienne à un topic (1 des k topics)
+  # Les mots avec le coeff beta le + élevé de chaque topic sont ceux qui participent le + à caractériser chaque topic 
+  
+  plot <- tidy_model_beta %>%
+  group_by(topic) %>%
+  top_n(8, beta) %>%
+  ungroup() %>%
+  arrange(topic, -beta) %>%
+  ggplot(aes(reorder(term, beta), beta, fill = factor(topic))) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~ topic, scales = "free") +
+  scale_fill_viridis_d() + 
+  coord_flip() + 
+  labs(x = "Topic", 
+       y = "beta score", 
+       title = "Topic modeling of PAT description")
+  
+  print(plot)
+}
+```
+
+Voici les quelques tests que nous avons réalisé et les interprétations obtenues
+:
+
+Avec 9 clusters :
+
+```{r}
+axes9 <- lda.fit(k = 9) 
+```
+
+Interprétation : Nous avons essayé de nommer nous mêmes les topics, soit en
+utilisant les axes thématiques (si cela peut correspondre à un axe thématique),
+soit en utilisant des LLM nous fournissant des noms à partir des mots
+caractérisant ces topics.
+
+Pour 9 topics :
+
+-   Restauration collective \| =\> Restauration collective
+
+-   Agriculture & Climat \| =\> Environnement ?
+
+-   Production alimentaire locale \| =\> Economie alimentaire
+
+-   Ruralité \| =\> Urbanisme ?
+
+-   Production agricole \| =\>
+
+-   Développement territorial \| =\> Gouvernance
+
+-   Agroéconomie \| =\> Economie Alimentaire
+
+-   Alimentation durable \| =\> Nutrition et santé ?
+
+-   Qualité alimentaire / Accès \| =\> Justice sociale
+
+Education alimentaire ? semble absent ; aussi Culturel et gastronomie
+
+Nous essayons avec k = 8
+
+```{r}
+axes8 <- lda.fit(k = 8) 
+
+```
+
+identificaton des clusters / axes :
+
+-   Accessibilité / Justice Sociale
+
+-   Restauration collective (+ Nutrition santé + )
+
+-   Ruralité (urbanisme ?) ?
+
+-   Production agricole
+
+-   Climat & Agriculture
+
+-   Gouvernance
+
+-   Economie alimentaie
+
+Education alimentaire ? Culturel et gastronomie ? Nutrition ?
+
+Et avec 7 topics ?
+
+```{r}
+axes7 <- lda.fit(k = 7)
+```
+
+Interprétation des clusters :
+
+-   Production agricole
+
+-   Economie alimentaire
+
+-   mix entre Nutrition santé et Justice Sociale ?
+
+-   Agro-environnement \| =\> Environnement
+
+-   Développement territorial \| =\> Gouvernance
+
+-   Ruralité \| =\> Urbanisme
+
+-   Restauration collective ?
+
+On se demande au final s'il faut garder dans le modèle "alimentaire",
+"alimentation", car ils apparaissent très fréquemment et dans plusieurs thèmes.
+Cela donne une information intéressante que l'on perdrait si on les supprimait :
+exemple, ce thème est lié à une consommation durable (ex : alimentaire
+alimentation local durable) et moins présent quand on parle par exemple de
+climeat ("agricole enjeu climatique ressource..."). Cependant, cela donne un
+fort déséquilibre car ces mots ont une fréquence naturellement forte dans la
+description des PAT.
+
+On essaye avec k = 10
+
+```{r}
+axes10 <- lda.fit(k = 10)
+```
+
+1 - Nutrition santé
+
+2 — Environnement ?
+
+3 — Culture et gastronomie
+
+4 - Gouvernance
+
+5 — Resto collective
+
+6 - Environnement ?
+
+7 — Ruralité (urbanisme)
+
+8 - Production agricole
+
+9 - Alimentation durable
+
+10 - Marchés / Economie Alimentaire
+
+Cette interprétation est difficile et semble très variables des paramètres du
+modèle. Nous avons aussi essayer de faire varier alpha (avec k = 9)
+
+```{r}
+lda.fit(k = 9, alpha = 0)
+```
+
+```{r}
+lda.fit(k = 9, alpha = 0.5)
+```
+
+thèmes identifiés :
+
+-   Gouvernance
+
+-   Ruralité
+
+-   Economie alimentaire
+
+-   Production agricole
+
+-   Filière et circuits locaux
+
+-   Environnement (agriculture durable)
+
+-   Alimentation durable
+
+-   Justice Sociale - Nutrition santé
+
+-   Culturel et gastronomie
+
+```{r}
+lda.fit(k = 9, alpha = 1)
+lda.fit(k = 9, alpha = 2)
+
+```
+
+Pour conclure, on peut dire qu'il n'est pas extrêmement simple d'essayer de
+comprendre les thématiques qui sont abordées dans les descriptions des enjeux
+des PAT, notamment :
+
+\- car certains mots, comme 'alimentaire' 'alimentation' 'territoire' sont très
+fréquents
+
+\- car certains thèmes sont imbriqués (justice sociale et santé par exemple, ou
+restauration collective et santé)
+
+\- certains thèmes sont cependant peu sensibles aux variations de paramètres (ex
+
+:   gouvernance, production agricole, etc)
+
+Un travail d'interprétation est donc nécessaire afin de comprendre combien de
+topics garder, et comment interpréter ceux-ci.
+
+# Jusqu'à une classification ?
+
+On peut essayer d'extraire de notre résultat de topic modelling les vecteurs de
+proportions de chaque topic abordé dans chaque PAT : il s'agit des coefficients
+gamma. Il y a 1 gamma par topic et par texte =\> cela corresond au % du topic
+abordé dans chaque texte et donc la probabilité de chaque document d'appartenir
+à un topic.
+
+On va ensuite essayer de faire une classification des PAT selon ces vecteurs de
+proportion.
+
+```{r}
+model.lda <- LDA(stm, k = 9, method = "Gibbs",  control = list(alpha =0.5))
+tidy_model_gamma<- tidy(model.lda, matrix = "gamma") # on extrait les gamma de ce modèle 
+
+tidy_model_gamma <- data.frame(tidy_model_gamma) # on les transforme en dataframe
+
+tidy_model_gamma_wide <- tidy_model_gamma %>% pivot_wider(
+                               names_from = topic, 
+                               values_from = gamma)
+ 
+
+tidy_model_gamma_wide$document <- gsub("text", "", tidy_model_gamma_wide$document)
+tidy_model_gamma_wide$document <- as.numeric(tidy_model_gamma_wide$document)
+tidy_model_gamma_wide[,c(2:10)] <- 100*round(tidy_model_gamma_wide[,c(2:10)],3)
+
+head(tidy_model_gamma_wide)
+
+```
+
+On réalise ensuite une PCA sur nos vecteurs puis une classification hiérarchique
+ascendante sur les PAT décrits par leurs vecteurs de proportion de chaque topic
+:
+
+```{r}
+res.pca <- PCA(tidy_model_gamma_wide, scale.unit = T, quali.sup = 1, ncp = 3, graph = F)
+# barplot(res.pca$eig[,2]) # scree plot => NCP = 3
+
+plot.PCA(x = res.pca, choix = "ind", invisible = "quali", label = "none")
+
+res.hcpc <- HCPC(res = res.pca, nb.clust = -1, description = T)
+
+clust <- data.frame(cbind(doc = tidy_model_gamma_wide$document, 
+                          res.pca$ind$coord[,1:2],
+                          clust = res.hcpc$data.clust$clust))
+clust$clust <- as.factor(clust$clust)
+
+head(clust)
+
+res.hcpc$desc.var
+```
+
+On représente graphiquement nos PAT selon leur cluster On pourrait ajouter de
+l'information illustrative pour essayer de comprendre cette typologie (si les
+topics ont du sens)
+
+```{r}
+# graph à améliorer 
+clust %>% ggplot() +
+  aes(x = Dim.1, y = Dim.2, group = clust, col = clust) +
+  geom_point() +
+  ggtitle("Typologies des PAT selon leurs description") +
+  theme(
+    title = element_text(size = 14, hjust = 0.5),
+    text = element_text(size = 12)
+  )
+
+```
+
+On essaye de représenter un "PAT" moyen de chaque cluster. Par quel topic est il
+le plus concerné ? Quel topic est moins abordé ? Si les topics ont du sens, ce
+type de représentation nous permettent de comprendre nos PAT à travers les
+thématiques qui qualifient les enjeux liés à leurs territoires.
+
+attention : les set seed ne fonctionnent pas donc les thèmes bougent donc ce
+graph n'a pas les bonnes légendes =\> voir celui plus bas.
+
+```{r}
+tidy_model_gamma_t <- cbind(tidy_model_gamma_wide, clust = clust$clust )
+
+
+pat_moyen <- tidy_model_gamma_t %>% 
+  group_by(clust) %>% 
+  summarize(across(2:10, mean, .names = "mean_{.col}"))
+
+library(tidyr)
+pat_moyen_long <- pivot_longer(
+  data = pat_moyen,
+  cols = 2:10,
+  names_to = c("mean", "topic"),
+  names_sep = "_",
+  values_to = "proportion"
+)
+
+pat_moyen_long %>% ggplot() +
+  aes(x = clust, y = proportion) +
+  geom_col(aes(fill = topic), position = position_stack()) +
+  # scale_color_manual(values = c("green4","blue4","lightgreen","grey","orange2", "purple2","yellow3","green2","pink"))+
+  scale_fill_manual(
+    values = c("yellow2","blue4","lightgreen","grey","orange2", "purple2","yellow3","green2","pink"),
+    labels = c(
+      "Production agricole",
+      "Gouvernance",
+      "Alimentation durable",
+      "Ruralité",
+      "Restauration Collective",
+      "Justice Sociale",
+      "Filières locales",
+      "Environnement",
+      "Nutrition et santé"
+    )
+  )
+
+```
+
+(le set seet ne fonction pas très bien donc les sujets sont bousculés à chaque
+nouveau modèle donc ce graphique n'est pas forcément interprétable en l'état
+mais c'est une idée de résultat que l'on peut obtenir ) : voici ci dessous une
+capture d'écran du même code exécuté *avec les bonnes légendes*
+
+![Texte Alternatif](images/prop.jpg)
