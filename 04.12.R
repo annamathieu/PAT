@@ -97,11 +97,12 @@ stm <- simple_triplet_matrix(
 )
 
 # Fit LDA model
+set.seed(1234)
 lda_model_9 <- LDA(stm, k = 9, method = "Gibbs")
 
 
 
-tidy_model_beta <- tidy(lda_model, matrix = "beta")
+tidy_model_beta <- tidy(lda_model_9, matrix = "beta")
 
 
 # proba que chaque mot soit tiré dans un topic (1 des 9 topics)
@@ -140,23 +141,31 @@ tidy_model_beta %>%
 
 # identification des axes avec 9 axes : 
 
-# 1 — Ruralité                       | => Urbanisme ? 
-# 2 — Alimentation durable           | => Nutrition et santé ? 
+
+# 1 — Restauration collective        | => Restauration collective
+# 2 — Marchés & Consommation         | => Culturel et gasrtronomie 
 # 3 — Agriculture & Climat           | => Environnement ? 
-# 4 — Agroéconomie                   | => Economie Alimentaire 
-# 5 — Marchés & Consommation         | => Culturel et gasrtronomie 
-# 6 — Restauration collective        | => Restauration collective
-# 7 — Exploitation agricole          | =>
-# 8 — Développement territorial      | => Gouvernance
+# 4 — Ruralité                       | => Urbanisme ? 
+# 5 — Exploitation agricole          | =>
+# 6 — Développement territorial      | => Gouvernance
+# 7 — Agroéconomie                   | => Economie Alimentaire 
+# 8 — Alimentation durable           | => Nutrition et santé ? 
 # 9 — Qualité alimentaire / Accès    | => Justice sociale
 
+
+
 # Education alimentaire ? semble absent
+
+
+
+
+
 
 # Tester avec un modèle à une cluster de moins
 
 
 # vecteurs de répartition des axes dans chaque PAT 
-tidy_model_gamma <- tidy(lda_model, matrix = "gamma")
+tidy_model_gamma <- tidy(lda_model_9, matrix = "gamma")
 
 # 1 gamma par topic et par texte => cela corresond au % du topic abordé dans chaque texte 
 # probabilité de chaque document d'appartenir à un topic.
@@ -181,11 +190,34 @@ tidy_model_gamma_wide[,c(2:10)] <- 100*round(tidy_model_gamma_wide[,c(2:10)],3)
 
 library(FactoMineR)
 
-res.pca <- PCA(tidy_model_gamma_wide, scale.unit = T, quali.sup = 1, ncp = 9)
-res.pca$eig
+barplot(res.pca$eig[,2]) # scree plot => NCP = 3
+res.pca <- PCA(tidy_model_gamma_wide, scale.unit = T, quali.sup = 1, ncp = 3, graph = F)
+
+plot.PCA(x = res.pca, choix = "ind", invisible = "quali", label = "none")
 
 res.hcpc <- HCPC(res = res.pca, nb.clust = -1, description = T)
+
+clust <- data.frame(cbind(doc = tidy_model_gamma_wide$document, 
+                          res.pca$ind$coord[,1:2],
+                          clust = res.hcpc$data.clust$clust))
+clust$clust <- as.factor(clust$clust)
+
 res.hcpc$desc.var
+
+
+# graph à améliorer 
+library(ggplot2)
+clust %>% ggplot() +
+  aes(x = Dim.1, y = Dim.2, group = clust, col = clust) +
+  geom_point() +
+    labs(
+    title("Typologies des PAT selon leurs description")) +
+  theme(
+    title = element_text(size = 14, hjust = 0.5),
+    text = element_text(size = 12)
+  )
+
+
 
 
 #############################################################
