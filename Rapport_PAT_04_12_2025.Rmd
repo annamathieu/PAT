@@ -46,7 +46,7 @@ aperçu des thèmes abordés par les descriptions de nos PAT. Un travail de
 pré-traitement des données à donc été réalisé car les données ne sont pas
 utilisables en l'état.
 
-On retrouve par exemple des débuts et des fins de phrases fusionnées (ex: "Zoom
+On trouve par exemple : des débuts et des fins de phrases fusionnées (ex: "Zoom
 sur les filières déficitairesDans le" - PAT du département de la Savoie), des
 mots mal-ortographiés...etc
 
@@ -62,7 +62,7 @@ pat2025[pat2025== ""] <- NA # Transformation des cases vides en NA
 
 # Filtrage des données
 
-Nous avons réalisé plusieurs filtres pour nettoyer nos données
+Nous avons réalisé plusieurs filtres pour nettoyer nos données.
 
 ## Changement des apostrophes
 
@@ -222,7 +222,7 @@ txt_filter1 <- str_replace_all(string=txt, filter1,"")
 #Second filtre
 
 fr_stopwords_2 <- unlist(str_extract_all("plus à ai aie aient aies ait as au aura aurai auraient aurais aurait auras aurez auriez aurions aurons auront aux avaient avais avait avec avez aviez avions avons ayant ayez ayons c ce ceci cela celà ces cet cette d dans de des du elle en es est et étaient étais était étant été étée étées êtes étés étiez étions eu eue eues eûmes eurent eus eusse eussent eusses eussiez eussions eut eût eûtes eux fûmes furent fus fusse fussent fusses fussiez fussions fut fût fûtes ici il ils j je l la le les leur leurs lui m ma mais me même mes moi mon n ne nos notre nous on ont ou par pas pour qu que quel quelle quelles quels qui s sa sans se sera serai seraient serais serait seras serez seriez serions serons seront ses soi soient sois soit sommes son sont soyez soyons suis sur t ta te tes toi ton tu un une vos votre vous y plusieurs d’accord hélas peut-être donc pourtant autour derrière dessous dessus
-devant parmi vers durant pendant depuis afin malgré sauf dès lorsque parce pendant pourquoi dedans loin partout aujourhui aussitôt autrefois avant-hier bientôt d'abord déjà demain en ce moment hier enfin longtemps maintenant quelquefois soudain souvent assez aussi autant davantage presque debout mieux sinon brusquement exactement doucement facilement heureusement lentement sagement seulement tranquillement st où paatfin er ème eme ha km nd aa lys hem", boundary("word")))
+devant parmi vers durant pendant depuis afin malgré sauf dès lorsque parce pendant pourquoi dedans loin partout aujourhui aussitôt autrefois avant-hier bientôt d'abord déjà demain en ce moment hier enfin longtemps maintenant quelquefois soudain souvent assez aussi autant davantage presque debout mieux sinon brusquement exactement doucement facilement heureusement lentement sagement seulement tranquillement st où paatfin er ème eme ha km nd aa lys hem peu fort forts", boundary("word")))
 
 filter2 <- paste0("\\b(", paste(fr_stopwords_2, collapse = "|"), ")\\b")
 txt_filter2 <- str_replace_all(string=txt_filter1, filter2,"") 
@@ -334,10 +334,10 @@ correspond à hash_lemma_fr - lemma.y à lexique382 - lemma à notre base de git
 head(res.lemmat)
 ```
 
-On regardant les lemmatisation proposées, nous avons conclus que lexique382
-était la meilleure base que nous avions, puis hash_lemma_fr et la base trouvée
-sur GitHub. Nous avons donc réalisé une fonction pour fusionner en prenant en
-compte cet ordre de priorité
+En regardant les lemmatisation proposées, nous avons conclus que lexique382
+était la meilleure base que nous avions, puis hash_lemma_fr et enfin la base
+trouvée sur GitHub. Nous avons donc réalisé une fonction pour fusionner en
+prenant en compte cet ordre de priorité.
 
 ```{r}
 
@@ -365,3 +365,9 @@ tri.reslemmat <- function(base) {
 
 res.lemmat <- tri.reslemmat(base = res.lemmat)
 ```
+
+A la fin nous obtenons un tableau avec 2 colonnes :
+
+-   le numéro du document
+
+-   les lemmatisation de chaque token de chaque document
