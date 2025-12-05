@@ -46,7 +46,7 @@ aperçu des thèmes abordés par les descriptions de nos PAT. Un travail de
 pré-traitement des données à donc été réalisé car les données ne sont pas
 utilisables en l'état.
 
-On retrouve par exemple des débuts et des fins de phrases fusionnées (ex: "Zoom
+On trouve par exemple : des débuts et des fins de phrases fusionnées (ex: "Zoom
 sur les filières déficitairesDans le" - PAT du département de la Savoie), des
 mots mal-ortographiés...etc
 
@@ -62,7 +62,7 @@ pat2025[pat2025== ""] <- NA # Transformation des cases vides en NA
 
 # Filtrage des données
 
-Nous avons réalisé plusieurs filtres pour nettoyer nos données
+Nous avons réalisé plusieurs filtres pour nettoyer nos données.
 
 ## Changement des apostrophes
 
@@ -330,10 +330,10 @@ correspond à hash_lemma_fr - lemma.y à lexique382 - lemma à notre base de git
 head(res.lemmat)
 ```
 
-On regardant les lemmatisation proposées, nous avons conclus que lexique382
-était la meilleure base que nous avions, puis hash_lemma_fr et la base trouvée
-sur GitHub. Nous avons donc réalisé une fonction pour fusionner en prenant en
-compte cet ordre de priorité
+En regardant les lemmatisation proposées, nous avons conclus que lexique382
+était la meilleure base que nous avions, puis hash_lemma_fr et enfin la base
+trouvée sur GitHub. Nous avons donc réalisé une fonction pour fusionner en
+prenant en compte cet ordre de priorité.
 
 ```{r}
 
@@ -361,3 +361,9 @@ tri.reslemmat <- function(base) {
 
 res.lemmat <- tri.reslemmat(base = res.lemmat)
 ```
+
+A la fin nous obtenons un tableau avec 2 colonnes :
+
+-   le numéro du document
+
+-   les lemmatisation de chaque token de chaque document
