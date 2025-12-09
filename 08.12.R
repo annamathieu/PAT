@@ -102,7 +102,8 @@ topic.extraction <- function(topic_model) {
   liste_mots <- rbind(frex,beta)
   colnames(liste_mots) <- paste0("topic",seq(from=1,to=9))
   
-  list <- sapply(res, paste, collapse = " ")
+  list <- sapply(liste_mots, paste, collapse = " ")
+  list <- str_split(list, pattern = " ")
   
   return (list)
   
@@ -135,7 +136,15 @@ plot(mod.corr)
 
 
 
+###########################################
 
+# test nb de topics
+
+stm.search <- searchK(documents = documents,
+                      vocab = vocab,
+                      K = 2:30,
+                      init.type = "LDA")
+plot(stm.search)
 
 
 
