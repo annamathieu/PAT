@@ -52,6 +52,9 @@ out <- prepDocuments(documents, vocab,
 documents <- out$documents
 vocab <- out$vocab
 
+save(documents, file = "documents.RData")
+save(vocab, file = "vocab.RData")
+
 ###########################################################
 # STM 
 # topic_model<-stm(documents, 
