@@ -170,6 +170,7 @@ On supprime les apostrophes.
 txt <- str_replace_all(txt, c("l'"="","d'"="","l’" = "", "d’" = "")) # suppression des apostrophes
 
 ```
+
 ## Filtres des gentilés
 
 ```{r}
@@ -794,6 +795,15 @@ pat_moyen_long %>% ggplot() +
 
 ```
 
-(le set seed ne fonction pas très bien donc les sujets sont bousculés à chaque nouveau modèle donc ce graphique n'est pas forcément interprétable en l'état mais c'est une idée de résultat que l'on peut obtenir ) : voici ci dessous une capture d'écran du même code exécuté *avec les bonnes légendes*
+(le set seed ne fonction pas très bien donc les sujets sont bousculés à chaque
+nouveau modèle donc ce graphique n'est pas forcément interprétable en l'état
+mais c'est une idée de résultat que l'on peut obtenir ) : voici ci dessous une
+capture d'écran du même code exécuté *avec les bonnes légendes*
 
 ![Texte Alternatif](images/prop.jpg)
+
+```{r}
+# sauver le res.lemmat dans l'environnement 
+save(res.lemmat, file = "res.lemmat.RData")
+
+```
