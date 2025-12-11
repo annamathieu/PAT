@@ -52,14 +52,17 @@ out <- prepDocuments(documents, vocab,
 documents <- out$documents
 vocab <- out$vocab
 
+save(documents, file = "documents.RData")
+save(vocab, file = "vocab.RData")
+
 ###########################################################
 # STM 
-topic_model<-stm(documents, 
-                 vocab,
-                 K=9, verbose=FALSE, init.type = "LDA", 
-                 seed = 1245)
-
-summary(topic_model)
+# topic_model<-stm(documents, 
+#                  vocab,
+#                  K=9, verbose=FALSE, init.type = "LDA", 
+#                  seed = 1245)
+# 
+# summary(topic_model)
 
 
 
@@ -109,30 +112,30 @@ topic.extraction <- function(topic_model) {
   
 }
 
-res = topic.extraction(topic_model)
-res
+# res = topic.extraction(topic_model)
+# res
 
 
 
-
-
-install.packages('clue')
-clue::solve_LSAP
-
-plot.STM(topic_model, type = "hist", 
-         labeltype = "frex")
-
-cloud(topic_model)
-
-plot(topic_model, type = "perspectives", topics = c(4, 8))
-
-plot.topicCorr(topic_model)
-
-findThoughts(topic_model)
-
-
-mod.corr <- topicCorr(topic_model)
-plot(mod.corr)
+# 
+# 
+# install.packages('clue')
+# clue::solve_LSAP
+# 
+# plot.STM(topic_model, type = "hist", 
+#          labeltype = "frex")
+# 
+# cloud(topic_model)
+# 
+# plot(topic_model, type = "perspectives", topics = c(4, 8))
+# 
+# plot.topicCorr(topic_model)
+# 
+# findThoughts(topic_model)
+# 
+# 
+# mod.corr <- topicCorr(topic_model)
+# plot(mod.corr)
 
 
 
@@ -140,12 +143,11 @@ plot(mod.corr)
 
 # test nb de topics
 
-stm.search <- searchK(documents = documents,
-                      vocab = vocab,
-                      K = 2:30,
-                      init.type = "LDA")
-plot(stm.search)
-
+# stm.search <- searchK(documents = documents,
+#                       vocab = vocab,
+#                       K = 2:30,
+#                       init.type = "LDA")
+# plot(stm.search)
 
 
 
