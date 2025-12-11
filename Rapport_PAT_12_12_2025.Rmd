@@ -1,0 +1,139 @@
+---
+title: "Bilan analyse textuel - LDA - Projet PAT"
+author: "Erwan Gouhier, Anna Mathieu"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 3
+    number_sections: true
+    toc_float: true
+    self_contained: true
+    df_print: paged
+    highlight: tango
+    tabset: true
+editor_options: 
+  markdown: 
+    wrap: 80
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r packages, include=F}
+library(topicmodels)
+library(tidytext)
+library(stringr)
+library(quanteda)
+library(udpipe)
+library(tidyverse)
+library(dplyr)
+library(remotes)
+library(readxl)
+
+library(FactoMineR)
+library(Factoshiny)
+library(ggplot2)
+library(ggrepel)
+library(RColorBrewer)
+library(plotly)
+library(tidyr)
+
+library(stm)
+```
+
+
+
+# Objectifs : 
+- Nous essayons de déterminer le nombre optimal de topic à retenir, k, notre principal hyperparamètre.
+- Nous essayons d'obtenir des formes fortes de notre topic modelling pour consolider nos topics à travers les termes qui les caractérisent
+
+
+# nombre optimal de topics
+
+# consolidation de la LDA 
+
+Nous avions des soucis avec la LDA la semaine dernière liés à la reproductibilité (seed non fixés) et liés aux métriques d'évaluation des topics. La fonction utilisée ne permettait pas de récupérer plus que les coefficients beta (et les mots ayant le coeff beta le plus élevé pour chaque topic). 
+
+La fonction *stm* permet de fixer une seed et de récupérer plus de métriques, comme nous allons le développer plus tard. 
+
+La préparation des données est légèrement différentes, il faut préparer le vocabulaire (ensemble de tous les mots) ainsi que les documents (noms des documents => n° des PAT).
+
+```{r}
+# Préparation des documents
+
+# Importation de res lemmat (voir Rapport du 04-12-25)
+load(file = "res.lemmat.RData")
+
+# step 1 : Create the Vocabulary
+vocab <- unique(res.lemmat$lem.f) # => liste unique de mots 
+head(vocab)
+
+# step 2 :  Create a Word-to-Index Mapping
+# on va associer les numéros des mots dans le vocabulaire  (chaque mot prend un numero)
+word_to_idx <- setNames(seq_along(vocab), vocab)
+head(word_to_idx)
+
+# Step 3: Count Word Occurrences per Document
+# Group by document and count occurrences of each word
+doc_word_counts <- res.lemmat %>%
+  group_by(doc, lem.f) %>%
+  summarise(count = n(), .groups = 'drop')
+# we count the frequency of each word in each document 
+head(doc_word_counts)
+
+# step4 4 : create document list 
+# Get unique documents in order => liste des documents 
+unique_docs <- unique(res.lemmat$doc)
+head(unique_docs)  # correspondent aux lignes de la BDD qui ont une description (ex : la n°3 n'en a pas)
+
+# Create the documents list
+documents <- lapply(unique_docs, function(current_doc) {
+  # Filter words for this document
+  words_in_doc <- doc_word_counts %>%
+    filter(doc == current_doc)
+  
+  # Convert words to indices
+  indices <- as.integer(word_to_idx[words_in_doc$lem.f])
+  counts <- as.integer(words_in_doc$count)
+  
+  # Create 2-row matrix: row 1 = indices, row 2 = counts
+  matrix(c(indices, counts), nrow = 2, byrow = TRUE)
+})
+# on va créer une liste qui contient autant d'éléménts qu'il n'y a de textes, dans chaque élément, il y a les identifiants des mots qui sont cités dans le vocabulaire (le n° du mot ) et sa fréquence d'apparition dans ce texte
+
+# Name the documents (optional but recommended)
+names(documents) <- unique_docs
+
+documents[[1]][1,1] # le premier mot du text 1 (par ordre alphabetique) est le numéro 135
+vocab[135]
+documents[[1]][2,1] # il apparait une seule fois dans ce doc 
+
+
+# Step 5 : prep with prep documents
+out <- prepDocuments(documents, vocab, 
+                     lower.thresh = 1,  # remove words appearing in only 1 doc
+                     upper.thresh = Inf)
+
+documents <- out$documents
+vocab <- out$vocab
+
+save(documents, file = "documents.RData")
+save(vocab, file = "vocab.RData")
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
