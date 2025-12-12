@@ -124,10 +124,73 @@ save(vocab, file = "vocab.RData")
 
 ```
 
+On va ensuite créer une fonction qui créé le modèle de topic modelling avec la fonction stm.
+
+```{r}
+lda.model <- function(k, seed) {
+  topic_model<-stm(documents, 
+                   vocab,
+                   K=k, verbose=FALSE, init.type = "LDA", 
+                   seed = seed)
+  
+  return(topic_model)
+}
+```
 
 
+Exemple de fonctionnement de la fonction et des sorties : 
+```{r}
+modeltest <- lda.model(k = 9, seed = 1234)
+summary(modeltest)
+
+```
+On récupère les 7 mots qui ont les scores les plus élevés par TOPIC pour les métriques suivantes : 
+- coefficients beta : rappel => probabilité d'appartenance d'un terme dans un topic 
+- FREX : indice de fréquence exclusivité => moyenne harmonique pondérée dans laquelle le rang du mot est une combinaison de sa fréquence et de son exclusivité. La formule est : 
+
+$$\mathrm{FREX}_{k,v}
+= \left(
+    \frac{\omega}{\mathrm{ECDF}\!\left( \beta_{k,v} / \sum_{j=1}^{K} \beta_{j,v} \right)}
+    +
+    \frac{1-\omega}{\mathrm{ECDF}\!\left( \beta_{k,v} \right)}
+\right)^{-1}
+ $$
+ avec : 
+ 
+ - k : le topic
+ - v : le mot
+ - w : poids associé à l'exclusivité => 1er terme
+ - ECDF : fonction de répartition empirique appliquéeà un mot dans son thème 
+ 
+ Cet indice met l'accent sur des mots typiques et plus exclusifs des thèmes. La fréquence de certains termes très génériques présents dans le corpus et qui se retrouvent dans de nombreux thèmes (alimentaire, alimentation, territoire) 
+
+(source : )
+- Lift : 
+- Score : 
+
+On va ensuite créer une fonction qui va récupérer les mots qui caractérisent le plus nos topics extraits. 
+
+=> il faut donc choisir les métriques qui nous intéressent : 
 
 
+```{r}
+topic.extraction <- function(topic_model) {
+  
+  # récupérer les mots avec les indices FREX (Fréquence exclusivité) les plus forts 
+  frex <- data.frame(t(summary(topic_model)$frex))
+  
+  beta <-  data.frame(t(summary(topic_model)$prob))
+  
+  # créer liste_mots
+  liste_mots <- rbind(frex,beta)
+  colnames(liste_mots) <- paste0("topic",seq(from=1,to=9))
+  
+  list <- sapply(liste_mots, paste, collapse = " ")
+  list <- str_split(list, pattern = " ")
+  
+  return (list)
+}
+```
 
 
 
