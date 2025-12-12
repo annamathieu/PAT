@@ -50,9 +50,6 @@ library(stm)
 -   Nous essayons d'obtenir des formes fortes de notre topic modelling pour
     consolider nos topics à travers les termes qui les caractérisent
 
-# nombre optimal de topics
-
-# consolidation de la LDA
 
 Nous avions des soucis avec la LDA la semaine dernière liés à la
 reproductibilité (seed non fixés) et liés aux métriques d'évaluation des topics.
@@ -67,7 +64,7 @@ vocabulaire (ensemble de tous les mots) ainsi que les documents (noms des
 documents =\> n° des PAT).
 
 
-## Préparation 
+# Préparation 
 ```{r}
 # Préparation des documents
 
@@ -132,7 +129,7 @@ save(vocab, file = "vocab.RData")
 
 ```
 
-## Modèle et métriques
+# Modèle et métriques
 
 On va ensuite créer une fonction qui créé le modèle de topic modelling avec la
 fonction stm.
@@ -164,6 +161,7 @@ stm <- load(file="stm.RData")
 
 
 ```{r}
+# install.packages("topicdoc")
 library(topicdoc)
 library(tidyverse)
 
@@ -195,11 +193,6 @@ coherence %>% ggplot(aes(x=k,y=min_coherence)) +
 ```
 
 
-
-
-
-
-
 On récupère les 7 mots qui ont les scores les plus élevés par TOPIC pour les
 métriques suivantes : - coefficients beta : rappel =\> probabilité
 d'appartenance d'un terme dans un topic - FREX : indice de fréquence exclusivité
@@ -226,9 +219,7 @@ Cet indice met l'accent sur des mots typiques et plus exclusifs des thèmes. La
 fréquence de certains termes très génériques présents dans le corpus et qui se
 retrouvent dans de nombreux thèmes (alimentaire, alimentation, territoire). Les
 mots avec le score le plus élevé sont ceux qui sont à la fois assez fréquents et
-à la fois assez exclusifs à un thème.
-
-[Bischof et al, 2012](https://icml.cc/2012/papers/113.pdf)
+à la fois assez exclusifs à un thème [Bischof et al, 2012](https://icml.cc/2012/papers/113.pdf)
 
 On va ensuite créer une fonction qui va récupérer les mots qui caractérisent le
 plus nos topics extraits.
@@ -259,7 +250,7 @@ Extraction des termes de chaque thème avec Beta et frex et montrer que frex est
 # On utilise NaileR pour faire une extraction automatique de nos variables latentes
 library(NaileR)
 
-
+# à faire plus tard
 
 # avec FREX
 
@@ -269,7 +260,7 @@ library(NaileR)
 
 
 
-## Méthodologie 
+# Méthodologie 
 
 On va ensuite essayer de créer des "formes fortes" , en réalisant de nombreuses fois la LDA, puis en supprimant les mots les moins fréquents (n'apparaissant par exemple que dans un seul topic d'une seule LDA), et en regardant comment les mêmes mots s'associent de la même façon ensemble avec plusieurs itérations de l'algorithme. Les mots ne sont pas mis dans le même topic à chaque LDA, donc le 'topic 1' de la 'lda1' n'est pas le même que le 'topic1' de la 'lda2' mais s'il y a une stabilité dans les thèmes alors les mêmes mots se retrouveront dans les mêmes topics, et l'on s'intéresse justement aux termes qui composent ces topics (= la variable latente à nommer) plutôt qu'aux topics (1, 2, ... etc) en eux-mêmes. 
 
@@ -282,9 +273,9 @@ Nous avons aussi essayé de conserver tous les mots dans l'espace latent final, 
 
 Nous réalisons n = 10 LDA que nous lançons à partir d'une seed aléatoire (que ici nous fixerons pour que les résultats soient exactement identiques). 
 
-## Réalisation 
+# Réalisation 
 
-### Initialisation aléatoire et hyperparamètres 
+## Initialisation aléatoire et hyperparamètres 
 
 ```{r}
 seeds = sample(1:9999, 10, replace = F)
@@ -296,7 +287,7 @@ nb_lda = length(seeds) # nb de lda
 ```
 
 
-### Création des modèles 
+## Création des modèles 
 ```{r}
 # model1 <- lda.model(k = k, seed = seeds[1])
 # model2 <- lda.model(k = k, seed = seeds[2])
@@ -317,7 +308,7 @@ load("modeles.RData")
 
 
 
-### Extraction des termes 
+## Extraction des termes 
 ```{r}
 words1 <- topic.extraction(model1)
 words2 <- topic.extraction(model2)
@@ -411,7 +402,9 @@ dim(mfa.df.final)
 
 On va ensuite comparer deux méthodes pour l'obtention des formes fortes : un AFM avec autant de groupes de variables que de nb.lda et pour chaque groupe autant de variables que de k, et une AFC avec une transformation des fréquences en modalités, et autant de variables de termes uniques dans le vocabulaire.
 
-### AFM
+## AFM
+
+L'AFM est une analyse dimensionnelle qui permet d'imposer une structure sur les variables, ce qui est nécessaire ici car chaque topic n'a de sens qu'au sein d'une exécution de la LDA, et les mots peuvent être parfois partagés au sein d'une lda ou entre topics de plusieurs LDA.
 
 ```{r}
 res.mfa <- MFA(base = mfa.df.final, 
@@ -546,7 +539,7 @@ identification des variables latentes avec LLM :
 5. Filières Agricoles et Circuits de Distribution
 6. Structures et Dynamiques Agricoles
 
-### Test AFM quali
+## Test AFM quali
 
 Nous avons aussi essayé une AFM avec comme classe de variable 'n' => catégorielle.
 
@@ -564,7 +557,7 @@ res.fma.q <- MFA(base = afm.quali,
 
 Il semblerait difficile d'identifier des formes fortes car en utilisant un type catégorielle, les mots '...' , ... tirent fortement les axes donc cette méthode ne permet pas de consolider notre LDA.
 
-### AFC
+## AFC
 
 ```{r}
 afc.df <- data.frame(t(mfa.df.final))
@@ -594,7 +587,7 @@ Si on fait une classification issue du résultat de l'AFC, il semblerait que les
 ```
 
 
-## Conclusion 
+# Conclusion 
 
 Il semble intéressant d'utiliser des analyses factorielles pour consolider nos topic modellings et obtenir des formes fortes de nos topics. Après avoir lancé cet algorithme en faisant varier beaucoup les paramètres, on a pu observer une relative sensabilité à la modification de la stop_words liste des mots, ainsi évidemment qu'au paramètre k, ainsi que des topics très "forts" toujours retrouvés et composés des mêmes termes. 
 
