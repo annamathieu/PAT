@@ -87,6 +87,7 @@ lda.model <- function(k, seed) {
 
 
 
+
 topic.extraction <- function(topic_model) {
   
   # Faire tourner l'algo plusieurs fois => associer les thèmes ensemble pour les rendre + robustes ... ? 
@@ -148,6 +149,41 @@ topic.extraction <- function(topic_model) {
 #                       K = 2:30,
 #                       init.type = "LDA")
 # plot(stm.search)
+
+
+###############################################
+
+# test avec que FREX
+
+topic.extraction2 <- function(topic_model) {
+  
+  # Faire tourner l'algo plusieurs fois => associer les thèmes ensemble pour les rendre + robustes ... ? 
+  # ???
+  
+  # récupérer les mots avec les indices FREX (Fréquence exclusivité) les plus forts 
+  frex <- data.frame(t(summary(topic_model)$frex))
+  
+  colnames(frex) <- paste0("topic",seq(from=1,to=9))
+  
+  list <- sapply(frex, paste, collapse = " ")
+  list <- str_split(list, pattern = " ")
+  
+  return (list)
+  
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
