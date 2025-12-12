@@ -164,6 +164,7 @@ stm <- load(file="stm.RData")
 # install.packages("topicdoc")
 library(topicdoc)
 library(tidyverse)
+load(file = 'stm.RData')
 
 #Fonction visant à produir un graph montrant la cohérence moyenne des topicss proposé à la sortie d'une LDA entre 2 valeurs du nombre de topics
 # nstart : nombre de topics minimum
@@ -194,8 +195,10 @@ coherence %>% ggplot(aes(x=k,y=min_coherence)) +
 
 
 On récupère les 7 mots qui ont les scores les plus élevés par TOPIC pour les
-métriques suivantes : - coefficients beta : rappel =\> probabilité
-d'appartenance d'un terme dans un topic - FREX : indice de fréquence exclusivité
+métriques suivantes : 
+- coefficients beta : rappel => probabilité d'appartenance d'un terme dans un topic 
+
+- FREX : indice de fréquence exclusivité
 =\> moyenne harmonique pondérée dans laquelle le rang du mot est une combinaison
 de sa fréquence et de son exclusivité. La formule est :
 
