@@ -18,7 +18,7 @@ editor_options:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
 ```
 
 ```{r packages, include=F}
@@ -371,13 +371,13 @@ res.mfa <- MFA(base = mfa.df.final,
               group = rep(k,nb_lda),
               type = rep("f",nb_lda), 
               name.group = paste0("lda",seq(1:nb_lda)),
-              graph = F
+              graph = FALSE
               )
 
 # on affiche le scree plot pour choisir le nombre de composantes à conserver
 
 barplot(res.mfa$eig[1:40,2])
-# on retient 4 composantes
+# on retient 5 composantes
 
 res.mfa <- MFA(base = mfa.df.final, 
               group = rep(k,nb_lda),
@@ -390,38 +390,32 @@ res.mfa <- MFA(base = mfa.df.final,
 
 On réalise ensuite une classification hierarchique de nos individus (mots). 
 ```{r}
-res.hcpc <- HCPC(res = res.mfa, nb.clust = -1) # nb optimal de classes
-
+clustopt <- HCPC(res = res.mfa, nb.clust = -1) # nb optimal de classes
+# 6 = nb optimal de classes
 ```
 
 On regarde le nombre optimal de clusters, les mots qui les composent et on essaye d'optimiser ce nombre de clusters.
 ```{r}
-res.hcpc <- HCPC(res = res.mfa, nb.clust = 7)
-res.hcpc <- HCPC(res = res.mfa, nb.clust = 8)
+clust7<- HCPC(res = res.mfa, nb.clust = 7, graph = FALSE)
+clust8<- HCPC(res = res.mfa, nb.clust = 8, graph = F)
 ```
 
-On choisit le nombre de clusters retenus
-```{r}
-# création du jdd contenant les mots, leurs coordonnées sur les dimensions 1 et 2 ainsi que leur topic
-clust <- data.frame(cbind(word = rownames(mfa.df.final),
+Quel nombre de cluster a le plus de sens ?
+```{r, fig.width=8, fig.height=5}
+plot_clust <- function(res.hcpc){
+  
+  clust <- data.frame(cbind(word = rownames(mfa.df.final),
                            clust = res.hcpc$data.clust$clust, 
                            dim1 = res.mfa$ind$coord[,1], 
                            dim2 = res.mfa$ind$coord[,2]))
 
-str(clust)
-clust$clust <- as.factor(clust$clust)
-clust$word <- as.factor((clust$word))
-clust$dim1 <- as.numeric(clust$dim1)
-clust$dim2 <- as.numeric(clust$dim2)
-
-head(clust)
-```
-
-
-et on affiche ces différents clusters : 
-
-```{r}
-plotk9c7f2 <- plot_ly(
+  str(clust)
+  clust$clust <- as.factor(clust$clust)
+  clust$word <- as.factor((clust$word))
+  clust$dim1 <- as.numeric(clust$dim1)
+  clust$dim2 <- as.numeric(clust$dim2)
+  
+  plot <- plot_ly(
   data = clust,
   x = ~dim1,
   y = ~dim2,
@@ -430,7 +424,7 @@ plotk9c7f2 <- plot_ly(
   color = ~factor(clust),
   text = ~word,       # nom de ta colonne contenant les mots
   textposition = "top center",
-  marker = list(size = 9),
+  marker = list(size = 7),
   hoverinfo = "text"
 ) %>%
   layout(
@@ -447,6 +441,40 @@ plotk9c7f2 <- plot_ly(
     ),
     legend = list(title = list(text = "Cluster"))
   )
+  
+  print(plot)
+}
+```
+
+
+
+```{r}
+# nombre optimal 
+plot_clust(clustopt)
+plot_clust(clust7)
+plot_clust(clust8)
+```
+
+On choisit le nombre de clusters retenus :
+```{r}
+res.hcpc <- HCPC(res = res.mfa, nb.clust = 6)
+```
+
+et on extrait les coordonnées des individus et leur appartenance à un cluster : 
+```{r}
+# création du jdd contenant les mots, leurs coordonnées sur les dimensions 1 et 2 ainsi que leur topic
+clust <- data.frame(cbind(word = rownames(mfa.df.final),
+                           clust = res.hcpc$data.clust$clust, 
+                           dim1 = res.mfa$ind$coord[,1], 
+                           dim2 = res.mfa$ind$coord[,2]))
+
+str(clust)
+clust$clust <- as.factor(clust$clust)
+clust$word <- as.factor((clust$word))
+clust$dim1 <- as.numeric(clust$dim1)
+clust$dim2 <- as.numeric(clust$dim2)
+
+head(clust)
 ```
 
 
@@ -468,7 +496,7 @@ Nous avons aussi essayé une AFM avec comme classe de variable 'n' => catégorie
 ```{r}
 afm.quali <- data.frame(lapply(mfa.df.final, FUN = as.factor ))
 rownames(afm.quali) <- rownames(mfa.df.final)
-str(afm.quali)
+str(head(afm.quali))
 
 res.fma.q <- MFA(base = afm.quali, 
                  group = rep(k,nb_lda),
@@ -483,11 +511,13 @@ Il semblerait difficile d'identifier des formes fortes car en utilisant un type 
 
 ```{r}
 afc.df <- data.frame(t(mfa.df.final))
-str(afc.df)
+str(head(afc.df))
 
 res.afc <- CA(afc.df)
 
 plot.CA(res.afc, invisible = "row")
+
+hcpc.afc <- HCPC(res.afc, nb.clust = -1)
 ```
 
 
