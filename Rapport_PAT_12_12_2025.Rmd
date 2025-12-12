@@ -496,7 +496,7 @@ Nous avons aussi essayé une AFM avec comme classe de variable 'n' => catégorie
 ```{r}
 afm.quali <- data.frame(lapply(mfa.df.final, FUN = as.factor ))
 rownames(afm.quali) <- rownames(mfa.df.final)
-str(head(afm.quali))
+# str(head(afm.quali))
 
 res.fma.q <- MFA(base = afm.quali, 
                  group = rep(k,nb_lda),
@@ -511,7 +511,7 @@ Il semblerait difficile d'identifier des formes fortes car en utilisant un type 
 
 ```{r}
 afc.df <- data.frame(t(mfa.df.final))
-str(head(afc.df))
+# str(head(afc.df))
 
 res.afc <- CA(afc.df)
 
