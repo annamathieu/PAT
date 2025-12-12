@@ -156,6 +156,50 @@ summary(modeltest)
 
 ```
 
+Une première méthode à laquelle nous avons pensé consistait à afficher un graphique à la manière des valeurs propres en ACP pour décider du nombre de topics que l'on choisit pour notre LDA. On a créé une fonction qui prend en compte 2 arguments (nstart et nend), qui correspondent aux valeurs minimum et maximum du nombre de topics qu'on fixe dans notre LDA, la fonction teste pour toutes les valeurs de k comprises dans cet intervalle.
+```{r}
+#On charge le simple triplet matrix que nous avions fait dans le rapport du 04-12
+stm <- load(file="stm.RData")
+```
+
+
+```{r}
+library(topicdoc)
+library(tidyverse)
+
+#Fonction visant à produir un graph montrant la cohérence moyenne des topicss proposé à la sortie d'une LDA entre 2 valeurs du nombre de topics
+# nstart : nombre de topics minimum
+# nend : nombre de topics maximum
+# La fonction a un pas de 1 pour les valeurs de k, il est donc recommandé de ne pas mettre des valeurs trop éloignées 
+
+coherence_graph <- function(nstart,nend){
+  L <- as.data.frame(matrix(nrow=nend-nstart+1,ncol=2))
+  colnames(L) <- c("k","min_coherence")
+  L$k <- nstart:nend
+  
+  for (k_topic in nstart:nend){
+    lda_model <- LDA(stm, k = k_topic, method = "Gibbs",
+                     control = list(seed = as.integer(800)))
+    
+    L$min_coherence[k_topic-nstart+1] <- min(topic_coherence(lda_model,stm))
+  }
+  return(L)
+}
+
+coherence <- coherence_graph(2,5)
+
+coherence %>% ggplot(aes(x=k,y=min_coherence)) +
+    geom_line() +
+    geom_point() +
+  ggtitle("Cohérence moyenne des topics en fonction du nombre de topics")
+```
+
+
+
+
+
+
+
 On récupère les 7 mots qui ont les scores les plus élevés par TOPIC pour les
 métriques suivantes : - coefficients beta : rappel =\> probabilité
 d'appartenance d'un terme dans un topic - FREX : indice de fréquence exclusivité

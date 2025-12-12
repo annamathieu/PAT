@@ -187,7 +187,7 @@ txt <- str_replace_all(string=txt,gentile,"")
 #On récupère le nom des gentilés des départements
 
 gentile <- read.delim("data/gentiles_departements.txt",sep=";",header=FALSE)
-gentile <- unlist(tolower(gentile[,2]))
+gentile <- unlist(str_squish(tolower(gentile[,2])))
 gentile <- paste0("\\b(", paste(gentile, collapse = "|"), ")\\b")
 
 txt <- str_replace_all(string=txt,gentile,"")
