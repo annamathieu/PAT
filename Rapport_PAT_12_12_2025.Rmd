@@ -43,23 +43,31 @@ library(tidyr)
 library(stm)
 ```
 
+# Objectifs :
 
-
-# Objectifs : 
-- Nous essayons de déterminer le nombre optimal de topic à retenir, k, notre principal hyperparamètre.
-- Nous essayons d'obtenir des formes fortes de notre topic modelling pour consolider nos topics à travers les termes qui les caractérisent
-
+-   Nous essayons de déterminer le nombre optimal de topic à retenir, k, notre
+    principal hyperparamètre.
+-   Nous essayons d'obtenir des formes fortes de notre topic modelling pour
+    consolider nos topics à travers les termes qui les caractérisent
 
 # nombre optimal de topics
 
-# consolidation de la LDA 
+# consolidation de la LDA
 
-Nous avions des soucis avec la LDA la semaine dernière liés à la reproductibilité (seed non fixés) et liés aux métriques d'évaluation des topics. La fonction utilisée ne permettait pas de récupérer plus que les coefficients beta (et les mots ayant le coeff beta le plus élevé pour chaque topic). 
+Nous avions des soucis avec la LDA la semaine dernière liés à la
+reproductibilité (seed non fixés) et liés aux métriques d'évaluation des topics.
+La fonction utilisée ne permettait pas de récupérer plus que les coefficients
+beta (et les mots ayant le coeff beta le plus élevé pour chaque topic).
 
-La fonction *stm* permet de fixer une seed et de récupérer plus de métriques, comme nous allons le développer plus tard. 
+La fonction *stm* permet de fixer une seed et de récupérer plus de métriques,
+comme nous allons le développer plus tard.
 
-La préparation des données est légèrement différentes, il faut préparer le vocabulaire (ensemble de tous les mots) ainsi que les documents (noms des documents => n° des PAT).
+La préparation des données est légèrement différentes, il faut préparer le
+vocabulaire (ensemble de tous les mots) ainsi que les documents (noms des
+documents =\> n° des PAT).
 
+
+## Préparation 
 ```{r}
 # Préparation des documents
 
@@ -124,7 +132,10 @@ save(vocab, file = "vocab.RData")
 
 ```
 
-On va ensuite créer une fonction qui créé le modèle de topic modelling avec la fonction stm.
+## Modèle et métriques
+
+On va ensuite créer une fonction qui créé le modèle de topic modelling avec la
+fonction stm.
 
 ```{r}
 lda.model <- function(k, seed) {
@@ -137,41 +148,48 @@ lda.model <- function(k, seed) {
 }
 ```
 
+Exemple de fonctionnement de la fonction et des sorties :
 
-Exemple de fonctionnement de la fonction et des sorties : 
 ```{r}
 modeltest <- lda.model(k = 9, seed = 1234)
 summary(modeltest)
 
 ```
-On récupère les 7 mots qui ont les scores les plus élevés par TOPIC pour les métriques suivantes : 
-- coefficients beta : rappel => probabilité d'appartenance d'un terme dans un topic 
-- FREX : indice de fréquence exclusivité => moyenne harmonique pondérée dans laquelle le rang du mot est une combinaison de sa fréquence et de son exclusivité. La formule est : 
 
-$$\mathrm{FREX}_{k,v}
-= \left(
-    \frac{\omega}{\mathrm{ECDF}\!\left( \beta_{k,v} / \sum_{j=1}^{K} \beta_{j,v} \right)}
-    +
-    \frac{1-\omega}{\mathrm{ECDF}\!\left( \beta_{k,v} \right)}
-\right)^{-1}
- $$
- avec : 
- 
- - k : le topic
- - v : le mot
- - w : poids associé à l'exclusivité => 1er terme
- - ECDF : fonction de répartition empirique appliquéeà un mot dans son thème 
- 
- Cet indice met l'accent sur des mots typiques et plus exclusifs des thèmes. La fréquence de certains termes très génériques présents dans le corpus et qui se retrouvent dans de nombreux thèmes (alimentaire, alimentation, territoire) 
+On récupère les 7 mots qui ont les scores les plus élevés par TOPIC pour les
+métriques suivantes : - coefficients beta : rappel =\> probabilité
+d'appartenance d'un terme dans un topic - FREX : indice de fréquence exclusivité
+=\> moyenne harmonique pondérée dans laquelle le rang du mot est une combinaison
+de sa fréquence et de son exclusivité. La formule est :
 
-(source : )
-- Lift : 
-- Score : 
+$$\text{FREX}_{f,k} = \left( \frac{w}{\text{ECDF}_{\varphi,k}(\varphi_{f,k})} + \frac{1-w}{\text{ECDF}_{\mu,k}(\mu_{f,k})} \right)^{-1}$$
 
-On va ensuite créer une fonction qui va récupérer les mots qui caractérisent le plus nos topics extraits. 
+avec :
 
-=> il faut donc choisir les métriques qui nous intéressent : 
+-   k : le topic
+-   w : paramètre de poids (% associé à l'exclusivité et 1-w = % associé à la
+    fréquence), par défaut w= 0.5
+-   la puissance -1 est une moyenne harmonique prenant en compte les deux termes
+    suivants :
 
+terme 1 - ECDF = fonction de répartition empirique cumulative des fréquences des
+mots d'un thème - $\varphi_{f,k}$ = fréquence du mot f dans le topic k
+
+terme 2 : - $\mu_{f,k}$ : exclusivité d'un mot f dans un topic k - fonction de
+répartition empirique cumulative des exclusivité dans le topic k
+
+Cet indice met l'accent sur des mots typiques et plus exclusifs des thèmes. La
+fréquence de certains termes très génériques présents dans le corpus et qui se
+retrouvent dans de nombreux thèmes (alimentaire, alimentation, territoire). Les
+mots avec le score le plus élevé sont ceux qui sont à la fois assez fréquents et
+à la fois assez exclusifs à un thème.
+
+[Bischof et al, 2012](https://icml.cc/2012/papers/113.pdf)
+
+On va ensuite créer une fonction qui va récupérer les mots qui caractérisent le
+plus nos topics extraits.
+
+=\> il faut donc choisir les métriques qui nous intéressent :
 
 ```{r}
 topic.extraction <- function(topic_model) {
@@ -179,7 +197,7 @@ topic.extraction <- function(topic_model) {
   # récupérer les mots avec les indices FREX (Fréquence exclusivité) les plus forts 
   frex <- data.frame(t(summary(topic_model)$frex))
   
-  beta <-  data.frame(t(summary(topic_model)$prob))
+  # beta <-  data.frame(t(summary(topic_model)$prob)) # et les scores beta les plus élevés 
   
   # créer liste_mots
   liste_mots <- rbind(frex,beta)
@@ -192,11 +210,278 @@ topic.extraction <- function(topic_model) {
 }
 ```
 
+Extraction des termes de chaque thème avec Beta et frex et montrer que frex est plus discriminant : 
+```{r}
+# On utilise NaileR pour faire une extraction automatique de nos variables latentes
+
+# avec FREX
+
+# avec scores BETA
+
+```
 
 
 
+## Méthodologie 
+
+On va ensuite essayer de créer des "formes fortes" , en réalisant de nombreuses fois la LDA, puis en supprimant les mots les moins fréquents (n'apparaissant par exemple que dans un seul topic d'une seule LDA), et en regardant comment les mêmes mots s'associent de la même façon ensemble avec plusieurs itérations de l'algorithme. Les mots ne sont pas mis dans le même topic à chaque LDA, donc le 'topic 1' de la 'lda1' n'est pas le même que le 'topic1' de la 'lda2' mais s'il y a une stabilité dans les thèmes alors les mêmes mots se retrouveront dans les mêmes topics, et l'on s'intéresse justement aux termes qui composent ces topics (= la variable latente à nommer) plutôt qu'aux topics (1, 2, ... etc) en eux-mêmes. 
+
+Nous avons testé plusieurs K, (9, 10, 15) et nous avons décidé de conserver k = 9 (augmenter le nombre de topics a eut pour effet que les mots associés dans les topics n'est pas forcément de sens ensemble donc la construction de l'espace latent des topics et la classification étaient peu satisfaisantes). 
+
+Nous avons essayé de réaliser la procédure en gardant les termes ayant les frex et les scores beta les plus élevés, et après avoir testé avec uniquement les scores frex, les groupes sont beaucoup plus discriminés donc nous avons décidé de ne conserver que cet indicateur permettant de construire des topics avec des termes suffisamment exclusifs de chaque topic. 
+
+Nous avons aussi essayé de conserver tous les mots dans l'espace latent final, cependant appliquer un filtre de fréquence (si un terme n'apparait qu'un nombre x minimal de fois dans l'ensemble des exécutions de l'algorithme) permet de réduire le nombre de points et de conserver des mots qui se retrouvent dans au moins plusieurs lda. 
 
 
+Nous réalisons n = 10 LDA que nous lançons à partir d'une seed aléatoire (que ici nous fixerons pour que les résultats soient exactement identiques). 
+
+## Réalisation 
+
+### Initialisation aléatoire et hyperparamètres 
+
+```{r}
+seeds = sample(1:9999, 10, replace = F)
+
+seeds = c(3644,491,1509,3734,4753,9597,7323,9369,659,4999) # vecteur conservé pour la reproductibilité
+
+k = 9  # nb de topics 
+nb_lda = length(seeds) # nb de lda 
+```
+
+
+### Création des modèles 
+```{r}
+model1 <- lda.model(k = k, seed = seeds[1])
+model2 <- lda.model(k = k, seed = seeds[2])
+model3 <- lda.model(k = k, seed = seeds[3])
+model4 <- lda.model(k = k, seed = seeds[4])
+model5 <- lda.model(k = k, seed = seeds[5])
+model6 <- lda.model(k = k, seed = seeds[6])
+model7 <- lda.model(k = k, seed = seeds[7])
+model8 <- lda.model(k = k, seed = seeds[8])
+model9 <- lda.model(k = k, seed = seeds[9])
+model10 <- lda.model(k = k, seed = seeds[10])
+
+# save(model1,model2,model3,model4,model5,model6,model7,model8,model9,model10, file = "modeles.RData")
+
+```
+
+
+
+### Extraction des termes 
+```{r}
+words1 <- topic.extraction(model1)
+words2 <- topic.extraction(model2)
+words3 <- topic.extraction(model3)
+words4 <- topic.extraction(model4)
+words5 <- topic.extraction(model5)
+words6 <- topic.extraction(model6)
+words7 <- topic.extraction(model7)
+words8 <- topic.extraction(model8)
+words9 <- topic.extraction(model9)
+words10 <- topic.extraction(model10)
+
+head(words1)
+
+```
+
+
+
+on va ensuite mettre tous les mots ensemble : 
+```{r}
+lda_list <- list(words1,words2,words3,words4,words5,words6,words7,words8,words9,words10)
+# on créé la liste avec les mots de chaque lda : n objets, contenant chacun k éléments (9 ici)
+
+words <- unique(unlist(lda_list))# récupére la liste unique des mots de toutes les lda
+# ajouter toutes les listes de mots 
+
+```
+
+
+et on créé un tableau de données contenant en ligne les mots, en colonne chaque topic de chaque lda, et au croisement un "1" si le mot se retrouve dans les termes sélectionnés caractérisant ce topic, et sinon un "0".
+
+```{r}
+# Créer le data frame 
+
+col = paste0("lda", rep(1:nb_lda, each = k), "_topic", rep(1:k, times = nb_lda))
+# on crée un vecteur avec les noms de colonnes avec x lda et n topics, et on le met dans l'ordre des lda
+# c'est le vecteur des noms de colonnes de notre df 
+
+mfa.df = data.frame(matrix(ncol = k *nb_lda, nrow = length(words), NA))
+# on créé le df => 1 + k * n colonnes , on le remplit de NA
+colnames(mfa.df) <- col
+# on met les noms de colonnes issus du vecteur col
+rownames(mfa.df) <- words 
+# on ajoute les mots dans la colonne words
+```
+
+On va ensuite remplir le df : 
+```{r}
+# On va ensuite associer à chaque lda les mots des différents topics 
+
+for (i in 1:nb_lda) {
+  for (j in 1:k) {
+    col_name <- paste0("lda", i, "_topic", j)
+    
+    # récupération des mots du topic j de la lda i
+    words_in_topic <- lda_list[[i]][[j]]
+    # lda_list[[i]][[j]] retourne les mots du topic j de la lda i
+    
+    # pour chaque mot du dataframe
+    mfa.df[[col_name]] <- ifelse(
+      rownames(mfa.df) %in% words_in_topic,
+      1,  # si le mot est dans ce topic
+      0  
+    )
+  }
+}
+```
+
+
+Et on impose un filtre qui va d'abord calculer la somme de chaque ligne = le nombre de 1 = le nombre d'occurence de chaque mot sur l'ensemble des lda dans l'ensemble des topics
+Si cette fréquence est de 1, alors le mot (la ligne) est supprimée.
+On récupère ensuite le df final. 
+
+```{r}
+mfa.df.filtre <- mfa.df
+mfa.df.filtre$freq <- apply(mfa.df, 1, sum)
+
+# avec freq >= 2
+mfa.df.filtre <- subset(mfa.df.filtre, freq>=2)
+
+mfa.df.final <- mfa.df.filtre[,-ncol(mfa.df.filtre)] # supprimer la colonne fréquence 
+
+summary(colSums(mfa.df.final)) # on vérifie le nombre min, max, médian, moyen de mots par thèmes pour voir l'impact du filtrage 
+```
+
+
+On va ensuite comparer deux méthodes pour l'obtention des formes fortes : un AFM avec autant de groupes de variables que de nb.lda et pour chaque groupe autant de variables que de k, et une AFC avec une transformation des fréquences en modalités, et autant de variables de termes uniques dans le vocabulaire.
+
+### AFM
+
+```{r}
+res.mfa <- MFA(base = mfa.df.final, 
+              group = rep(k,nb_lda),
+              type = rep("f",nb_lda), 
+              name.group = paste0("lda",seq(1:nb_lda)),
+              graph = F
+              )
+
+# on affiche le scree plot pour choisir le nombre de composantes à conserver
+
+barplot(res.mfa$eig[1:40,2])
+# on retient 4 composantes
+
+res.mfa <- MFA(base = mfa.df.final, 
+              group = rep(k,nb_lda),
+              type = rep("f",nb_lda), 
+              name.group = paste0("lda",seq(1:nb_lda)),
+              ncp = 4
+              # graph = F
+              )
+```
+
+On réalise ensuite une classification hierarchique de nos individus (mots). 
+```{r}
+res.hcpc <- HCPC(res = res.mfa.2, nb.clust = -1) # nb optimal de classes
+
+```
+
+On regarde le nombre optimal de clusters, les mots qui les composent et on essaye d'optimiser ce nombre de clusters.
+```{r}
+res.hcpc <- HCPC(res = res.mfa, nb.clust = -1)
+res.hcpc <- HCPC(res = res.mfa, nb.clust = -1)
+```
+
+On choisit le nombre de clusters retenus
+```{r}
+# création du jdd contenant les mots, leurs coordonnées sur les dimensions 1 et 2 ainsi que leur topic
+clust <- data.frame(cbind(word = rownames(mfa.df.final),
+                           clust = res.hcpc$data.clust$clust, 
+                           dim1 = res.mfa$ind$coord[,1], 
+                           dim2 = res.mfa$ind$coord[,2]))
+
+str(clust)
+clust$clust <- as.factor(clust$clust)
+clust$word <- as.factor((clust$word))
+clust$dim1 <- as.numeric(clust$dim1)
+clust$dim2 <- as.numeric(clust$dim2)
+
+head(clust)
+```
+
+
+et on affiche ces différents clusters : 
+
+```{r}
+plotk9c7f2 <- plot_ly(
+  data = clust,
+  x = ~dim1,
+  y = ~dim2,
+  type = "scatter",
+  mode = "markers+text",
+  color = ~factor(clust),
+  text = ~word,       # nom de ta colonne contenant les mots
+  textposition = "top center",
+  marker = list(size = 9),
+  hoverinfo = "text"
+) %>%
+  layout(
+    title = "Projection des mots dans l'espace factoriel (Dim 1 & Dim 2)",
+    xaxis = list(
+      title = "Dimension 1",       # supprime le titre
+      showticklabels = FALSE,  # supprime les graduations
+      zeroline = FALSE
+    ),
+    yaxis = list(
+      title = "Dimension 2",
+      showticklabels = FALSE,
+      zeroline = FALSE
+    ),
+    legend = list(title = list(text = "Cluster"))
+  )
+```
+
+
+On récupère ensuite l'ensemble des mots de chaque clusters et on réalise l'extraction de la variable latente (nom du topic)
+
+```{r}
+# récupération des mots de chaque clusters 
+
+
+# interprétation avec naileR
+
+```
+
+
+### Test AFM quali
+
+Nous avons aussi essayé une AFM avec comme classe de variable 'n' => catégorielle.
+
+```{r}
+afm.quali <- data.frame(lapply(mfa.df.final, FUN = as.factor ))
+rownames(afm.quali) <- rownames(mfa.df.final)
+str(afm.quali)
+
+res.fma.q <- MFA(base = afm.quali, 
+                 group = rep(k,nb_lda),
+                 type = rep("n",nb_lda), 
+                 name.group = paste0("lda",seq(1:nb_lda))
+                 )
+```
+
+Il semblerait difficile d'identifier des formes fortes car en utilisant un type catégorielle, les mots 'agricole' , ... tirent fortement les axes donc cette méthode ne permet pas de consolider notre LDA.
+
+### AFC
+
+```{r}
+afc.df <- data.frame(t(mfa.df.final))
+str(afc.df)
+
+res.afc <- CA(afc.df)
+
+plot.CA(res.afc, invisible = "row")
+```
 
 
 
