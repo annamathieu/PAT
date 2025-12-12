@@ -200,10 +200,10 @@ topic.extraction <- function(topic_model) {
   # beta <-  data.frame(t(summary(topic_model)$prob)) # et les scores beta les plus élevés 
   
   # créer liste_mots
-  liste_mots <- rbind(frex,beta)
-  colnames(liste_mots) <- paste0("topic",seq(from=1,to=9))
+  # liste_mots <- rbind(frex,beta)
+  colnames(frex) <- paste0("topic",seq(from=1,to=9))
   
-  list <- sapply(liste_mots, paste, collapse = " ")
+  list <- sapply(frex, paste, collapse = " ")
   list <- str_split(list, pattern = " ")
   
   return (list)
@@ -251,18 +251,20 @@ nb_lda = length(seeds) # nb de lda
 
 ### Création des modèles 
 ```{r}
-model1 <- lda.model(k = k, seed = seeds[1])
-model2 <- lda.model(k = k, seed = seeds[2])
-model3 <- lda.model(k = k, seed = seeds[3])
-model4 <- lda.model(k = k, seed = seeds[4])
-model5 <- lda.model(k = k, seed = seeds[5])
-model6 <- lda.model(k = k, seed = seeds[6])
-model7 <- lda.model(k = k, seed = seeds[7])
-model8 <- lda.model(k = k, seed = seeds[8])
-model9 <- lda.model(k = k, seed = seeds[9])
-model10 <- lda.model(k = k, seed = seeds[10])
+# model1 <- lda.model(k = k, seed = seeds[1])
+# model2 <- lda.model(k = k, seed = seeds[2])
+# model3 <- lda.model(k = k, seed = seeds[3])
+# model4 <- lda.model(k = k, seed = seeds[4])
+# model5 <- lda.model(k = k, seed = seeds[5])
+# model6 <- lda.model(k = k, seed = seeds[6])
+# model7 <- lda.model(k = k, seed = seeds[7])
+# model8 <- lda.model(k = k, seed = seeds[8])
+# model9 <- lda.model(k = k, seed = seeds[9])
+# model10 <- lda.model(k = k, seed = seeds[10])
 
 # save(model1,model2,model3,model4,model5,model6,model7,model8,model9,model10, file = "modeles.RData")
+
+load("modeles.RData")
 
 ```
 
@@ -335,6 +337,8 @@ for (i in 1:nb_lda) {
     )
   }
 }
+
+head(mfa.df[,1:10])
 ```
 
 
@@ -352,6 +356,9 @@ mfa.df.filtre <- subset(mfa.df.filtre, freq>=2)
 mfa.df.final <- mfa.df.filtre[,-ncol(mfa.df.filtre)] # supprimer la colonne fréquence 
 
 summary(colSums(mfa.df.final)) # on vérifie le nombre min, max, médian, moyen de mots par thèmes pour voir l'impact du filtrage 
+
+dim(mfa.df)
+dim(mfa.df.final)
 ```
 
 
@@ -376,21 +383,21 @@ res.mfa <- MFA(base = mfa.df.final,
               group = rep(k,nb_lda),
               type = rep("f",nb_lda), 
               name.group = paste0("lda",seq(1:nb_lda)),
-              ncp = 4
+              ncp = 5
               # graph = F
               )
 ```
 
 On réalise ensuite une classification hierarchique de nos individus (mots). 
 ```{r}
-res.hcpc <- HCPC(res = res.mfa.2, nb.clust = -1) # nb optimal de classes
+res.hcpc <- HCPC(res = res.mfa, nb.clust = -1) # nb optimal de classes
 
 ```
 
 On regarde le nombre optimal de clusters, les mots qui les composent et on essaye d'optimiser ce nombre de clusters.
 ```{r}
-res.hcpc <- HCPC(res = res.mfa, nb.clust = -1)
-res.hcpc <- HCPC(res = res.mfa, nb.clust = -1)
+res.hcpc <- HCPC(res = res.mfa, nb.clust = 7)
+res.hcpc <- HCPC(res = res.mfa, nb.clust = 8)
 ```
 
 On choisit le nombre de clusters retenus
