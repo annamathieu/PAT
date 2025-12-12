@@ -213,6 +213,9 @@ topic.extraction <- function(topic_model) {
 Extraction des termes de chaque thème avec Beta et frex et montrer que frex est plus discriminant : 
 ```{r}
 # On utilise NaileR pour faire une extraction automatique de nos variables latentes
+library(NaileR)
+
+
 
 # avec FREX
 
@@ -482,12 +485,22 @@ On récupère ensuite l'ensemble des mots de chaque clusters et on réalise l'ex
 
 ```{r}
 # récupération des mots de chaque clusters 
+mots.clust <- tapply(
+  clust$word,     # Le vecteur à appliquer la fonction (les Mots)
+  clust$clust, # Le facteur de regroupement (les Clusters)
+  paste,                # La fonction à appliquer
+  collapse = ", ")       # L
 
-
-# interprétation avec naileR
+# interprétation avec naileR (à faire plus tard)
 
 ```
-
+identification des variables latentes avec LLM : 
+1. Gouvernance et Pilotage Territorial
+2. Alimentation Durable et Restauration Collective
+3. Caractéristiques Géographiques et Démographiques du Territoire
+4. Défis Climatiques et Environnementaux
+5. Filières Agricoles et Circuits de Distribution
+6. Structures et Dynamiques Agricoles
 
 ### Test AFM quali
 
@@ -505,7 +518,7 @@ res.fma.q <- MFA(base = afm.quali,
                  )
 ```
 
-Il semblerait difficile d'identifier des formes fortes car en utilisant un type catégorielle, les mots 'agricole' , ... tirent fortement les axes donc cette méthode ne permet pas de consolider notre LDA.
+Il semblerait difficile d'identifier des formes fortes car en utilisant un type catégorielle, les mots '...' , ... tirent fortement les axes donc cette méthode ne permet pas de consolider notre LDA.
 
 ### AFC
 
@@ -514,11 +527,39 @@ afc.df <- data.frame(t(mfa.df.final))
 # str(head(afc.df))
 
 res.afc <- CA(afc.df)
+barplot(res.afc$eig[,2]) # on retient 5 ncp 
+
+res.afc <- CA(afc.df, ncp = 5)
 
 plot.CA(res.afc, invisible = "row")
 
-hcpc.afc <- HCPC(res.afc, nb.clust = -1)
 ```
+
+
+Si on fait une classification issue du résultat de l'AFC, il semblerait que les formes fortes observées soient les mêmes que dans la méthode 1.
+
+```{r}
+# coord.afc <- data.frame(cbind(dim1= res.afc$col$coord[,1], 
+#                               dim2= res.afc$col$coord[,1]))
+# head(coord.afc)
+# 
+# hcpc.afc <- HCPC(coord.afc, nb.clust = -1)
+# 
+# plot_clust(hcpc.afc)
+# 
+```
+
+
+## Conclusion 
+
+Il semble intéressant d'utiliser des analyses factorielles pour consolider nos topic modellings et obtenir des formes fortes de nos topics. Après avoir lancé cet algorithme en faisant varier beaucoup les paramètres, on a pu observer une relative sensabilité à la modification de la stop_words liste des mots, ainsi évidemment qu'au paramètre k, ainsi que des topics très "forts" toujours retrouvés et composés des mêmes termes. 
+
+Le résultat présenté (6 clusters) nous semble cohérents au vue de tous les essais réalisés, rendant compte de thématiques qui portent du sens (bien que certaines soient composés de plusieurs sous-sujets), et que l'on a retrouvé systématiquement. 
+
+
+
+
+
 
 
 
