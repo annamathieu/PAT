@@ -293,15 +293,64 @@ plus discriminant :
 
 ```{r}
 # On utilise NaileR pour faire une extraction automatique de nos variables latentes
-library(NaileR)
-
-# à faire plus tard
 
 # avec FREX
 
+# dataframe frex 
+frex.df <- data.frame(topic.extraction(modeltest))
+colnames(frex.df) <- paste0(seq(from=1,to=9))
+frex.df.pivot <- pivot_longer(data = frex.df, names_to = "topic", values_to = "word", cols = 1:9)
+
+cat(gemini_generate(nail_textual(dataset = frex.df.pivot, num.var = 1, num.text = 2,
+                  
+                  introduction = "A study on Territorial food systems is done and we want to find the topics discussed in the description of each Territorial food system, we use topic modelling and latent dirichlet allocation. Voici les mots qui ont les indices frex (fréquence exclusivité) les plus élevés pour chaque topic.",
+                  request = "We want to automatically put a name on those topics based on the words caracterising them. Please give a name to each topic suming up most of the words caracterising it. Do it in French. Only give la Liste des Noms de Groupe Attribués",, 
+                  isolate.groups = F, drop.negative = T, generate = F)
+)
+)
+```
+
+Avec uniquement les scores beta : 
+```{r}
 # avec scores BETA
+beta.df <-  data.frame(t(summary(modeltest)$prob))
+colnames(beta.df) <- paste0(seq(from=1,to=9))
+beta.df.pivot <- pivot_longer(data = beta.df, names_to = "topic", values_to = "word", cols = 1:9)
+
+
+cat(gemini_generate(nail_textual(dataset = beta.df.pivot, num.var = 1, num.text = 2,
+                  
+                  introduction = "A study on Territorial food systems is done and we want to find the topics discussed in the description of each Territorial food system, we use topic modelling and latent dirichlet allocation. Voici les mots qui ont les indices beta (probabilité d'appartenance du mot dans le topic) les plus élevés pour chaque topic.",
+                  request = "We want to automatically put a name on those topics based on the words caracterising them. Please give a name to each topic suming up most of the words caracterising it. Do it in French. Only give la Liste des Noms de Groupe Attribués",, 
+                  isolate.groups = F, drop.negative = T, generate = F)
+)
+)
+```
+
+Avec beta et frex  :
+```{r}
+# avec les deux 
+betafrex <- data.frame(rbind(frex.df.pivot, beta.df.pivot))
+
+res.both <- (gemini_generate(nail_textual(dataset = betafrex, num.var = 1, num.text = 2,
+                  
+                  introduction = "A study on Territorial food systems is done and we want to find the topics discussed in the description of each Territorial food system, we use topic modelling and latent dirichlet allocation. Tu as les 7  mots qui ont les indices beta (probabilité d'appartenance du mot dans le topic) les plus élevés pour chaque topic., et les 7 mots qui ont les indices frex (fréquence exclusivité) les plus élevés pour chaque topic.",
+                  request = "We want to automatically put a name on those topics based on the words caracterising them. Please give a name to each topic suming up most of the words caracterising it. Do it in French. Only give la Liste des Noms de Groupe Attribués. Prends en compte les deux indicateurs mais ne sur-interprète pas les thèmes, tous les mots de doivent pas obligatoirement être utilisés. ",, 
+                  isolate.groups = F, drop.negative = T, generate = F)
+)
+)
+
+cat(res.both)
 
 ```
+
+
+Comme nous l'avons développé, certains termes sont trop fréquents dans tous les topics et 'polluent' donc l'analyse textuelle et l'identification des nos thèmes. 
+
+*Thèmes Communs et Transversaux :**
+ **Agriculture et Alimentation :** Presque tous les topics (`1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`) incluent des termes tels que "agricole", "agriculture", "alimentaire" ou "alimentation", confirmant que le cœur de l'étude concerne la production et la consommation de nourriture.
+*   **Local et Territorial :** La forte présence des mots "local" et "territorial" (`1`, `2`, `3`, `5`, `6`, `7`, `8`, `9`) souligne l'ancrage géographique et l'échelle d'analyse de ces systèmes.
+
 
 # Méthodologie
 
@@ -372,15 +421,15 @@ load("data/modeles.RData")
 ## Extraction des termes
 
 ```{r}
-words1 <- topic.extraction(model1)
-words2 <- topic.extraction(model2)
-words3 <- topic.extraction(model3)
-words4 <- topic.extraction(model4)
-words5 <- topic.extraction(model5)
-words6 <- topic.extraction(model6)
-words7 <- topic.extraction(model7)
-words8 <- topic.extraction(model8)
-words9 <- topic.extraction(model9)
+words1  <- topic.extraction(model1)
+words2  <- topic.extraction(model2)
+words3  <- topic.extraction(model3)
+words4  <- topic.extraction(model4)
+words5  <- topic.extraction(model5)
+words6  <- topic.extraction(model6)
+words7  <- topic.extraction(model7)
+words8  <- topic.extraction(model8)
+words9  <- topic.extraction(model9)
 words10 <- topic.extraction(model10)
 
 head(words1)
