@@ -18,7 +18,7 @@ editor_options:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
+knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
 ```
 
 ```{r packages, include=F}
@@ -69,7 +69,7 @@ documents =\> n° des PAT).
 # Préparation des documents
 
 # Importation de res lemmat (voir Rapport du 04-12-25)
-load(file = "res.lemmat.RData")
+load("data/res.lemmat.RData")
 
 # step 1 : Create the Vocabulary
 vocab <- unique(res.lemmat$lem.f) # => liste unique de mots 
@@ -156,15 +156,15 @@ summary(modeltest)
 Une première méthode à laquelle nous avons pensé consistait à afficher un graphique à la manière des valeurs propres en ACP pour décider du nombre de topics que l'on choisit pour notre LDA. On a créé une fonction qui prend en compte 2 arguments (nstart et nend), qui correspondent aux valeurs minimum et maximum du nombre de topics qu'on fixe dans notre LDA, la fonction teste pour toutes les valeurs de k comprises dans cet intervalle.
 ```{r}
 #On charge le simple triplet matrix que nous avions fait dans le rapport du 04-12
-stm <- load(file="stm.RData")
+stm <- load(file="data/stm.RData")
 ```
 
 
-```{r, eval= F}
+```{r}
 # install.packages("topicdoc")
 library(topicdoc)
 library(tidyverse)
-load(file = 'stm.RData')
+load(file = 'data/stm.RData')
 
 #Fonction visant à produir un graph montrant la cohérence moyenne des topicss proposé à la sortie d'une LDA entre 2 valeurs du nombre de topics
 # nstart : nombre de topics minimum
