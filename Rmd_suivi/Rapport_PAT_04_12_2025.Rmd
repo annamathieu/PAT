@@ -18,7 +18,7 @@ editor_options:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
 ```
 
 ```{r packages, include=F}
@@ -802,9 +802,26 @@ mais c'est une idée de résultat que l'on peut obtenir ) : voici ci dessous une
 capture d'écran du même code exécuté *avec les bonnes légendes*
 
 ![Texte Alternatif](images/prop.jpg)
+Filtre des PAT avec trop petites desc (< 20 lemmes)
+```{r}
+res.lemmat <- res.lemmat %>% 
+  group_by(doc) %>%
+  mutate(n_lignes = n()) %>% 
+  filter(n_lignes >= 20)
+
+# on retire 11 PAT 
+# length(unique(res.lemmat$doc))
+# length(unique(res.lemmat2$doc))
+
+```
+
+
 
 ```{r}
 # sauver le res.lemmat dans l'environnement 
-save(res.lemmat, file = "res.lemmat.RData")
+save(res.lemmat, file = "data/res.lemmat.RData")
 
 ```
+
+
+
