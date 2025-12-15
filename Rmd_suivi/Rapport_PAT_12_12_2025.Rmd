@@ -41,6 +41,8 @@ library(plotly)
 library(tidyr)
 
 library(stm)
+
+library(NaileR)
 ```
 
 # Objectifs :
@@ -592,24 +594,28 @@ l'extraction de la variable latente (nom du topic)
 
 ```{r}
 # récupération des mots de chaque clusters 
-mots.clust <- tapply(
-  clust$word,     # Le vecteur à appliquer la fonction (les Mots)
-  clust$clust, # Le facteur de regroupement (les Clusters)
-  paste,                # La fonction à appliquer
-  collapse = ", ")       # L
+# mots.clust <- tapply(
+#   clust$word,     # Le vecteur à appliquer la fonction (les Mots)
+#   clust$clust, # Le facteur de regroupement (les Clusters)
+#   paste,                # La fonction à appliquer
+#   collapse = ", ")       # L
 
 # interprétation avec naileR (à faire plus tard)
 
+res <- nail_textual(dataset = clust[,1:2], num.var = 2, num.text = 1,
+                  
+                  introduction = "A study on Territorial food systems is done and we want to find the topics discussed in the description of each Territorial food system, we use topic modelling and latent dirichlet allocation. We consolidate our topics by using multiple executions of the algorithm and perform MFA to find strong forms in our topics.",
+                  request = "We want to automatically put a name on those topics based on the words caracterising them. Please give a name to each topic suming up most of the words caracterising it. Do it in French. Only give la Liste des Noms de Groupe Attribués",, 
+                  isolate.groups = F, drop.negative = T, generate = F)
+
+#res
+
+descr.topic <- gemini_generate(res)
+
+cat(descr.topic)
+
 ```
 
-identification des variables latentes avec LLM :
-
-1.  Gouvernance et Pilotage Territorial
-2.  Alimentation Durable et Restauration Collective
-3.  Caractéristiques Géographiques et Démographiques du Territoire
-4.  Défis Climatiques et Environnementaux
-5.  Filières Agricoles et Circuits de Distribution
-6.  Structures et Dynamiques Agricoles
 
 ## Test AFM quali
 
