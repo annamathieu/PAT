@@ -20,3 +20,4 @@ data(car_alone)
                                                                            model = 'llama3', isolate.groups = F,
                                                                            generate = FALSE)
       cat(res_nail_textual )
+      
