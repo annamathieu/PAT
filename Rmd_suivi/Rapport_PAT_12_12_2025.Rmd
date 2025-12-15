@@ -50,7 +50,6 @@ library(stm)
 -   Nous essayons d'obtenir des formes fortes de notre topic modelling pour
     consolider nos topics à travers les termes qui les caractérisent
 
-
 Nous avions des soucis avec la LDA la semaine dernière liés à la
 reproductibilité (seed non fixés) et liés aux métriques d'évaluation des topics.
 La fonction utilisée ne permettait pas de récupérer plus que les coefficients
@@ -63,8 +62,8 @@ La préparation des données est légèrement différentes, il faut préparer le
 vocabulaire (ensemble de tous les mots) ainsi que les documents (noms des
 documents =\> n° des PAT).
 
+# Préparation
 
-# Préparation 
 ```{r}
 # Préparation des documents
 
@@ -153,12 +152,51 @@ summary(modeltest)
 
 ```
 
-Une première méthode à laquelle nous avons pensé consistait à afficher un graphique à la manière des valeurs propres en ACP pour décider du nombre de topics que l'on choisit pour notre LDA. On a créé une fonction qui prend en compte 2 arguments (nstart et nend), qui correspondent aux valeurs minimum et maximum du nombre de topics qu'on fixe dans notre LDA, la fonction teste pour toutes les valeurs de k comprises dans cet intervalle.
+Une première méthode à laquelle nous avons pensé consistait à afficher un
+graphique à la manière des valeurs propres en ACP pour décider du nombre de
+topics que l'on choisit pour notre LDA. On a créé une fonction qui prend en
+compte 2 arguments (nstart et nend), qui correspondent aux valeurs minimum et
+maximum du nombre de topics qu'on fixe dans notre LDA, la fonction teste pour
+toutes les valeurs de k comprises dans cet intervalle.
+
 ```{r}
 #On charge le simple triplet matrix que nous avions fait dans le rapport du 04-12
 stm <- load(file="data/stm.RData")
 ```
 
+Pour ce qui est de la cohérence mesurée dans les topics avec la fonction
+`topic_coherence`, elle mesure à quel point les termes d'un même topic
+apparaissent ensemble.
+
+Pour ce qui est du calcul, pour chaque mot d'un topic, on va calculer un rapport
+entre :\
+- le nombre de co-occurrences de deux termes dans tous les documents\
+- le nombre d'occurrences d'un des termes
+
+Le calcul final pour obtenir la cohérence est le suivant :
+
+$$
+\text{UMass-Coherence} = \sum_{m=2}^{M} \sum_{l=1}^{m-1}
+\log \left(
+\frac{\text{df}_{m,l} + 1}{\text{df}_{l,l}}
+\right)
+$$
+
+On fait la somme des logs de fréquences de co-occurrences pour chaque terme d'un
+topic. Les éléments du calcul sont les suivants :\
+- `df[m,l]` : nombre de documents où les mots $l$ et $m$ d'un thème apparaissent ensemble ,on ajoute +1 pour éviter un log de 0 \
+
+- `df[l,l]` : nombre de documents contenant le terme $l$, auquel 
+
+Pour l'algorithme en lui-même, si l'on prend une matrice carrée de dimensions
+$M \times M$, le calcul se fait sur la **partie triangulaire inférieure** de la
+matrice.
+
+Pour donner une définition plus générale d'un score de cohérence :
+
+> "In general, a coherence score quantifies the degree of semantic
+> interconnection among words within a given topic."\
+> — Farea et al., 2024
 
 ```{r}
 # install.packages("topicdoc")
@@ -193,14 +231,13 @@ coherence %>% ggplot(aes(x=k,y=min_coherence)) +
   ggtitle("Cohérence moyenne des topics en fonction du nombre de topics")
 ```
 
-
 On récupère les 7 mots qui ont les scores les plus élevés par TOPIC pour les
-métriques suivantes : 
-- coefficients beta : rappel => probabilité d'appartenance d'un terme dans un topic 
+métriques suivantes : - coefficients beta : rappel =\> probabilité
+d'appartenance d'un terme dans un topic
 
-- FREX : indice de fréquence exclusivité
-=\> moyenne harmonique pondérée dans laquelle le rang du mot est une combinaison
-de sa fréquence et de son exclusivité. La formule est :
+-   FREX : indice de fréquence exclusivité =\> moyenne harmonique pondérée dans
+    laquelle le rang du mot est une combinaison de sa fréquence et de son
+    exclusivité. La formule est :
 
 $$\text{FREX}_{f,k} = \left( \frac{w}{\text{ECDF}_{\varphi,k}(\varphi_{f,k})} + \frac{1-w}{\text{ECDF}_{\mu,k}(\mu_{f,k})} \right)^{-1}$$
 
@@ -222,7 +259,8 @@ Cet indice met l'accent sur des mots typiques et plus exclusifs des thèmes. La
 fréquence de certains termes très génériques présents dans le corpus et qui se
 retrouvent dans de nombreux thèmes (alimentaire, alimentation, territoire). Les
 mots avec le score le plus élevé sont ceux qui sont à la fois assez fréquents et
-à la fois assez exclusifs à un thème [Bischof et al, 2012](https://icml.cc/2012/papers/113.pdf)
+à la fois assez exclusifs à un thème [Bischof et al,
+2012](https://icml.cc/2012/papers/113.pdf)
 
 On va ensuite créer une fonction qui va récupérer les mots qui caractérisent le
 plus nos topics extraits.
@@ -248,7 +286,9 @@ topic.extraction <- function(topic_model) {
 }
 ```
 
-Extraction des termes de chaque thème avec Beta et frex et montrer que frex est plus discriminant : 
+Extraction des termes de chaque thème avec Beta et frex et montrer que frex est
+plus discriminant :
+
 ```{r}
 # On utilise NaileR pour faire une extraction automatique de nos variables latentes
 library(NaileR)
@@ -261,24 +301,42 @@ library(NaileR)
 
 ```
 
+# Méthodologie
 
+On va ensuite essayer de créer des "formes fortes" , en réalisant de nombreuses
+fois la LDA, puis en supprimant les mots les moins fréquents (n'apparaissant par
+exemple que dans un seul topic d'une seule LDA), et en regardant comment les
+mêmes mots s'associent de la même façon ensemble avec plusieurs itérations de
+l'algorithme. Les mots ne sont pas mis dans le même topic à chaque LDA, donc le
+'topic 1' de la 'lda1' n'est pas le même que le 'topic1' de la 'lda2' mais s'il
+y a une stabilité dans les thèmes alors les mêmes mots se retrouveront dans les
+mêmes topics, et l'on s'intéresse justement aux termes qui composent ces topics
+(= la variable latente à nommer) plutôt qu'aux topics (1, 2, ... etc) en
+eux-mêmes.
 
-# Méthodologie 
+Nous avons testé plusieurs K, (9, 10, 15) et nous avons décidé de conserver k =
+9 (augmenter le nombre de topics a eut pour effet que les mots associés dans les
+topics n'est pas forcément de sens ensemble donc la construction de l'espace
+latent des topics et la classification étaient peu satisfaisantes).
 
-On va ensuite essayer de créer des "formes fortes" , en réalisant de nombreuses fois la LDA, puis en supprimant les mots les moins fréquents (n'apparaissant par exemple que dans un seul topic d'une seule LDA), et en regardant comment les mêmes mots s'associent de la même façon ensemble avec plusieurs itérations de l'algorithme. Les mots ne sont pas mis dans le même topic à chaque LDA, donc le 'topic 1' de la 'lda1' n'est pas le même que le 'topic1' de la 'lda2' mais s'il y a une stabilité dans les thèmes alors les mêmes mots se retrouveront dans les mêmes topics, et l'on s'intéresse justement aux termes qui composent ces topics (= la variable latente à nommer) plutôt qu'aux topics (1, 2, ... etc) en eux-mêmes. 
+Nous avons essayé de réaliser la procédure en gardant les termes ayant les frex
+et les scores beta les plus élevés, et après avoir testé avec uniquement les
+scores frex, les groupes sont beaucoup plus discriminés donc nous avons décidé
+de ne conserver que cet indicateur permettant de construire des topics avec des
+termes suffisamment exclusifs de chaque topic.
 
-Nous avons testé plusieurs K, (9, 10, 15) et nous avons décidé de conserver k = 9 (augmenter le nombre de topics a eut pour effet que les mots associés dans les topics n'est pas forcément de sens ensemble donc la construction de l'espace latent des topics et la classification étaient peu satisfaisantes). 
+Nous avons aussi essayé de conserver tous les mots dans l'espace latent final,
+cependant appliquer un filtre de fréquence (si un terme n'apparait qu'un nombre
+x minimal de fois dans l'ensemble des exécutions de l'algorithme) permet de
+réduire le nombre de points et de conserver des mots qui se retrouvent dans au
+moins plusieurs lda.
 
-Nous avons essayé de réaliser la procédure en gardant les termes ayant les frex et les scores beta les plus élevés, et après avoir testé avec uniquement les scores frex, les groupes sont beaucoup plus discriminés donc nous avons décidé de ne conserver que cet indicateur permettant de construire des topics avec des termes suffisamment exclusifs de chaque topic. 
+Nous réalisons n = 10 LDA que nous lançons à partir d'une seed aléatoire (que
+ici nous fixerons pour que les résultats soient exactement identiques).
 
-Nous avons aussi essayé de conserver tous les mots dans l'espace latent final, cependant appliquer un filtre de fréquence (si un terme n'apparait qu'un nombre x minimal de fois dans l'ensemble des exécutions de l'algorithme) permet de réduire le nombre de points et de conserver des mots qui se retrouvent dans au moins plusieurs lda. 
+# Réalisation
 
-
-Nous réalisons n = 10 LDA que nous lançons à partir d'une seed aléatoire (que ici nous fixerons pour que les résultats soient exactement identiques). 
-
-# Réalisation 
-
-## Initialisation aléatoire et hyperparamètres 
+## Initialisation aléatoire et hyperparamètres
 
 ```{r}
 seeds = sample(1:9999, 10, replace = F)
@@ -289,8 +347,8 @@ k = 9  # nb de topics
 nb_lda = length(seeds) # nb de lda 
 ```
 
+## Création des modèles
 
-## Création des modèles 
 ```{r}
 # model1 <- lda.model(k = k, seed = seeds[1])
 # model2 <- lda.model(k = k, seed = seeds[2])
@@ -305,13 +363,12 @@ nb_lda = length(seeds) # nb de lda
 
 # save(model1,model2,model3,model4,model5,model6,model7,model8,model9,model10, file = "modeles.RData")
 
-load("modeles.RData")
+load("data/modeles.RData")
 
 ```
 
+## Extraction des termes
 
-
-## Extraction des termes 
 ```{r}
 words1 <- topic.extraction(model1)
 words2 <- topic.extraction(model2)
@@ -328,9 +385,8 @@ head(words1)
 
 ```
 
+on va ensuite mettre tous les mots ensemble :
 
-
-on va ensuite mettre tous les mots ensemble : 
 ```{r}
 lda_list <- list(words1,words2,words3,words4,words5,words6,words7,words8,words9,words10)
 # on créé la liste avec les mots de chaque lda : n objets, contenant chacun k éléments (9 ici)
@@ -340,8 +396,9 @@ words <- unique(unlist(lda_list))# récupére la liste unique des mots de toutes
 
 ```
 
-
-et on créé un tableau de données contenant en ligne les mots, en colonne chaque topic de chaque lda, et au croisement un "1" si le mot se retrouve dans les termes sélectionnés caractérisant ce topic, et sinon un "0".
+et on créé un tableau de données contenant en ligne les mots, en colonne chaque
+topic de chaque lda, et au croisement un "1" si le mot se retrouve dans les
+termes sélectionnés caractérisant ce topic, et sinon un "0".
 
 ```{r}
 # Créer le data frame 
@@ -358,7 +415,8 @@ rownames(mfa.df) <- words
 # on ajoute les mots dans la colonne words
 ```
 
-On va ensuite remplir le df : 
+On va ensuite remplir le df :
+
 ```{r}
 # On va ensuite associer à chaque lda les mots des différents topics 
 
@@ -382,10 +440,10 @@ for (i in 1:nb_lda) {
 head(mfa.df[,1:10])
 ```
 
-
-Et on impose un filtre qui va d'abord calculer la somme de chaque ligne = le nombre de 1 = le nombre d'occurence de chaque mot sur l'ensemble des lda dans l'ensemble des topics
-Si cette fréquence est de 1, alors le mot (la ligne) est supprimée.
-On récupère ensuite le df final. 
+Et on impose un filtre qui va d'abord calculer la somme de chaque ligne = le
+nombre de 1 = le nombre d'occurence de chaque mot sur l'ensemble des lda dans
+l'ensemble des topics Si cette fréquence est de 1, alors le mot (la ligne) est
+supprimée. On récupère ensuite le df final.
 
 ```{r}
 mfa.df.filtre <- mfa.df
@@ -402,12 +460,17 @@ dim(mfa.df)
 dim(mfa.df.final)
 ```
 
-
-On va ensuite comparer deux méthodes pour l'obtention des formes fortes : un AFM avec autant de groupes de variables que de nb.lda et pour chaque groupe autant de variables que de k, et une AFC avec une transformation des fréquences en modalités, et autant de variables de termes uniques dans le vocabulaire.
+On va ensuite comparer deux méthodes pour l'obtention des formes fortes : un AFM
+avec autant de groupes de variables que de nb.lda et pour chaque groupe autant
+de variables que de k, et une AFC avec une transformation des fréquences en
+modalités, et autant de variables de termes uniques dans le vocabulaire.
 
 ## AFM
 
-L'AFM est une analyse dimensionnelle qui permet d'imposer une structure sur les variables, ce qui est nécessaire ici car chaque topic n'a de sens qu'au sein d'une exécution de la LDA, et les mots peuvent être parfois partagés au sein d'une lda ou entre topics de plusieurs LDA.
+L'AFM est une analyse dimensionnelle qui permet d'imposer une structure sur les
+variables, ce qui est nécessaire ici car chaque topic n'a de sens qu'au sein
+d'une exécution de la LDA, et les mots peuvent être parfois partagés au sein
+d'une lda ou entre topics de plusieurs LDA.
 
 ```{r}
 res.mfa <- MFA(base = mfa.df.final, 
@@ -431,19 +494,23 @@ res.mfa <- MFA(base = mfa.df.final,
               )
 ```
 
-On réalise ensuite une classification hierarchique de nos individus (mots). 
+On réalise ensuite une classification hierarchique de nos individus (mots).
+
 ```{r}
 clustopt <- HCPC(res = res.mfa, nb.clust = -1) # nb optimal de classes
 # 6 = nb optimal de classes
 ```
 
-On regarde le nombre optimal de clusters, les mots qui les composent et on essaye d'optimiser ce nombre de clusters.
+On regarde le nombre optimal de clusters, les mots qui les composent et on
+essaye d'optimiser ce nombre de clusters.
+
 ```{r}
 clust7<- HCPC(res = res.mfa, nb.clust = 7, graph = FALSE)
 clust8<- HCPC(res = res.mfa, nb.clust = 8, graph = F)
 ```
 
 Quel nombre de cluster a le plus de sens ?
+
 ```{r, fig.width=8, fig.height=5}
 plot_clust <- function(res.hcpc){
   
@@ -489,8 +556,6 @@ plot_clust <- function(res.hcpc){
 }
 ```
 
-
-
 ```{r}
 # nombre optimal 
 plot_clust(clustopt)
@@ -499,11 +564,13 @@ plot_clust(clust8)
 ```
 
 On choisit le nombre de clusters retenus :
+
 ```{r}
 res.hcpc <- HCPC(res = res.mfa, nb.clust = 6)
 ```
 
-et on extrait les coordonnées des individus et leur appartenance à un cluster : 
+et on extrait les coordonnées des individus et leur appartenance à un cluster :
+
 ```{r}
 # création du jdd contenant les mots, leurs coordonnées sur les dimensions 1 et 2 ainsi que leur topic
 clust <- data.frame(cbind(word = rownames(mfa.df.final),
@@ -520,8 +587,8 @@ clust$dim2 <- as.numeric(clust$dim2)
 head(clust)
 ```
 
-
-On récupère ensuite l'ensemble des mots de chaque clusters et on réalise l'extraction de la variable latente (nom du topic)
+On récupère ensuite l'ensemble des mots de chaque clusters et on réalise
+l'extraction de la variable latente (nom du topic)
 
 ```{r}
 # récupération des mots de chaque clusters 
@@ -534,18 +601,20 @@ mots.clust <- tapply(
 # interprétation avec naileR (à faire plus tard)
 
 ```
-identification des variables latentes avec LLM : 
 
-1. Gouvernance et Pilotage Territorial
-2. Alimentation Durable et Restauration Collective
-3. Caractéristiques Géographiques et Démographiques du Territoire
-4. Défis Climatiques et Environnementaux
-5. Filières Agricoles et Circuits de Distribution
-6. Structures et Dynamiques Agricoles
+identification des variables latentes avec LLM :
+
+1.  Gouvernance et Pilotage Territorial
+2.  Alimentation Durable et Restauration Collective
+3.  Caractéristiques Géographiques et Démographiques du Territoire
+4.  Défis Climatiques et Environnementaux
+5.  Filières Agricoles et Circuits de Distribution
+6.  Structures et Dynamiques Agricoles
 
 ## Test AFM quali
 
-Nous avons aussi essayé une AFM avec comme classe de variable 'n' => catégorielle.
+Nous avons aussi essayé une AFM avec comme classe de variable 'n' =\>
+catégorielle.
 
 ```{r}
 afm.quali <- data.frame(lapply(mfa.df.final, FUN = as.factor ))
@@ -559,7 +628,9 @@ res.fma.q <- MFA(base = afm.quali,
                  )
 ```
 
-Il semblerait difficile d'identifier des formes fortes car en utilisant un type catégorielle, les mots '...' , ... tirent fortement les axes donc cette méthode ne permet pas de consolider notre LDA.
+Il semblerait difficile d'identifier des formes fortes car en utilisant un type
+catégorielle, les mots '...' , ... tirent fortement les axes donc cette méthode
+ne permet pas de consolider notre LDA.
 
 ## AFC
 
@@ -576,8 +647,8 @@ plot.CA(res.afc, invisible = "row")
 
 ```
 
-
-Si on fait une classification issue du résultat de l'AFC, il semblerait que les formes fortes observées soient les mêmes que dans la méthode 1.
+Si on fait une classification issue du résultat de l'AFC, il semblerait que les
+formes fortes observées soient les mêmes que dans la méthode 1.
 
 ```{r}
 # coord.afc <- data.frame(cbind(dim1= res.afc$col$coord[,1], 
@@ -590,17 +661,16 @@ Si on fait une classification issue du résultat de l'AFC, il semblerait que les
 # 
 ```
 
+# Conclusion
 
-# Conclusion 
+Il semble intéressant d'utiliser des analyses factorielles pour consolider nos
+topic modellings et obtenir des formes fortes de nos topics. Après avoir lancé
+cet algorithme en faisant varier beaucoup les paramètres, on a pu observer une
+relative sensabilité à la modification de la stop_words liste des mots, ainsi
+évidemment qu'au paramètre k, ainsi que des topics très "forts" toujours
+retrouvés et composés des mêmes termes.
 
-Il semble intéressant d'utiliser des analyses factorielles pour consolider nos topic modellings et obtenir des formes fortes de nos topics. Après avoir lancé cet algorithme en faisant varier beaucoup les paramètres, on a pu observer une relative sensabilité à la modification de la stop_words liste des mots, ainsi évidemment qu'au paramètre k, ainsi que des topics très "forts" toujours retrouvés et composés des mêmes termes. 
-
-Le résultat présenté (6 clusters) nous semble cohérents au vue de tous les essais réalisés, rendant compte de thématiques qui portent du sens (bien que certaines soient composés de plusieurs sous-sujets), et que l'on a retrouvé systématiquement. 
-
-
-
-
-
-
-
-
+Le résultat présenté (6 clusters) nous semble cohérents au vue de tous les
+essais réalisés, rendant compte de thématiques qui portent du sens (bien que
+certaines soient composés de plusieurs sous-sujets), et que l'on a retrouvé
+systématiquement.
