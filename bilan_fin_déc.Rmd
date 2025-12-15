@@ -60,7 +60,6 @@ df_resultat <- df_count %>%
 
 rm(df_mots)
 rm(df_cross)
-rm(df_resultat)
 rm(df_count)
 
 df_resultat$cluster <- res.hcpc$data.clust$clust
@@ -98,14 +97,14 @@ df_filtre <- as.data.frame(df[, colSums(df_resultat.final[,-1]) > 10])
 
 Col les + pures
 ```{r}
-df <- apply(df_filtre[,-1],2,function(x) x/sum(x)*100)
+df <- data.frame(apply(df_filtre[,-1],2,function(x) x/sum(x)*100))
 df[df=="NaN"] <- 0
 
 max.col(df)
 
 colnames(df)[max.col(df)]
 
-
+df[,max.col(df)]
 ```
 
 
