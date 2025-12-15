@@ -1,0 +1,113 @@
+---
+title: "bilan"
+author: "Anna Mathieu"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+A partir des formes fortes obtenues par MFA, on souhaite extraire les compositions des descriptions des PAT, grâce à la fréquence d'apparition de chaque terme de chaque topic dans les descriptions des PAT tokenisées.
+
+Création du df 
+```{r}
+# documents : ta liste (text1, text2, ...)
+# vocab     : ton vecteur de mots
+
+library(purrr)
+
+df_textes <- imap_dfr(documents, function(mat, nom_doc) {
+  
+  # index des mots
+  idx <- mat[1, ]
+  
+  # fréquences
+  freq <- mat[2, ]
+  
+  # conversion index -> mots
+  mots <- vocab[idx]
+  
+  # répéter les mots selon la fréquence
+  texte <- paste(
+    rep(mots, times = freq),
+    collapse = " "
+  )
+  
+  tibble(
+    doc = nom_doc,
+    texte = texte
+  )
+})
+
+df_textes
+
+```
+
+
+
+On crée le data frame vide: 361 colonnes et 132 lignes 
+```{r}
+df_mots <- tibble(mot = rownames(mfa.df.final)) # une colonne pour les mots 
+
+df_cross <- crossing(df_mots, df_textes) # tous les croisement des mots (132) avec tous les textes (360)
+
+df_count <- df_cross %>%  mutate(occurrence = str_count(texte, fixed(mot)))  # comptage des occurences de chaque mot dans le texte 
+
+df_resultat <- df_count %>%
+  select(mot, doc, occurrence) %>%
+  pivot_wider(
+    names_from = doc,
+    values_from = occurrence
+  )
+
+rm(df_mots)
+rm(df_cross)
+rm(df_resultat)
+rm(df_count)
+
+df_resultat$cluster <- res.hcpc$data.clust$clust
+
+df_resultat.final <- data.frame(df_resultat %>%
+  group_by(cluster) %>%
+  summarise(across(where(is.numeric), sum, na.rm = TRUE)))
+
+
+df <- apply(df_resultat.final[,-1],2,function(x) x/sum(x)*100)
+df[df=="NaN"] <- 0
+
+
+sum(is.na(df))
+
+max.col(df)
+
+colnames(df)[max.col(df)]
+
+
+
+summary(colSums(df_resultat.final[,-1]))
+
+```
+
+
+
+
+Filtre pour supp les docs qui ont pas assez de mots qui se retrouvent 
+
+```{r}
+df_filtre <- as.data.frame(df[, colSums(df_resultat.final[,-1]) > 10])
+```
+
+
+Col les + pures
+```{r}
+df <- apply(df_filtre[,-1],2,function(x) x/sum(x)*100)
+df[df=="NaN"] <- 0
+
+max.col(df)
+
+colnames(df)[max.col(df)]
+
+
+```
+
+
+
+
