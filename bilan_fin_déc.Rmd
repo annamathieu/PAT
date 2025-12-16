@@ -173,28 +173,18 @@ easyCODA::PLOT.PCA(res.pca)
 res.ward <- easyCODA::WARD(res.alr, weight = F)
 
 plot(res.ward)
-
 ```
 
 
 ```{r}
-names(res.lra)
+######################################
+# PCA sur le res de CLR 
+res.pca <- FactoMineR::PCA(res.alr$LR, ncp = 3)
+barplot(res.pca$eig[,2])
 
-coord.pat <- data.frame(dim1 = res.pca$rowcoord[,1], dim2 = res.pca$rowcoord[,2])
-rownames(coord.pat) = rownames(df.t)
+res.hcpc <- HCPC(res.pca, nb.clust = 3)
 
-res.hcpc <- HCPC(coord.pat, nb.clust = 4)
-
-
-?easyCODA-package::WARD
-```
-
-
-
-```{r}
-res.pca <- easyCODA::PCA(res.lra$N)
-res.lra$
-
+res.hcpc$desc.var
 ```
 
 
