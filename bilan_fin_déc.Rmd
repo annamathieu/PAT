@@ -167,14 +167,10 @@ df.t <- t(apply(df.t,1,function(x) (x/sum(x))*100))
 ######### nb : easyCODA::LRA => compute une CLR 
 
 res.alr <- CLR(df.t, weight = F)
-res.pca <- easyCODA::PCA(res.alr, nd = 5)
-easyCODA::PLOT.PCA(res.pca)
+# res.pca <- easyCODA::PCA(res.alr, nd = 5)
+# easyCODA::PLOT.PCA(res.pca)
 
 res.ward <- easyCODA::WARD(res.alr, weight = F)
-
-plot(res.ward)
-
-
 
 ```
 
@@ -190,9 +186,9 @@ res.hcpc <- HCPC(res.pca, nb.clust = 3)
 res.hcpc$desc.var
 # Variables => donc topic sous ou sur représentés dans le cluster
 
-# clust1 :      
-# clust2 : 
-# clust3 : 
+# clust1 :   Gouvernance, démographie, env   
+# clust2 :   Gouvernance, secteur agricole, justice sociale 
+# clust3 :   Eco alim, secteur agricole, env 
 
 res.hcpc$desc.ind 
 # clust1 : 441        36       457       318       211 
@@ -224,4 +220,28 @@ HCPC(res.pca.brut, nb.clust = 6)$desc.var
 # clust 6 : démo 
 
 ```
+
+CA sur table de comptage
+```{r}
+df.ca <- data.frame(t(df_filtre))
+colnames(df.ca) <- colnames(df.t)
+rownames(df.ca) <- as.numeric(gsub("text", "", rownames(df.ca)))
+df.ca <- df.ca[order(as.numeric(rownames(df.ca))), ]
+
+res.ca <- FactoMineR::CA(df.ca)
+plot.CA(res.ca, invisible = "row")
+
+res.hcpc.ca <- HCPC(res.ca, nb.clust = -1)
+res.hcpc.ca$`1` # eco alim, env
+res.hcpc.ca$`2` # agri + alim coll durable 
+res.hcpc.ca$`3` # gouvernance 
+```
+
+
+Et CA sur le tableau avec transformations log 
+```{r}
+res <- ALR(df.t, weight = F)
+res.ca.clr <- FactoMineR::CA(res.clr$LR)
+```
+
 
