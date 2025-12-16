@@ -136,18 +136,65 @@ summary(df.t)
 
 On veut classifier nos PAT selon ces vecteurs de proportion de nos 6 topics. 
 
+⚠️ Ces vecteurs de proportions sont construits sur l'occurence des mots représentatifs de chaque topic dans chacun des PAT. Ces mots sont les termes ayant les indices frex les plus forts, consolidés par de nombreuses éxecutions de la LDA, puis filtrés pour supprimer les mots n'apparaissant que dans un seul topic d'une seule LDA, puis regroupés dans des formes fortes par classification hiérarchique précédée d'une MFA. 
+
 ```{r}
 # zeros ?
 
-100*sum(df.t==0)/(nrow(df.t)*(ncol(df.t))) # 6 % de zéros 
+100*sum(df.t==0)/(nrow(df.t)*(ncol(df.t))) # 6 % de zéros
+```
 
 
+On va coder nous mêmes le remplacement des zéros par BDL = remplacement de chaque zéro par 2/3 de la valeur minimale de chaque colonne 
+```{r}
+# df.t[df.t==0] <- 1000
+# df.t[minRow(df.t),]
+
+min <- apply(df.t, 2, function(x) min(x[x != 0]))
+min <- (2/3)*min
+
+# replace les zero par la valeur 
+for (i in seq_along(min)) {
+  df.t[df.t[, i] == 0, i] <- min[i]
+}
+
+summary(rowSums(df.t)) # du coup, toutes les fréquences ne sommes plus à 100
+
+# on recalcule nos fréquences 
+df.t <- t(apply(df.t,1,function(x) (x/sum(x))*100))
 
 
-LRA(df.t, weight = F)
+######### nb : easyCODA::LRA => compute une CLR 
 
+res.alr <- CLR(df.t, weight = F)
+res.pca <- easyCODA::PCA(res.alr, nd = 5)
+easyCODA::PLOT.PCA(res.pca)
+
+res.ward <- easyCODA::WARD(res.alr, weight = F)
+
+plot(res.ward)
 
 ```
 
+
+```{r}
+names(res.lra)
+
+coord.pat <- data.frame(dim1 = res.pca$rowcoord[,1], dim2 = res.pca$rowcoord[,2])
+rownames(coord.pat) = rownames(df.t)
+
+res.hcpc <- HCPC(coord.pat, nb.clust = 4)
+
+
+?easyCODA-package::WARD
+```
+
+
+
+```{r}
+res.pca <- easyCODA::PCA(res.lra$N)
+res.lra$
+
+```
 
 
