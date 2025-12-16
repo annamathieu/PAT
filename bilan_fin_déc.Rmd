@@ -173,6 +173,9 @@ easyCODA::PLOT.PCA(res.pca)
 res.ward <- easyCODA::WARD(res.alr, weight = F)
 
 plot(res.ward)
+
+
+
 ```
 
 
@@ -209,6 +212,7 @@ HCPC(res.pca.brut, nb.clust = 3)$desc.var
 # clust 2 : secteur agri + alim durable et sociale (env - ) => soutien agricole et justice sociale 
 # clust 3 : démo + alim durable + gouvernance (eco alim -) => soutien à la population 
 
+HCPC(res.pca.brut, nb.clust = 3)$desc.ind
 
 # test avec NB.CLUST = 6
 HCPC(res.pca.brut, nb.clust = 6)$desc.var
