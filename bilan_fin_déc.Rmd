@@ -11,21 +11,26 @@ knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
 ```
 
 ```{r}
-# install.packages("easyCODA")
 # packages à charger
 library(purrr)
 library(easyCODA)
 library(FactoMineR)
+library(zeroreplace)
+
 
 ```
+
+```{r}
+# chargement des données des autres RMD
+
+```
+
 
 
 A partir des formes fortes obtenues par MFA, on souhaite extraire les compositions des descriptions des PAT, grâce à la fréquence d'apparition de chaque terme de chaque topic dans les descriptions des PAT tokenisées.
 
 Création du df 
 ```{r}
-# documents : ta liste (text1, text2, ...)
-# vocab     : ton vecteur de mots
 df_textes <- imap_dfr(documents, function(mat, nom_doc) {
   
   # index des mots
@@ -135,6 +140,7 @@ On veut classifier nos PAT selon ces vecteurs de proportion de nos 6 topics.
 # zeros ?
 
 100*sum(df.t==0)/(nrow(df.t)*(ncol(df.t))) # 6 % de zéros 
+
 
 
 
