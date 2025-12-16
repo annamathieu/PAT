@@ -171,7 +171,7 @@ Pour ce qui est de la cohérence mesurée dans les topics avec la fonction
 apparaissent ensemble.
 
 Pour ce qui est du calcul, pour chaque mot d'un topic, on va calculer un rapport
-entre :\
+entre :\
 - le nombre de co-occurrences de deux termes dans tous les documents\
 - le nombre d'occurrences d'un des termes
 
@@ -185,7 +185,7 @@ $$
 $$
 
 On fait la somme des logs de fréquences de co-occurrences pour chaque terme d'un
-topic. Les éléments du calcul sont les suivants :\
+topic. Les éléments du calcul sont les suivants :\
 - `df[m,l]` : nombre de documents où les mots $l$ et $m$ d'un thème apparaissent ensemble ,on ajoute +1 pour éviter un log de 0 \
 
 - `df[l,l]` : nombre de documents contenant le terme $l$, auquel 
@@ -194,7 +194,7 @@ Pour l'algorithme en lui-même, si l'on prend une matrice carrée de dimensions
 $M \times M$, le calcul se fait sur la **partie triangulaire inférieure** de la
 matrice.
 
-Pour donner une définition plus générale d'un score de cohérence :
+Pour donner une définition plus générale d'un score de cohérence :
 
 > "In general, a coherence score quantifies the degree of semantic
 > interconnection among words within a given topic."\
@@ -434,6 +434,16 @@ words10 <- topic.extraction(model10)
 
 head(words1)
 
+rm(model1)
+rm(model2)
+rm(model3)
+rm(model4)
+rm(model5)
+rm(model6)
+rm(model7)
+rm(model8)
+rm(model9)
+rm(model10)
 ```
 
 on va ensuite mettre tous les mots ensemble :
@@ -444,6 +454,18 @@ lda_list <- list(words1,words2,words3,words4,words5,words6,words7,words8,words9,
 
 words <- unique(unlist(lda_list))# récupére la liste unique des mots de toutes les lda
 # ajouter toutes les listes de mots 
+
+rm(words1)
+rm(words2)
+rm(words3)
+rm(words4)
+rm(words5)
+rm(words6)
+rm(words7)
+rm(words8)
+rm(words9)
+rm(words10)
+
 
 ```
 
