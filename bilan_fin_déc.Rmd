@@ -185,6 +185,39 @@ barplot(res.pca$eig[,2])
 res.hcpc <- HCPC(res.pca, nb.clust = 3)
 
 res.hcpc$desc.var
+# Variables => donc topic sous ou sur représentés dans le cluster
+
+# clust1 :      
+# clust2 : 
+# clust3 : 
+
+res.hcpc$desc.ind 
+# clust1 : 441        36       457       318       211 
+# clust2 : 443       122       341       323       269 
+# clust3 : 178       174       167       181       319 
 ```
 
+PCA sur le tableau de données brut
+```{r}
+res.pca.brut <- FactoMineR::PCA(df.t)
+barplot(res.pca.brut$eig[,2])
+res.hcpc.brut <- HCPC(res.pca.brut, nb.clust = -1)
+
+# test avec Nb opt = 3 clust 
+HCPC(res.pca.brut, nb.clust = 3)$desc.var
+# clust 1 : eco alim + environnement => production alimentaire verte 
+# clust 2 : secteur agri + alim durable et sociale (env - ) => soutien agricole et justice sociale 
+# clust 3 : démo + alim durable + gouvernance (eco alim -) => soutien à la population 
+
+
+# test avec NB.CLUST = 6
+HCPC(res.pca.brut, nb.clust = 6)$desc.var
+# clust 1 : eco alim 
+# clust 2 : secteur agri 
+# clust 3 : environnement
+# clust 4 : gouvernance
+# clust 5 : alim durable et sociale 
+# clust 6 : démo 
+
+```
 
