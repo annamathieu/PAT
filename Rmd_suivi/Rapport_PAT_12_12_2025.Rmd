@@ -291,7 +291,7 @@ topic.extraction <- function(topic_model) {
 Extraction des termes de chaque thème avec Beta et frex et montrer que frex est
 plus discriminant :
 
-```{r}
+```{r, eval=FALSE}
 # On utilise NaileR pour faire une extraction automatique de nos variables latentes
 
 # avec FREX
@@ -311,7 +311,7 @@ cat(gemini_generate(nail_textual(dataset = frex.df.pivot, num.var = 1, num.text 
 ```
 
 Avec uniquement les scores beta : 
-```{r}
+```{r, eval=FALSE}
 # avec scores BETA
 beta.df <-  data.frame(t(summary(modeltest)$prob))
 colnames(beta.df) <- paste0(seq(from=1,to=9))
@@ -328,7 +328,7 @@ cat(gemini_generate(nail_textual(dataset = beta.df.pivot, num.var = 1, num.text 
 ```
 
 Avec beta et frex  :
-```{r}
+```{r, eval=FALSE}
 # avec les deux 
 betafrex <- data.frame(rbind(frex.df.pivot, beta.df.pivot))
 
@@ -663,7 +663,7 @@ head(clust)
 On récupère ensuite l'ensemble des mots de chaque clusters et on réalise
 l'extraction de la variable latente (nom du topic)
 
-```{r}
+```{r, eval=FALSE}
 # récupération des mots de chaque clusters 
 # mots.clust <- tapply(
 #   clust$word,     # Le vecteur à appliquer la fonction (les Mots)
