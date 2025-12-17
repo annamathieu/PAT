@@ -569,6 +569,8 @@ res.mfa <- MFA(base = mfa.df.final,
               ncp = 5
               # graph = F
               )
+
+save(res.mfa, file = "data/res.mfa.RData")
 ```
 
 On réalise ensuite une classification hierarchique de nos individus (mots).
@@ -681,11 +683,13 @@ l'extraction de la variable latente (nom du topic)
 
 # interprétation avec naileR (à faire plus tard)
 
-res <- nail_textual(dataset = clust[,1:2], num.var = 2, num.text = 1,
+cat(gemini_generate(nail_textual(dataset = clust[,1:2], num.var = 2, num.text = 1,
                   
                   introduction = "A study on Territorial food systems is done and we want to find the topics discussed in the description of each Territorial food system, we use topic modelling and latent dirichlet allocation. We consolidate our topics by using multiple executions of the algorithm and perform MFA to find strong forms in our topics.",
                   request = "We want to automatically put a name on those topics based on the words caracterising them. Please give a name to each topic suming up most of the words caracterising it. Do it in French. Only give la Liste des Noms de Groupe Attribués",, 
                   isolate.groups = F, drop.negative = T, generate = F)
+                  )
+    )
 
 #res
 
