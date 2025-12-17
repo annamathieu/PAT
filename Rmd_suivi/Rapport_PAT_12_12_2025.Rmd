@@ -631,7 +631,9 @@ plot_clust <- function(res.hcpc){
 
 ```{r}
 # nombre optimal 
-plot_clust(clustopt)
+plot.formes_fortes <- plot_clust(clustopt)
+save(plot.formes_fortes, file = "images/plot.formes_fortes")
+
 plot_clust(clust7)
 plot_clust(clust8)
 ```
@@ -658,6 +660,8 @@ clust$dim1 <- as.numeric(clust$dim1)
 clust$dim2 <- as.numeric(clust$dim2)
 
 head(clust)
+
+save(clust, file = "data/clust.RData")
 ```
 
 On récupère ensuite l'ensemble des mots de chaque clusters et on réalise
