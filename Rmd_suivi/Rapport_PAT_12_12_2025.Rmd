@@ -70,7 +70,7 @@ documents =\> n° des PAT).
 # Préparation des documents
 
 # Importation de res lemmat (voir Rapport du 04-12-25)
-load("data/res.lemmat.RData")
+# load("data/res.lemmat.RData")
 
 # step 1 : Create the Vocabulary
 vocab <- unique(res.lemmat$lem.f) # => liste unique de mots 
@@ -148,7 +148,7 @@ lda.model <- function(k, seed) {
 
 Exemple de fonctionnement de la fonction et des sorties :
 
-```{r}
+```{r, eval = F}
 modeltest <- lda.model(k = 9, seed = 1234)
 summary(modeltest)
 
@@ -161,7 +161,7 @@ compte 2 arguments (nstart et nend), qui correspondent aux valeurs minimum et
 maximum du nombre de topics qu'on fixe dans notre LDA, la fonction teste pour
 toutes les valeurs de k comprises dans cet intervalle.
 
-```{r}
+```{r, eval = F}
 #On charge le simple triplet matrix que nous avions fait dans le rapport du 04-12
 stm <- load(file="data/stm.RData")
 ```
@@ -200,7 +200,7 @@ Pour donner une définition plus générale d'un score de cohérence :
 > interconnection among words within a given topic."\
 > — Farea et al., 2024
 
-```{r}
+```{r, eval = F}
 # install.packages("topicdoc")
 library(topicdoc)
 library(tidyverse)
@@ -291,7 +291,7 @@ topic.extraction <- function(topic_model) {
 Extraction des termes de chaque thème avec Beta et frex et montrer que frex est
 plus discriminant :
 
-```{r}
+```{r, eval = F}
 # On utilise NaileR pour faire une extraction automatique de nos variables latentes
 
 # avec FREX
@@ -311,7 +311,7 @@ cat(gemini_generate(nail_textual(dataset = frex.df.pivot, num.var = 1, num.text 
 ```
 
 Avec uniquement les scores beta : 
-```{r}
+```{r, eval = F}
 # avec scores BETA
 beta.df <-  data.frame(t(summary(modeltest)$prob))
 colnames(beta.df) <- paste0(seq(from=1,to=9))
@@ -328,7 +328,7 @@ cat(gemini_generate(nail_textual(dataset = beta.df.pivot, num.var = 1, num.text 
 ```
 
 Avec beta et frex  :
-```{r}
+```{r, eval = F}
 # avec les deux 
 betafrex <- data.frame(rbind(frex.df.pivot, beta.df.pivot))
 
@@ -401,20 +401,20 @@ nb_lda = length(seeds) # nb de lda
 ## Création des modèles
 
 ```{r}
-# model1 <- lda.model(k = k, seed = seeds[1])
-# model2 <- lda.model(k = k, seed = seeds[2])
-# model3 <- lda.model(k = k, seed = seeds[3])
-# model4 <- lda.model(k = k, seed = seeds[4])
-# model5 <- lda.model(k = k, seed = seeds[5])
-# model6 <- lda.model(k = k, seed = seeds[6])
-# model7 <- lda.model(k = k, seed = seeds[7])
-# model8 <- lda.model(k = k, seed = seeds[8])
-# model9 <- lda.model(k = k, seed = seeds[9])
-# model10 <- lda.model(k = k, seed = seeds[10])
-# 
-# save(model1,model2,model3,model4,model5,model6,model7,model8,model9,model10, file = "data/modeles.RData")
+model1 <- lda.model(k = k, seed = seeds[1])
+model2 <- lda.model(k = k, seed = seeds[2])
+model3 <- lda.model(k = k, seed = seeds[3])
+model4 <- lda.model(k = k, seed = seeds[4])
+model5 <- lda.model(k = k, seed = seeds[5])
+model6 <- lda.model(k = k, seed = seeds[6])
+model7 <- lda.model(k = k, seed = seeds[7])
+model8 <- lda.model(k = k, seed = seeds[8])
+model9 <- lda.model(k = k, seed = seeds[9])
+model10 <- lda.model(k = k, seed = seeds[10])
 
-load("data/modeles.RData")
+# save(model1,model2,model3,model4,model5,model6,model7,model8,model9,model10, file = "data/modeles.RData")
+# 
+# load("data/modeles.RData")
 
 ```
 
@@ -466,7 +466,7 @@ rm(words8)
 rm(words9)
 rm(words10)
 
-
+save(lda_list, file = "data/lda_list.RData")
 ```
 
 et on créé un tableau de données contenant en ligne les mots, en colonne chaque
@@ -531,6 +531,8 @@ summary(colSums(mfa.df.final)) # on vérifie le nombre min, max, médian, moyen 
 
 dim(mfa.df)
 dim(mfa.df.final)
+
+save(mfa.df.final, file = "data/mfa.df.final.RData")
 ```
 
 On va ensuite comparer deux méthodes pour l'obtention des formes fortes : un AFM
@@ -631,9 +633,7 @@ plot_clust <- function(res.hcpc){
 
 ```{r}
 # nombre optimal 
-plot.formes_fortes <- plot_clust(clustopt)
-save(plot.formes_fortes, file = "images/plot.formes_fortes")
-
+plot_clust(clustopt)
 plot_clust(clust7)
 plot_clust(clust8)
 ```
@@ -642,6 +642,7 @@ On choisit le nombre de clusters retenus :
 
 ```{r}
 res.hcpc <- HCPC(res = res.mfa, nb.clust = 6)
+save(res.hcpc, file = "data/res.hcpc.RData")
 ```
 
 et on extrait les coordonnées des individus et leur appartenance à un cluster :
@@ -667,7 +668,7 @@ save(clust, file = "data/clust.RData")
 On récupère ensuite l'ensemble des mots de chaque clusters et on réalise
 l'extraction de la variable latente (nom du topic)
 
-```{r}
+```{r, eval = F}
 # récupération des mots de chaque clusters 
 # mots.clust <- tapply(
 #   clust$word,     # Le vecteur à appliquer la fonction (les Mots)
@@ -697,7 +698,7 @@ cat(descr.topic)
 Nous avons aussi essayé une AFM avec comme classe de variable 'n' =\>
 catégorielle.
 
-```{r}
+```{r, eval = F}
 afm.quali <- data.frame(lapply(mfa.df.final, FUN = as.factor ))
 rownames(afm.quali) <- rownames(mfa.df.final)
 # str(head(afm.quali))
@@ -715,7 +716,7 @@ ne permet pas de consolider notre LDA.
 
 ## AFC
 
-```{r}
+```{r, eval = F}
 afc.df <- data.frame(t(mfa.df.final))
 # str(head(afc.df))
 
@@ -731,7 +732,7 @@ plot.CA(res.afc, invisible = "row")
 Si on fait une classification issue du résultat de l'AFC, il semblerait que les
 formes fortes observées soient les mêmes que dans la méthode 1.
 
-```{r}
+```{r, eval = F}
 # coord.afc <- data.frame(cbind(dim1= res.afc$col$coord[,1], 
 #                               dim2= res.afc$col$coord[,1]))
 # head(coord.afc)
