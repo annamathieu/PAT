@@ -130,7 +130,7 @@ abline(v = 10, col = "blue4", lwd = 3)
 
 On va créer le data frame filtré contenant uniquement les PAT avec plus de 10 termes issus des formes fortes. 
 ```{r}
-df_filtre <- as.data.frame(df_resultat.final[, colSums(df_resultat.final) > 10])
+df_filtre <- as.data.frame(df_resultat.final[, colSums(df_resultat.final) >= 10])
 ```
 
 On va créer le tableau contenant les fréquences de chaque topic à partir de nos comptages.
@@ -149,9 +149,8 @@ df[,max.col(df)] # on cherche les textes les plus purs de chaque topic et on aff
 
 Analyse de ces PAT "purs" 
 => qualitative : à la main, en comparant avec la base
-```{r}
 
-```
+
 
 => qualitative : avec modèle de langage 
 ```{r}
@@ -162,7 +161,7 @@ Analyse de ces PAT "purs"
 On va transposer le df pour obtenir un tableau de données avec 6 colonnes (les titres sont issus des noms extraits par extraction des variables latentes avec NailR) et autant de lignes que de PAT après sélection (PAT ayant une description + au moins un certain nb de caractères dans la description et au moins 10 termes issus de nos formes fortes)
 ```{r}
 df.t <- data.frame(t(df))
-colnames(df.t) <- c("Gouvernance", "Alimentation Collective, Durable et Solidaire", "Démographie" , "Environnement", "Economie alimentaire", "Secteur agricole")
+colnames(df.t) <- c("Gouvernance", "Education/Justice Sociale", "Démographie" , "Environnement", "Economie alimentaire", "Secteur agricole")
 rownames(df.t) <- as.numeric(gsub("text", "", rownames(df.t)))
 
 df.t <- df.t[order(as.numeric(rownames(df.t))), ]
@@ -176,7 +175,7 @@ summary(df.t)
 
 
 ```{r}
-df.t %>%
+plot <- df.t %>%
   pivot_longer(cols = everything(),
                names_to = "Groupe",
                values_to = "Valeur") %>%
@@ -185,7 +184,10 @@ df.t %>%
   theme_minimal() +
   labs(title = "Distribution par groupe",
        x = "Groupe",
-       y = "Valeur")
+       y = "Valeur") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+plot + ylim(0, 50)
 
 # from gemini request 
 # 12.12.25 Rmd
@@ -195,12 +197,22 @@ On veut classifier nos PAT selon ces vecteurs de proportion de nos 6 topics.
 
 ⚠️ Ces vecteurs de proportions sont construits sur l'occurence des mots représentatifs de chaque topic dans chacun des PAT. Ces mots sont les termes ayant les indices frex les plus forts, consolidés par de nombreuses éxecutions de la LDA, puis filtrés pour supprimer les mots n'apparaissant que dans un seul topic d'une seule LDA, puis regroupés dans des formes fortes par classification hiérarchique précédée d'une MFA. 
 
+
+# Comparaison de deux approches de classification 
+
+## Méthode Greenacre, classif de vecteurs de fréquences
+
+### Préparation des données 
+
+Il faut gérer les fréquences égales à zéro. Dans la méthode décrite par Greenacre [Greenacre, 2019 ](https://www.researchgate.net/publication/327387401_Compositional_Data_Analysis_in_Practice), on utilise des transformations logarithmiques avant de réaliser une classification par AFC. 
+
+Pour réaliser les transformations logarithmiques, on doit d'abord traiter la problématique des zéros. Il existe plusieurs packages qui réalisent ce traitment, mais nous n'avons pas réussi à les télécharger donc nous avons testé nous mêmes plusieurs approches : 
+
 ```{r}
 # zeros ?
 
 100*sum(df.t==0)/(nrow(df.t)*(ncol(df.t))) # 6 % de zéros
 ```
-
 
 On va coder nous mêmes le remplacement des zéros par BDL = remplacement de chaque zéro par 2/3 de la valeur minimale de chaque colonne 
 ```{r}
@@ -230,6 +242,15 @@ res.alr <- CLR(df.t, weight = F)
 res.ward <- easyCODA::WARD(res.alr, weight = F)
 
 ```
+
+Remplacement par une petite valeur: 
+```{r}
+
+```
+
+### Transformations logarithmiques
+
+On réalise la transformation par LRA, puis on réalise une PCA (en fait une AFC) sur le tableau de données compos
 
 
 ```{r, ignore = T}
