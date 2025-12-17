@@ -468,7 +468,7 @@ stm <- simple_triplet_matrix(
   dimnames = list(docs, terms)
 )
 
-save(stm, file = 'stm.RData')
+# save(stm, file = 'stm.RData')
 ```
 
 ```{r}
@@ -819,6 +819,7 @@ res.lemmat <- res.lemmat %>%
 
 ```{r}
 # sauver le res.lemmat dans l'environnement 
+
 save(res.lemmat, file = "data/res.lemmat.RData")
 
 ```
