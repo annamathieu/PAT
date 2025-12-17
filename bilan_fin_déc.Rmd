@@ -5,7 +5,6 @@ date: "`r Sys.Date()`"
 output: html_document
 ---
 
-
 ```{r setup, include=FALSE}
 knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
 ```
@@ -35,15 +34,51 @@ load(file = "data/clust.RData")     # coordonnéees des mots = formes fortes
 load(file = "data/documents.RData") # comptage des lemmes dans les doc
 load(file = "data/vocab.RData")     # identification des mots 
 load(file = "data/mfa.df.final.RData")
-
+load(file = "data/res.lemmat.RData")
+load(file = "data/res.hcpc.RData")
+load(file = "data/clust.RData")
+load(file = "data/res.mfa.RData")
 
 ```
 
+# Objectifs 
+
+A partir des formes fortes obtenues par MFA, on souhaite extraire les compositions des descriptions des PAT. On va comparer différentes procédures pour aboutir à la classification des PAT, en commençant par la caractérisation de nos PAT à travers la fréquence d'apparition de chaque terme de chaque topic dans les descriptions des PAT tokenisées.
+
+# Formes Fortes 
+
+Voici les formes fortes identifiées (voir doc 12.12) :
+
+```{r}
+source(file = "functions/plot_clust.R")
+
+plot_clust(res.hcpc, res.mfa, mfa.df.final)
+```
+
+Les formes fortes ne sont pas toutes composées du mêmes nombre de mots :
+
+```{r}
+clust %>% 
+  group_by(clust) %>% 
+  summarise(sum = n())
+```
+
+Cela caractérise le fait que certains thèmes sont bcp plus riches en mots. Faut il considérer le même nombre de mots par thème ? 
+
+En effet, le thème 3 , qui a le plus de mots, a peut-être plus de chances d'être un thème que l'on retrouve plus au niveau fréquence dans les PAT (ce que l'on ne confirme pas à posteriori ). 
+On prend note de cela mais pour l'instant on va conserver l'ensemble des termes composant nos topics fortifiés. 
 
 
-A partir des formes fortes obtenues par MFA, on souhaite extraire les compositions des descriptions des PAT, grâce à la fréquence d'apparition de chaque terme de chaque topic dans les descriptions des PAT tokenisées.
+## Association des formes fortes - axes thématiques
+```{r}
+# à faire 
+# + description des PAT (à demander)
+```
 
-Création du df 
+
+# Construction des df
+
+On va "reconstituer" dans df_textes chaque description de PAT à travers les tokens de ces descriptions.
 ```{r}
 df_textes <- imap_dfr(documents, function(mat, nom_doc) {
   
@@ -74,7 +109,7 @@ df_textes
 
 
 
-On crée le data frame vide: 361 colonnes et 132 lignes 
+On crée le data frame "df_resultat.final" qui correspond à la table de comptage des termes de nos topics fortifiés (par topic) par PAT.
 ```{r}
 df_mots <- tibble(mot = rownames(mfa.df.final)) # une colonne pour les mots 
 
@@ -82,7 +117,7 @@ df_cross <- crossing(df_mots, df_textes) # tous les croisement des mots (132) av
 
 df_count <- df_cross %>%  mutate(occurrence = str_count(texte, fixed(mot)))  # comptage des occurences de chaque mot dans le texte 
 
-df_resultat <- df_count %>%
+df_resultat <- df_count %>%          # df avec autant de lignes que de mots, et de colonnes que de PAT et au croisement les occurences des mots (issus des formes fortes)
   select(mot, doc, occurrence) %>%
   pivot_wider(
     names_from = doc,
@@ -94,7 +129,7 @@ rm(df_cross)
 rm(df_count)
 
 # on trie les mots (lignes) du doc clust par ordre alphabétique pour ensuite récupérer les clusters des mots 
-clust <- clust %>% arrange(by = word)
+clust <- clust %>% arrange(by = word) # ⚠ important avant le merge de la colonnes clust !!
   
 df_resultat$cluster <- clust$clust
 
@@ -117,6 +152,7 @@ df_resultat.final <- df_resultat.final[,-1]
 
 ```
 
+# Filtrage PAT nb termes FF
 
 Filtre pour supp les docs qui ont pas assez de mots qui se retrouvent 
 
@@ -133,49 +169,35 @@ On va créer le data frame filtré contenant uniquement les PAT avec plus de 10 
 df_filtre <- as.data.frame(df_resultat.final[, colSums(df_resultat.final) >= 10])
 ```
 
+
+# Table de Fréquence
 On va créer le tableau contenant les fréquences de chaque topic à partir de nos comptages.
 ```{r}
 df <- data.frame(apply(df_filtre,2,function(x) x/sum(x)*100))
 df[df=="NaN"] <- 0
 ```
 
-On s'intéresse ensuite aux PAT qui sont les plus purs, c'est à dire qui prennent la valeur maximale pour un des topics. On va essayer de comprendre la solidité de notre mesure de fréquence en comparant ces PAT avec leur description. 
-
-On pourrait utiliser ces PAT comme exemple pour fournir à un modèle de langage de l'information supplémentaire liée à chaque topic pour en extraire le nom de la variable latente ensuite. 
-
-```{r}
-df[,max.col(df)] # on cherche les textes les plus purs de chaque topic et on affiche leur profils de répartition des topics 
-```
-
-Analyse de ces PAT "purs" 
-=> qualitative : à la main, en comparant avec la base
-
-
-
-=> qualitative : avec modèle de langage 
-```{r}
-
-```
-
-
 On va transposer le df pour obtenir un tableau de données avec 6 colonnes (les titres sont issus des noms extraits par extraction des variables latentes avec NailR) et autant de lignes que de PAT après sélection (PAT ayant une description + au moins un certain nb de caractères dans la description et au moins 10 termes issus de nos formes fortes)
 ```{r}
-df.t <- data.frame(t(df))
-colnames(df.t) <- c("Gouvernance", "Education/Justice Sociale", "Démographie" , "Environnement", "Economie alimentaire", "Secteur agricole")
-rownames(df.t) <- as.numeric(gsub("text", "", rownames(df.t)))
+df <- data.frame(t(df))
+colnames(df) <- c("Gouvernance", "Education/Justice Sociale", "Territoires" , "Environnement","Secteur agricole", "Economie alimentaire")
+rownames(df) <- as.numeric(gsub("text", "", rownames(df)))
 
-df.t <- df.t[order(as.numeric(rownames(df.t))), ]
+df <- df[order(as.numeric(rownames(df))), ]
 ```
+
+
+# PAT Purs 
 
 Comment se répartissent les vecteurs de composition des PAT en 6 topics ? 
 
 ```{r}
-summary(df.t)
+summary(df)
 ```
 
 
 ```{r}
-plot <- df.t %>%
+plot <- df %>%
   pivot_longer(cols = everything(),
                names_to = "Groupe",
                values_to = "Valeur") %>%
@@ -198,6 +220,29 @@ On veut classifier nos PAT selon ces vecteurs de proportion de nos 6 topics.
 ⚠️ Ces vecteurs de proportions sont construits sur l'occurence des mots représentatifs de chaque topic dans chacun des PAT. Ces mots sont les termes ayant les indices frex les plus forts, consolidés par de nombreuses éxecutions de la LDA, puis filtrés pour supprimer les mots n'apparaissant que dans un seul topic d'une seule LDA, puis regroupés dans des formes fortes par classification hiérarchique précédée d'une MFA. 
 
 
+On s'intéresse aux PAT qui sont les plus purs, c'est à dire qui prennent la valeur maximale pour un des topics. On va essayer de comprendre la solidité de notre mesure de fréquence en comparant ces PAT avec leur description. 
+
+On pourrait utiliser ces PAT comme exemple pour fournir à un modèle de langage de l'information supplémentaire liée à chaque topic pour en extraire le nom de la variable latente ensuite. 
+
+```{r}
+summary(df)
+
+df.t = data.frame(t(df)) 
+df.t[,max.col(df.t)] # on cherche les textes les plus purs de chaque topic et on affiche leur profils de répartition des topics 
+```
+
+Analyse de ces PAT "purs" 
+=> qualitative : à la main, en comparant avec la base
+
+
+
+=> qualitative : avec modèle de langage 
+```{r}
+
+```
+
+
+
 # Comparaison de deux approches de classification 
 
 ## Méthode Greenacre, classif de vecteurs de fréquences
@@ -211,31 +256,31 @@ Pour réaliser les transformations logarithmiques, on doit d'abord traiter la pr
 ```{r}
 # zeros ?
 
-100*sum(df.t==0)/(nrow(df.t)*(ncol(df.t))) # 6 % de zéros
+100*sum(df==0)/(nrow(df)*(ncol(df))) # % de zéros
 ```
 
 On va coder nous mêmes le remplacement des zéros par BDL = remplacement de chaque zéro par 2/3 de la valeur minimale de chaque colonne 
 ```{r}
-# df.t[df.t==0] <- 1000
-# df.t[minRow(df.t),]
+# df[df==0] <- 1000
+# df[minRow(df),]
 
-min <- apply(df.t, 2, function(x) min(x[x != 0]))
+min <- apply(df, 2, function(x) min(x[x != 0]))
 min <- (2/3)*min
 
 # replace les zero par la valeur 
 for (i in seq_along(min)) {
-  df.t[df.t[, i] == 0, i] <- min[i]
+  df[df[, i] == 0, i] <- min[i]
 }
 
-summary(rowSums(df.t)) # du coup, toutes les fréquences ne sommes plus à 100
+summary(rowSums(df)) # du coup, toutes les fréquences ne sommes plus à 100
 
 # on recalcule nos fréquences 
-df.t <- t(apply(df.t,1,function(x) (x/sum(x))*100))
+df <- t(apply(df,1,function(x) (x/sum(x))*100))
 
 
 ######### nb : easyCODA::LRA => compute une CLR 
 
-res.alr <- CLR(df.t, weight = F)
+res.alr <- CLR(df, weight = F)
 # res.pca <- easyCODA::PCA(res.alr, nd = 5)
 # easyCODA::PLOT.PCA(res.pca)
 
@@ -276,7 +321,7 @@ res.hcpc$desc.ind
 
 PCA sur le tableau de données brut
 ```{r}
-res.pca.brut <- FactoMineR::PCA(df.t)
+res.pca.brut <- FactoMineR::PCA(df)
 barplot(res.pca.brut$eig[,2])
 res.hcpc.brut <- HCPC(res.pca.brut, nb.clust = -1)
 
@@ -299,10 +344,12 @@ HCPC(res.pca.brut, nb.clust = 6)$desc.var
 
 ```
 
+## AFC sur table de comptage 
+
 CA sur table de comptage
 ```{r}
 df.ca <- data.frame(t(df_filtre))
-colnames(df.ca) <- colnames(df.t)
+colnames(df.ca) <- colnames(df)
 rownames(df.ca) <- as.numeric(gsub("text", "", rownames(df.ca)))
 df.ca <- df.ca[order(as.numeric(rownames(df.ca))), ]
 
@@ -316,10 +363,10 @@ res.hcpc.ca$`3` # gouvernance
 ```
 
 
-Et CA sur le tableau avec transformations log 
-```{r}
-res <- ALR(df.t, weight = F)
-res.ca.clr <- FactoMineR::CA(res.clr$LR)
-```
+
+# Score d'adéquation avec LLM
+
+Une autre méthode pourrait être d'essayer d'utiliser des modèles de langage pour calculer un score (=> et au final un vecteur) d'association entre chaque description de PAT et les topics consolidés. C'est une approche que l'on peut utiliser pour comparer aux résultats obtenues par les méthodes de classifications réalisées précédemment. 
+
 
 
