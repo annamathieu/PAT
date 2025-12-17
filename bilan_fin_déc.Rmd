@@ -1,6 +1,6 @@
 ---
-title: "bilan"
-author: "Anna Mathieu"
+title: "bilan fin décembre"
+author: "Team PAT"
 date: "`r Sys.Date()`"
 output: html_document
 ---
@@ -13,15 +13,29 @@ knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
 ```{r}
 # packages à charger
 library(purrr)
-library(easyCODA)
+library(easyCODA)    # Greenacre 
 library(FactoMineR)
-library(zeroreplace)
 
+library(tidyverse)
+library(dplyr)
+
+library(Factoshiny)
+library(ggplot2)
+library(ggrepel)
+library(RColorBrewer)
+library(plotly)
+library(tidyr)
 
 ```
 
 ```{r}
 # chargement des données des autres RMD
+
+load(file = "data/clust.RData")     # coordonnéees des mots = formes fortes 
+load(file = "data/documents.RData") # comptage des lemmes dans les doc
+load(file = "data/vocab.RData")     # identification des mots 
+load(file = "data/mfa.df.final.RData")
+
 
 ```
 
@@ -79,7 +93,10 @@ rm(df_mots)
 rm(df_cross)
 rm(df_count)
 
-df_resultat$cluster <- res.hcpc$data.clust$clust
+# on trie les mots (lignes) du doc clust par ordre alphabétique pour ensuite récupérer les clusters des mots 
+clust <- clust %>% arrange(by = word)
+  
+df_resultat$cluster <- clust$clust
 
 df_resultat.final <- data.frame(df_resultat %>%
   group_by(cluster) %>%
@@ -103,36 +120,76 @@ df_resultat.final <- df_resultat.final[,-1]
 
 Filtre pour supp les docs qui ont pas assez de mots qui se retrouvent 
 
+On veut filtrer les PAT qui n'ont pas assez de mots issus de nos formes fortes, ou placer la limite ? 
+On trace l'histogramme du nombre total de termes issus de l'ensemble de nos topics (formes fortes). On avait fixé la limite à 10 termes minimum issus des formes fortes pour que le PAT soit conservé pour la classification 
+
+```{r}
+hist(colSums(df_resultat.final), breaks = 200, xlim = range(0:150))
+abline(v = 10, col = "blue4", lwd = 3)
+```
+
+On va créer le data frame filtré contenant uniquement les PAT avec plus de 10 termes issus des formes fortes. 
 ```{r}
 df_filtre <- as.data.frame(df_resultat.final[, colSums(df_resultat.final) > 10])
 ```
 
-Col les + pures
+On va créer le tableau contenant les fréquences de chaque topic à partir de nos comptages.
 ```{r}
 df <- data.frame(apply(df_filtre,2,function(x) x/sum(x)*100))
 df[df=="NaN"] <- 0
-
-max.col(df)
-
-colnames(df)[max.col(df)]
-
-df[,max.col(df)]
 ```
 
-On va transposer le df 
+On s'intéresse ensuite aux PAT qui sont les plus purs, c'est à dire qui prennent la valeur maximale pour un des topics. On va essayer de comprendre la solidité de notre mesure de fréquence en comparant ces PAT avec leur description. 
+
+On pourrait utiliser ces PAT comme exemple pour fournir à un modèle de langage de l'information supplémentaire liée à chaque topic pour en extraire le nom de la variable latente ensuite. 
+
+```{r}
+df[,max.col(df)] # on cherche les textes les plus purs de chaque topic et on affiche leur profils de répartition des topics 
+```
+
+Analyse de ces PAT "purs" 
+=> qualitative : à la main, en comparant avec la base
+```{r}
+
+```
+
+=> qualitative : avec modèle de langage 
+```{r}
+
+```
+
+
+On va transposer le df pour obtenir un tableau de données avec 6 colonnes (les titres sont issus des noms extraits par extraction des variables latentes avec NailR) et autant de lignes que de PAT après sélection (PAT ayant une description + au moins un certain nb de caractères dans la description et au moins 10 termes issus de nos formes fortes)
 ```{r}
 df.t <- data.frame(t(df))
 colnames(df.t) <- c("Gouvernance", "Alimentation Collective, Durable et Solidaire", "Démographie" , "Environnement", "Economie alimentaire", "Secteur agricole")
 rownames(df.t) <- as.numeric(gsub("text", "", rownames(df.t)))
 
 df.t <- df.t[order(as.numeric(rownames(df.t))), ]
+```
 
+Comment se répartissent les vecteurs de composition des PAT en 6 topics ? 
+
+```{r}
 summary(df.t)
-# from gemini request 
-# 12.12.25 Rmd
 ```
 
 
+```{r}
+df.t %>%
+  pivot_longer(cols = everything(),
+               names_to = "Groupe",
+               values_to = "Valeur") %>%
+  ggplot(aes(x = Groupe, y = Valeur)) +
+  geom_boxplot(fill = "skyblue") +
+  theme_minimal() +
+  labs(title = "Distribution par groupe",
+       x = "Groupe",
+       y = "Valeur")
+
+# from gemini request 
+# 12.12.25 Rmd
+```
 
 On veut classifier nos PAT selon ces vecteurs de proportion de nos 6 topics. 
 
@@ -175,7 +232,7 @@ res.ward <- easyCODA::WARD(res.alr, weight = F)
 ```
 
 
-```{r}
+```{r, ignore = T}
 ######################################
 # PCA sur le res de CLR 
 res.pca <- FactoMineR::PCA(res.alr$LR, ncp = 3)
