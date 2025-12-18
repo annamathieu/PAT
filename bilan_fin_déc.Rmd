@@ -727,16 +727,15 @@ temp["211","clust"] # PAT pur gouvernance
 
 
 res.hcpc.ca$desc.ind
-```
 
-=======
 res.hcpc.ca <- HCPC(res.ca, nb.clust = -1)
 res.hcpc.ca$`1` # eco alim, env
 res.hcpc.ca$`2` # agri + alim coll durable 
 res.hcpc.ca$`3` # gouvernance 
-
 ```
->>>>>>> 693c9eb6a78361c418b3e389f77c138a7c144bb2
+
+
+
 
 
 
