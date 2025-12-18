@@ -1,12 +1,29 @@
 ---
-title: "bilan fin décembre"
-author: "Team PAT"
+title: "Bilan fin décembre - Projet PAT"
+author: "Erwan Gouhier, Anna Mathieu"
 date: "`r Sys.Date()`"
-output: html_document
+output:
+  html_document:
+    toc: true
+    toc_depth: 3
+    number_sections: true
+    toc_float: true
+    self_contained: true
+    df_print: paged
+    highlight: tango
+    tabset: true
+  pdf_document:
+    toc: true
+    toc_depth: '3'
+editor_options:
+  markdown:
+    wrap: 80
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
+knitr::opts_chunk$set(echo = TRUE, message = F, warning = F)
+
 ```
 
 ```{r}
@@ -105,6 +122,8 @@ df_textes <- imap_dfr(documents, function(mat, nom_doc) {
 
 df_textes
 
+# save(df_textes, file = "data/df_textes.RData")
+
 ```
 
 
@@ -150,6 +169,8 @@ df_resultat.final <- data.frame(df_resultat %>%
 
 df_resultat.final <- df_resultat.final[,-1]
 
+head(df_resultat.final)
+
 ```
 
 # Filtrage PAT nb termes FF
@@ -160,8 +181,11 @@ On veut filtrer les PAT qui n'ont pas assez de mots issus de nos formes fortes, 
 On trace l'histogramme du nombre total de termes issus de l'ensemble de nos topics (formes fortes). On avait fixé la limite à 10 termes minimum issus des formes fortes pour que le PAT soit conservé pour la classification 
 
 ```{r}
-hist(colSums(df_resultat.final), breaks = 200, xlim = range(0:150))
+hist(colSums(df_resultat.final), breaks = 200, xlim = range(0:150), main = "", xlab = "", ylab = "")
 abline(v = 10, col = "blue4", lwd = 3)
+title(main = "Histogramme du nombre total de termes issus des formes fortes par description de PAT", cex.main = 0.9, 
+      xlab = "Nombre de termes total (< 150)", 
+      ylab = "Effectifs")
 ```
 
 On va créer le data frame filtré contenant uniquement les PAT avec plus de 10 termes issus des formes fortes. 
@@ -184,6 +208,10 @@ colnames(df) <- c("Gouvernance", "Education/Justice Sociale", "Territoires" , "E
 rownames(df) <- as.numeric(gsub("text", "", rownames(df)))
 
 df <- df[order(as.numeric(rownames(df))), ]
+
+# NB : les noms des ROWS correspondent aux n° des PAT (ayant une description + n'ayant pas été supp par les filtrages)
+head(df)
+
 ```
 
 
@@ -197,17 +225,22 @@ summary(df)
 
 
 ```{r}
+
 plot <- df %>%
   pivot_longer(cols = everything(),
                names_to = "Groupe",
                values_to = "Valeur") %>%
-  ggplot(aes(x = Groupe, y = Valeur)) +
-  geom_boxplot(fill = "skyblue") +
+  ggplot(aes(x = Groupe, y = Valeur, fill = Groupe)) +
+
+  geom_boxplot() +
+
+  scale_fill_manual(values = c("gold1", "tomato2", "springgreen4", "royalblue", "chartreuse2", "saddlebrown")) +
   theme_minimal() +
   labs(title = "Distribution par groupe",
        x = "Groupe",
        y = "Valeur") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(axis.text.x = element_text(angle = 45, hjust = 1), 
+        title = element_text(hjust = 0.5))
 
 plot + ylim(0, 50)
 
@@ -225,10 +258,10 @@ On s'intéresse aux PAT qui sont les plus purs, c'est à dire qui prennent la va
 On pourrait utiliser ces PAT comme exemple pour fournir à un modèle de langage de l'information supplémentaire liée à chaque topic pour en extraire le nom de la variable latente ensuite. 
 
 ```{r}
-summary(df)
-
 df.t = data.frame(t(df)) 
-df.t[,max.col(df.t)] # on cherche les textes les plus purs de chaque topic et on affiche leur profils de répartition des topics 
+colnames(df.t) <- gsub("X","PAT n°",colnames(df.t))
+df.t[,max.col(df.t)] 
+# on cherche les textes les plus purs de chaque topic et on affiche leur profils de répartition des topics 
 ```
 
 Analyse de ces PAT "purs" 
@@ -591,7 +624,8 @@ Ce groupe se caractérise par une forte orientation vers l'**agriculture locale 
  
 ## Conclusion sur les pat purs 
 
-On a essayé de regarder les PAT les purs de chaque topic, pour voir si les PAT qui sont sensés abordés majoritairement certaines thématiques, le font réellement. Nous avons utilisé pour cela deux méthodologies: 
+On a essayé de regarder les PAT les purs de chaque topic, pour voir si les PAT qui sont sensés abordés majoritairement certaines thématiques, le font réellement. Nous avons utilisé pour cela deux méthodologies:
+
 - regarder les descriptions des PAT (mots lemmatisés issues de chaque description, pour chaque PAT), que l'on a comparés aux % de répartition des thèmes abordés dans chaque PAT, obtenu par la méthodologie développée ci - avant. Nous connaissons les limites de notre méthodologie, d'identifier les thématiques uniquement par les termes composant les topics fortifiés ; et nous voulions donc vérifier à posteriori si notre stratégie avait du sens, c'est à dire si sur TOUS LES LEMMES d'une description, nous retrouvions nos topics majoritaires. 
 
 afin de ne pas se limiter à cette seule analyse (pour éviter une sur-interprétation et de vouloir 'coller' à nos topcics), nous avons appliqué une deuxième stratégie : 
@@ -623,20 +657,25 @@ On va coder nous mêmes le remplacement des zéros par BDL = remplacement de cha
 min <- apply(df, 2, function(x) min(x[x != 0]))
 min <- (2/3)*min
 
+df.zerorep <- df 
+
 # replace les zero par la valeur 
 for (i in seq_along(min)) {
-  df[df[, i] == 0, i] <- min[i]
+  df.zerorep[df.zerorep[, i] == 0, i] <- min[i]
 }
 
-summary(rowSums(df)) # du coup, toutes les fréquences ne sommes plus à 100
+summary(rowSums(df.zerorep)) # du coup, toutes les fréquences ne sommes plus à 100
 
 # on recalcule nos fréquences 
-df <- t(apply(df,1,function(x) (x/sum(x))*100))
+df.zerorep <- t(apply(df.zerorep,1,function(x) (x/sum(x))*100))
+```
 
+### Transformations logarithmiques
 
+```{r}
 ######### nb : easyCODA::LRA => compute une CLR 
 
-res.alr <- CLR(df, weight = F)
+res.alr <- CLR(df.zerorep, weight = F)
 # res.pca <- easyCODA::PCA(res.alr, nd = 5)
 # easyCODA::PLOT.PCA(res.pca)
 
@@ -644,65 +683,42 @@ res.ward <- easyCODA::WARD(res.alr, weight = F)
 
 ```
 
-Remplacement par une petite valeur: 
-```{r}
-
-```
-
-### Transformations logarithmiques
-
 On réalise la transformation par LRA, puis on réalise une PCA (en fait une AFC) sur le tableau de données compos
 
+### Classfication 
 
-```{r, ignore = T}
+```{r}
 ######################################
 # PCA sur le res de CLR 
-res.pca <- FactoMineR::PCA(res.alr$LR, ncp = 3)
+res.pca <- FactoMineR::PCA(res.alr$LR, ncp = 2)
 barplot(res.pca$eig[,2])
 
-res.hcpc <- HCPC(res.pca, nb.clust = 3)
+res.hcpc <- HCPC(res.pca, nb.clust = -1)
+```
 
+Description des clusters 
+```{r}
 res.hcpc$desc.var
 # Variables => donc topic sous ou sur représentés dans le cluster
 
 # clust1 :   Gouvernance, démographie, env   
 # clust2 :   Gouvernance, secteur agricole, justice sociale 
-# clust3 :   Eco alim, secteur agricole, env 
+# clust3 :   Eco alim, secteur agricole, env
+```
 
+Description des individus 
+```{r}
 res.hcpc$desc.ind 
 # clust1 : 441        36       457       318       211 
 # clust2 : 443       122       341       323       269 
 # clust3 : 178       174       167       181       319 
 ```
 
-PCA sur le tableau de données brut
-```{r}
-res.pca.brut <- FactoMineR::PCA(df)
-barplot(res.pca.brut$eig[,2])
-res.hcpc.brut <- HCPC(res.pca.brut, nb.clust = -1)
 
-# test avec Nb opt = 3 clust 
-HCPC(res.pca.brut, nb.clust = 3)$desc.var
-# clust 1 : eco alim + environnement => production alimentaire verte 
-# clust 2 : secteur agri + alim durable et sociale (env - ) => soutien agricole et justice sociale 
-# clust 3 : démo + alim durable + gouvernance (eco alim -) => soutien à la population 
-
-HCPC(res.pca.brut, nb.clust = 3)$desc.ind
-
-# test avec NB.CLUST = 6
-HCPC(res.pca.brut, nb.clust = 6)$desc.var
-# clust 1 : eco alim 
-# clust 2 : secteur agri 
-# clust 3 : environnement
-# clust 4 : gouvernance
-# clust 5 : alim durable et sociale 
-# clust 6 : démo 
-
-```
 
 ## AFC sur table de comptage 
 
-CA sur table de comptage
+### CA sur table de comptage
 ```{r}
 df.ca <- data.frame(t(df_filtre))
 colnames(df.ca) <- colnames(df)
@@ -711,32 +727,77 @@ df.ca <- df.ca[order(as.numeric(rownames(df.ca))), ]
 
 res.ca <- FactoMineR::CA(df.ca)
 plot.CA(res.ca, invisible = "row")
+```
 
+### CAH sur l'AFC
+```{r}
 res.hcpc.ca <- HCPC(res.ca, nb.clust = 3)
+```
+
+Description des clusters 
+```{r}
 res.hcpc.ca$desc.var$`1` # territoire, secteur agri, eco alim 
 res.hcpc.ca$desc.var$`2` # education alim++ , env++ 
 res.hcpc.ca$desc.var$`3` # gouvernance 
 ```
-Individus caractéristiques des clusters
+
+Description des individus
 
 Les PAT les plus purs des 6 topics se retrouvent ils dans les clusters surreprésentant ces thématiques ?
 
 ```{r}
 temp <- res.hcpc.ca$data.clust
-temp["211","clust"] # PAT pur gouvernance 
+temp["211","clust"] # clust 3 ? oui  
+temp["100","clust"] # clust 2 ? oui
+temp["300","clust"] # clust 1 ou 2 ?? -> le 1
+temp["331","clust"] # clust 2 ? oui 
+temp["462","clust"] # clust 1 ? oui 
+temp["427","clust"] # clust 1 ? oui
+```
 
+=> Tous les individus "PAT Purs" se retrouvent bien dans les clusters qui abordent plus que la moyenne des PAT les thématiques majoritaire du PAT.
 
+```{r}
 res.hcpc.ca$desc.ind
-
-res.hcpc.ca <- HCPC(res.ca, nb.clust = -1)
-res.hcpc.ca$`1` # eco alim, env
-res.hcpc.ca$`2` # agri + alim coll durable 
-res.hcpc.ca$`3` # gouvernance 
 ```
 
 
+## Comparaison des deux classifications 
 
+Dans la classification réalisée à partir de l'AFC sur le tableau de comptage il y a 3 clusters qui surreprésentent les topics suivants : 
 
+- 1° Secteur agricole + Economie Alimentaire + Territoire 
+- 2° Environnement + Justice Sociale-Education 
+- 3° Gouvernance 
+
+et avec la transformation logarithmiques, les trois clusters surremprésentent les topics suivants : 
+
+- 1° Secteur agricole + Economie Alimentaire
+- 2° Territoire + Gouvernance 
+- 3° Environnement + Justice Sociale-Education 
+
+On va donc considérer que le cluster 2° du 1) = cluster 3 du 2) et vice versa.
+
+```{r}
+classif1 <- res.hcpc$data.clust$clust
+classif2 <- res.hcpc.ca$data.clust$clust
+
+classif1 <- classif1 %>% 
+  str_replace(pattern = "2", replacement = "B" )
+
+classif1 <- classif1 %>% 
+  str_replace(pattern = "3", replacement = "2" )
+
+classif1 <- classif1 %>% 
+  str_replace(pattern = "B", replacement = "3" )
+
+comp_classif = data.frame(classif1 = classif1, classif2 = classif2)
+row.names(comp_classif) = rownames(df)
+
+100*sum(comp_classif$classif1==comp_classif$classif2)/nrow(comp_classif)
+```
+
+37 % des PAT sont classés dans le même cluster en considérant la correspondance entre les clusters 2 et clusters 3 des 2 méthodes.
 
 
 # Score d'adéquation avec LLM
@@ -748,7 +809,12 @@ Peut on réaliser la classification uniquement avec un modèle de langage ?
 peut il, prendre en compte les textes (descriptions) lemmatisées, identifier des thèmes, et classifier les PAT selon les termes abordés ? 
 
 ```{r}
-
+# cat(gemini_generate(nail_textual(dataset = df_textes, num.var = 1, num.text = 2,
+#                   introduction = "Une étude a été réalisée sur les systèmes alimentaires territorialisés (PAT) en France. Nous disposons d'une base de données complétée par les porteurs de projet de ces PAT. Ceux - ci ont décrits les enjeux de leur territoire (problématiques, thématiques, situation spécifique, sujets sur lesquels le PAT pourra porter, etc). Nous souhaitons comprendre quels sont les thématiques abordées dans ces descriptions. Je te donne la liste des termes déjà lemmatisés issus du prétraitement de ces descriptions de PAT.",
+#                   
+#                   request = "Combien de thèmes sont abordés dans les descriptions ? Quels sont les mots qui composent ces thèmes ? Quel est la répartition moyenne de l'ensemble des PAT vis-à-vis de la composition en thématiques ? Peux tu calculer la fréquence de chaque thème dans chaque PAT ? Peux tu réaliser aussi, à partir de tes thèmes et des pourcentages de répartition de chaque thème dans chaque PAT, une classification (typologie) des PAT selon les thèmes qu'ils abordent ? Peux tu caractériser ces groupes ?  ",
+#                   
+#                   isolate.groups = F, drop.negative = T, generate = F)))
 ```
 
  
