@@ -235,6 +235,7 @@ Analyse de ces PAT "purs"
 => qualitative : à la main, en comparant avec la base
 
 ## PAT 211 - Gouvernance
+
 ```{r}
 df_textes$texte[159]
 ```
@@ -243,6 +244,7 @@ df_textes$texte[159]
 On retrouve des mots du vocabulaire de la gouvernance : plan, action, renforcer, enjeu, programme, problématique, contrat
 Environnement : climat, eau, déchet (eau et déchet ne sont pas dans le mots reconnu)
 Stats Agriculture : an (mais c'est pas clair)
+
 
 ```{r}
 # cat(gemini_generate(nail_textual(dataset = df_textes[159,], num.var = 1, num.text = 2,
@@ -586,7 +588,7 @@ Ce groupe se caractérise par une forte orientation vers l'**agriculture locale 
 
 
 
-
+ 
 ## Conclusion sur les pat purs 
 
 On a essayé de regarder les PAT les purs de chaque topic, pour voir si les PAT qui sont sensés abordés majoritairement certaines thématiques, le font réellement. Nous avons utilisé pour cela deux méthodologies: 
@@ -621,23 +623,20 @@ On va coder nous mêmes le remplacement des zéros par BDL = remplacement de cha
 min <- apply(df, 2, function(x) min(x[x != 0]))
 min <- (2/3)*min
 
-
-df.zerorep <- df
-
 # replace les zero par la valeur 
 for (i in seq_along(min)) {
-  df.zerorep[df.zerorep[, i] == 0, i] <- min[i]
+  df[df[, i] == 0, i] <- min[i]
 }
 
-summary(rowSums(df.zerorep)) # du coup, toutes les fréquences ne sommes plus à 100
+summary(rowSums(df)) # du coup, toutes les fréquences ne sommes plus à 100
 
 # on recalcule nos fréquences 
-df.zerorep <- data.frame(t(apply(df.zerorep,1,function(x) (x/sum(x))*100)))
+df <- t(apply(df,1,function(x) (x/sum(x))*100))
 
 
 ######### nb : easyCODA::LRA => compute une CLR 
 
-res.alr <- CLR(df.zerorep, weight = F)
+res.alr <- CLR(df, weight = F)
 # res.pca <- easyCODA::PCA(res.alr, nd = 5)
 # easyCODA::PLOT.PCA(res.pca)
 
@@ -655,9 +654,51 @@ Remplacement par une petite valeur:
 On réalise la transformation par LRA, puis on réalise une PCA (en fait une AFC) sur le tableau de données compos
 
 
+```{r, ignore = T}
+######################################
+# PCA sur le res de CLR 
+res.pca <- FactoMineR::PCA(res.alr$LR, ncp = 3)
+barplot(res.pca$eig[,2])
 
+res.hcpc <- HCPC(res.pca, nb.clust = 3)
 
+res.hcpc$desc.var
+# Variables => donc topic sous ou sur représentés dans le cluster
 
+# clust1 :   Gouvernance, démographie, env   
+# clust2 :   Gouvernance, secteur agricole, justice sociale 
+# clust3 :   Eco alim, secteur agricole, env 
+
+res.hcpc$desc.ind 
+# clust1 : 441        36       457       318       211 
+# clust2 : 443       122       341       323       269 
+# clust3 : 178       174       167       181       319 
+```
+
+PCA sur le tableau de données brut
+```{r}
+res.pca.brut <- FactoMineR::PCA(df)
+barplot(res.pca.brut$eig[,2])
+res.hcpc.brut <- HCPC(res.pca.brut, nb.clust = -1)
+
+# test avec Nb opt = 3 clust 
+HCPC(res.pca.brut, nb.clust = 3)$desc.var
+# clust 1 : eco alim + environnement => production alimentaire verte 
+# clust 2 : secteur agri + alim durable et sociale (env - ) => soutien agricole et justice sociale 
+# clust 3 : démo + alim durable + gouvernance (eco alim -) => soutien à la population 
+
+HCPC(res.pca.brut, nb.clust = 3)$desc.ind
+
+# test avec NB.CLUST = 6
+HCPC(res.pca.brut, nb.clust = 6)$desc.var
+# clust 1 : eco alim 
+# clust 2 : secteur agri 
+# clust 3 : environnement
+# clust 4 : gouvernance
+# clust 5 : alim durable et sociale 
+# clust 6 : démo 
+
+```
 
 ## AFC sur table de comptage 
 
@@ -668,8 +709,7 @@ colnames(df.ca) <- colnames(df)
 rownames(df.ca) <- as.numeric(gsub("text", "", rownames(df.ca)))
 df.ca <- df.ca[order(as.numeric(rownames(df.ca))), ]
 
-res.ca <- FactoMineR::CA(df.ca, ncp = 2)
-barplot(res.ca$eig[,2])
+res.ca <- FactoMineR::CA(df.ca)
 plot.CA(res.ca, invisible = "row")
 
 res.hcpc.ca <- HCPC(res.ca, nb.clust = 3)
@@ -689,6 +729,14 @@ temp["211","clust"] # PAT pur gouvernance
 res.hcpc.ca$desc.ind
 ```
 
+=======
+res.hcpc.ca <- HCPC(res.ca, nb.clust = -1)
+res.hcpc.ca$`1` # eco alim, env
+res.hcpc.ca$`2` # agri + alim coll durable 
+res.hcpc.ca$`3` # gouvernance 
+
+```
+>>>>>>> 693c9eb6a78361c418b3e389f77c138a7c144bb2
 
 
 
