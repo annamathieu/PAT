@@ -234,13 +234,367 @@ df.t[,max.col(df.t)] # on cherche les textes les plus purs de chaque topic et on
 Analyse de ces PAT "purs" 
 => qualitative : à la main, en comparant avec la base
 
-
-
-=> qualitative : avec modèle de langage 
+## PAT 211 - Gouvernance
 ```{r}
+df_textes$texte[159]
+```
+"Caux Seine agglo est engagée dans divers programmes pour répondre aux problématiques et enjeux du territoire. Ainsi, le Projet Alimentaire Territorial vient renforcer les actions du Plan Climat Air Energie Territorial, du Plan Local des Déchets Ménagers et Assimilés, du Plan Local d'Urbanisme Intercommunal, du programme d'actions de la Protection de la Ressource en Eau et du Contrat Local de Santé."
 
+On retrouve des mots du vocabulaire de la gouvernance : plan, action, renforcer, enjeu, programme, problématique, contrat
+Environnement : climat, eau, déchet (eau et déchet ne sont pas dans le mots reconnu)
+Stats Agriculture : an (mais c'est pas clair)
+
+```{r}
+# cat(gemini_generate(nail_textual(dataset = df_textes[159,], num.var = 1, num.text = 2,
+#                   introduction = "Ces mots sont des termes issus de la description d'un PAT.",
+#                   request = "Quel est le thème principal abordé dans ce texte ? Quels sont les autres thèmes abordés ? peux tu quantifier cette répartition entre thèmes?",
+#                   isolate.groups = F, drop.negative = T, generate = F)))
 ```
 
+Voici l'analyse des données fournies, structurée selon les thèmes abordés et leur répartition.
+
+Analyse du Groupe 'text211'
+
+Le groupe 'text211' présente un ensemble de termes qui s'articulent autour de l'élaboration et la mise en œuvre de stratégies et d'actions à l'échelle d'un territoire, en lien avec des problématiques de développement durable.
+
+Thème principal abordé
+
+Le thème principal est l'**Action et la Planification Territoriale**. Ce thème est fortement représenté par des mots décrivant la mise en œuvre, la gestion et le cadre géographique et institutionnel des initiatives. Des termes comme `action` (x2), `programme` (x2), `local` (x3), `territorial` (x2), `intercommunal`, `agglo`, `contrat`, `engager`, `renforcer`, `répondre` et `venir` soulignent l'importance de la structuration et de la concrétisation des efforts à une échelle locale et régionale.
+
+Autres thèmes abordés
+
+D'autres thèmes majeurs se dégagent, représentant les domaines d'application ou les objectifs de cette planification territoriale :
+
+1.  **Environnement et Gestion des Ressources Naturelles et Déchets** : Ce thème regroupe des préoccupations écologiques et de gestion des ressources. On y trouve `climat`, `déchet`, `eau`, `énergie`, `protection`, `ressource`, ainsi que des termes liés à la gestion des déchets comme `ménager` et `assimilé` (souvent dans le contexte de "déchets ménagers et assimilés").
+2.  **Enjeux Socio-urbains et Alimentaires** : Ce thème fait référence aux dimensions sociales, sanitaires et d'aménagement de l'espace. Les mots `alimentaire`, `santé` et `urbanisme` en sont les principaux indicateurs.
+3.  **Défis et Problématiques Générales** : Des termes plus génériques soulignent la nature complexe et les enjeux sous-jacents aux actions menées. Il s'agit de `enjeu` et `problématique`.
+
+Répartition quantifiée entre les thèmes
+
+Sur un total de 29 mots, la répartition est la suivante :
+
+*   **Action et Planification Territoriale** : 16 mots (environ 55.2%)
+    *   `action` (2), `agglo`, `contrat`, `engager`, `intercommunal`, `local` (3), `programme` (2), `renforcer`, `répondre`, `territorial` (2), `venir`
+*   **Environnement et Gestion des Ressources Naturelles et Déchets** : 8 mots (environ 27.6%)
+    *   `assimilé`, `climat`, `déchet`, `eau`, `énergie`, `ménager`, `protection`, `ressource`
+*   **Enjeux Socio-urbains et Alimentaires** : 3 mots (environ 10.3%)
+    *   `alimentaire`, `santé`, `urbanisme`
+*   **Défis et Problématiques Générales** : 2 mots (environ 6.9%)
+    *   `enjeu`, `problématique`
+
+---Final Summary Task
+
+
+1. Comparison of all groups
+
+Seul le groupe 'text211' a été fourni pour analyse. Par conséquent, une comparaison entre plusieurs groupes n'est pas possible.
+
+2. List of group names you assigned
+
+*   **Group 'text211'**: Planification et Action Territoriale pour le Développement Durable
+
+
+---------------
+
+C'est très convaincant 55 % de 'gouvernance et planification territoriale' pour notre PAT caractérisé par 60 % de topic gouvernance.
+
+
+## PAT 100 - Education / Justice sociale
+```{r}
+df_textes$texte[81]
+```
+
+ce PAT reflète bien un pat abordant le sujet regroupant de la justice sociale - education alimentaire - la  restauration collective sous l'angle de : précarité, sain, sensibilisation, collectif , durable , etc. 
+
+C'est plutôt convaincant pour un PAT caractéristique de ce topic
+
+```{r}
+# cat(gemini_generate(nail_textual(dataset = df_textes[81,], num.var = 1, num.text = 2,
+#                   introduction = "Ces mots sont des termes issus de la description d'un PAT.",
+#                   request = "Quel est le thème principal abordé dans ce texte ? Quels sont les autres thèmes abordés ? peux tu quantifier cette répartition entre thèmes?",
+#                   isolate.groups = F, drop.negative = T, generate = F)))
+```
+
+Voici l'analyse du groupe 'text100' :
+
+Analyse du Groupe 'text100'
+
+Le texte fourni décrit un ensemble de termes relatifs à un Projet Alimentaire Territorial (PAT). L'analyse des mots clés permet de dégager les thèmes principaux et secondaires.
+
+Thème Principal Abordé
+
+Le thème principal abordé est le **développement et la mise en œuvre d'un Projet Alimentaire Territorial (PAT) visant à créer un système alimentaire local, durable, sain et solidaire.**
+
+Ce thème englobe les objectifs généraux du projet ainsi que les caractéristiques clés du système alimentaire visé, qui sont fortement représentées par les mots utilisés.
+
+Autres Thèmes Abordés et leur Répartition Quantifiée
+
+Les mots ont été classés en différentes catégories thématiques pour quantifier leur répartition. Sur un total de **32 mots** analysés, la distribution est la suivante :
+
+1.  **Actions, Objectifs & Mise en Œuvre du PAT**
+    *   Mots : `action`, `créer`, `favoriser` (2), `objectif`, `renforcer`, `sensibilisation`, `travailler`, `valoriser`
+    *   Nombre de mots : **9**
+    *   Répartition : **28.13%**
+    *   *Ce thème regroupe les verbes d'action et les noms d'objectifs, soulignant la dimension proactive et la volonté de concrétisation du projet.*
+
+2.  **Système Alimentaire & Qualité**
+    *   Mots : `alimentaire`, `alimentation` (2), `produit`, `restauration`, `sain` (2), `vente`
+    *   Nombre de mots : **8**
+    *   Répartition : **25.00%**
+    *   *Ce thème se concentre sur l'objet même du projet : l'alimentation, sa qualité (sain) et les activités connexes (produit, restauration, vente).*
+
+3.  **Développement Durable & Ancrage Territorial**
+    *   Mots : `circuit`, `court`, `durable` (2), `local` (2)
+    *   Nombre de mots : **6**
+    *   Répartition : **18.75%**
+    *   *Ce thème met en évidence l'importance de la durabilité, de la proximité (local, circuit court) et de l'ancrage géographique du système alimentaire.*
+
+4.  **Dimension Sociale & Collective**
+    *   Mots : `association`, `collectif` (2), `précarité`
+    *   Nombre de mots : **5**
+    *   Répartition : **15.63%**
+    *   *Ce thème souligne l'aspect communautaire, collaboratif (collectif, association) et l'attention portée aux vulnérabilités sociales (précarité) dans le cadre du PAT.*
+
+5.  **Le Projet Alimentaire Territorial (PAT) - Cadre Général**
+    *   Mots : `pat`
+    *   Nombre de mots : **1**
+    *   Répartition : **3.13%**
+    *   *Ce mot identifie directement le type de projet en question.*
+
+6.  **Termes Génériques / Descriptifs**
+    *   Mots : `introduction`, `nombre`, `point`
+    *   Nombre de mots : **3**
+    *   Répartition : **9.38%**
+    *   *Ces mots sont plus génériques et servent à structurer ou introduire des éléments de description.*
+
+---
+
+"Le développement et la mise en œuvre d'un Projet Alimentaire Territorial (PAT) visant à créer un système alimentaire local, durable, sain et solidaire" => le thème principal identifié est donc lié une alimentation, saine, durabke et à la notion de solidarité, bien que la robustesse de la réponse soit plus faible, aussi certainement lié au fait que cette thématique 'alimentation durable, justice sociale, etc" soit assez multiTématique et que l'analyse par le LLM est complétement sans a priori de nos topics.
+
+
+## PAT 300 mix Territoires / Education_Justice Sociale 
+```{r}
+df_textes$texte[232]
+```
+
+Ce profil de PAT semble assez bien refléter les 2 thématiques principales qui sont sensées le composee
+
+avec LLM : 
+```{r}
+# cat(gemini_generate(nail_textual(dataset = df_textes[232,], num.var = 1, num.text = 2,
+#                   introduction = "Ces mots sont des termes issus de la description d'un PAT.",
+#                   request = "Quel est le thème principal abordé dans ce texte ? Quels sont les autres thèmes abordés ? peux tu quantifier cette répartition entre thèmes?",
+#                   isolate.groups = F, drop.negative = T, generate = F)))
+```
+
+Analyse du groupe 'text300'
+
+Le groupe 'text300' est représenté par une seule réponse, décrivant un ensemble de termes liés à un PAT (Projet Alimentaire Territorial).
+
+Thème principal
+
+Le thème principal abordé dans ce texte est le **développement de systèmes alimentaires territoriaux, durables et inclusifs, avec un accent fort sur l'accès et l'approvisionnement local et collectif, notamment pour les populations défavorisées en milieu urbain.**
+
+Plus précisément, les termes indiquent une préoccupation pour la structuration de l'approvisionnement et de la distribution alimentaire (circuits courts, chaine, centrale, approvisionnement, restauration), la valorisation des produits locaux et du goût, ainsi que l'intégration des dimensions sociales et environnementales (durable, circulaire, collectif, défavorisé, quartier, qpv, économie sociale).
+
+Autres thèmes abordés
+
+1.  **Logistique et organisation de la chaîne alimentaire :** Accès, approvisionnement, centrale, chaine, circuit (court, circulaire), dispositif, regrouper.
+2.  **Inclusion sociale et territoriale :** Acteur, collectif, défavorisé, enjeu, favoriser, qpv (Quartiers Prioritaires de la Ville), quartier, urbain, éducation.
+3.  **Durabilité et modèles économiques :** Circulaire, commerce, durable, économie, enjeu.
+4.  **Qualité et valorisation du produit :** Goût, produit, alimentation, cuisine, restauration.
+
+Quantification de la répartition entre thèmes
+
+Étant donné la nature qualitative des données et la présence d'une seule réponse, une quantification numérique stricte n'est pas possible. Cependant, nous pouvons évaluer la prépondérance des thèmes par le nombre de mots-clés qui s'y rapportent directement :
+
+*   **Système Alimentaire Local et Approvisionnement (35%)** : alimentation, approvisionnement, circuit (court, circulaire), chaine, centrale, cuisine, goût, produit, restauration, accès.
+*   **Inclusion Sociale et Territoriale (30%)** : acteur, collectif, défavorisé, enjeu, favoriser, qpv, quartier, urbain, éducation.
+*   **Durabilité et Économie (20%)** : circulaire, commerce, durable, économie.
+*   **Organisation et Dispositifs (15%)** : dispositif, regrouper.
+
+Le thème du **système alimentaire** est clairement central et omniprésent, mais il est intrinsèquement lié et qualifié par des préoccupations d'**inclusion sociale** et de **durabilité**, qui représentent ensemble une part très significative du vocabulaire. L'accent est mis sur une approche holistique de l'alimentation, ne se limitant pas à l'acte de manger, mais englobant toute sa chaîne de valeur et son impact social et environnemental.
+
+---
+
+
+## PAT 331 - Environnement 57 % (avec agri 37 %)
+```{r}
+df_textes$texte[250]
+```
+Environnement : biodiversite, changement, climatique, eau, environnement, fort, protection, ressource, usage
+Secteur agricole: activité, agricole, agriculture, an, exploitant
+Gouvernance : santé (pas clair)
+
+Petite observation "d'incohérence dans les thèmes" : métropole & ménage dans Stats agri
+
+Le texte en lui même parle du conflit entre l'utilisation des terres pour l'agriculture et des protections environnementales, mais plus des contraintes en eau du territoire pour l'agriculture.
+
+et avec LLM 
+```{r}
+# cat(gemini_generate(nail_textual(dataset = df_textes[250,], num.var = 1, num.text = 2,
+#                   introduction = "Ces mots sont des termes issus de la description d'un PAT.",
+#                   request = "Quel est le thème principal abordé dans ce texte ? Quels sont les autres thèmes abordés ? peux tu quantifier cette répartition entre thèmes?",
+#                   isolate.groups = F, drop.negative = T, generate = F)))
+```
+
+Voici l'analyse thématique du groupe 'text331'.
+
+Analyse Thématique pour le groupe 'text331'
+
+Thème Principal
+
+Le thème principal abordé est la **gestion et la préservation des territoires agricoles et des ressources naturelles, face aux enjeux climatiques, fonciers et de développement territorial**.
+Les mots fréquemment cités tels que "agricole" (4x), "agriculture", "foncier" (3x), "enjeu" (4x), "ressource" (2x), "protection" (2x), "préservation", "eau", "biodiversité", "changement climatique", "environnement" soulignent cette orientation forte. Le contexte de "insulaire" et la notion de "dépendre" ou "autonomie" suggèrent également des défis spécifiques liés à la vulnérabilité territoriale.
+
+Autres Thèmes Abordés
+
+Les autres thèmes abordés, en complément du thème principal, sont :
+
+1.  **Les Enjeux Généraux et la Réflexion Stratégique :** Ce thème regroupe les mots évoquant les défis à relever, les problématiques et la nécessité de trouver des solutions ou des équilibres ("enjeu", "question", "important", "existence", "équilibre", "trouver", "adaptation").
+2.  **Les Contraintes, Réglementations et la Dépendance :** Ce thème met en lumière les limitations existantes, les cadres réglementaires et les situations de dépendance ("limiter", "restriction", "réglementaire", "soumettre", "arrêter", "dépendre", "insulaire", "continent").
+3.  **Le Développement Territorial, la Population et l'Attractivité :** Il s'agit des aspects liés à la dynamique des territoires, la présence humaine et leur capacité à attirer ou à se développer de manière autonome ("développement", "attractivité", "autonomie", "possibilité", "renforcer", "population", "flux").
+4.  **Le Changement Climatique et la Temporalité :** Ce thème regroupe les termes directement liés aux évolutions climatiques et aux notions temporelles qui peuvent impacter les activités et les ressources ("changement climatique", "hiver", "an", "mois").
+
+Répartition Quantitative des Thèmes
+
+Sur un total de **58 mots** identifiés pour le groupe 'text331', la répartition est la suivante :
+
+*   **Thème Principal : Enjeux Agricoles, Foncier et Gestion des Ressources Naturelles**
+    *   Nombre de mots : 24
+    *   Pourcentage : **41,4%**
+*   **Autres Thèmes :**
+    *   Enjeux Généraux et Réflexion Stratégique : 14 mots (**24,1%**)
+    *   Contraintes, Réglementations et Dépendance : 9 mots (**15,5%**)
+    *   Développement Territorial, Population et Attractivité : 7 mots (**12,1%**)
+    *   Changement Climatique et Temporalité : 4 mots (**6,9%**)
+
+---
+
+Final Summary Task
+
+
+Seul le groupe 'text331' a été fourni pour analyse.
+Le profil de ce groupe est fortement centré sur les **défis complexes liés à l'agriculture, la gestion foncière et la préservation des ressources naturelles (eau, biodiversité)**. Ces enjeux sont exacerbés par des facteurs comme le **changement climatique** et des **contraintes spécifiques (potentiellement insulaires ou réglementaires)**. Les mots utilisés évoquent une préoccupation majeure pour la **durabilité**, la **protection** et la recherche d'un **équilibre** face à la **spéculation** et la nécessité d'une **adaptation** et d'un **développement** territorial cohérent. La thématique des "enjeux" est très présente, soulignant la nature problématique et stratégique des discussions.
+
+
+
+## PAT 462 - secteur agri 
+```{r}
+df_textes$texte[349]
+```
+Ce texte représente bien une description d'un PAT qui aborde bcp la question du secteur agricole: 
+=> élevage , exploitation, agricole, ugb , terre, ... sont des mots très fréquent 
+
+
+```{r}
+# cat(gemini_generate(nail_textual(dataset = df_textes[349,], num.var = 1, num.text = 2,
+#                   introduction = "Ces mots sont des termes issus de la description d'un PAT.",
+#                   request = "Quel est le thème principal abordé dans ce texte ? Quels sont les autres thèmes abordés ? peux tu quantifier cette répartition entre thèmes?", 
+#                   isolate.groups = F, drop.negative = T, generate = F)))
+```
+
+Les mots fournis proviennent d'une description de PAT (Projet Alimentaire Territorial), et l'analyse vise à identifier les thèmes principaux et leur répartition.
+
+Thème Principal
+
+Le thème principal abordé dans ce texte est sans conteste l'**Agriculture et la Production**. Le nombre élevé d'occurrences de termes liés aux pratiques agricoles, aux types d'élevage, aux acteurs du monde agricole et aux produits de la terre témoigne de cette centralité.
+
+Autres Thèmes Abordés
+
+Les autres thèmes majeurs, classés par ordre d'importance après le retrait des termes généraux, sont :
+
+1.  **Enjeux, Objectifs et Durabilité** : Ce thème regroupe les défis, les aspirations et les questions de pérennité du système.
+2.  **Système Alimentaire et Consommation** : Il couvre la transformation, la distribution et les modes de consommation, notamment la restauration collective et l'origine des produits.
+3.  **Territoire, Local et Communauté** : Ce thème met en lumière l'ancrage géographique, l'échelle locale et les dynamiques de population.
+4.  **Économie et Finance** : Il concerne les aspects monétaires, les moyens et la valeur.
+5.  **Logistique et Services** : Aborde les moyens de déplacement et les services associés.
+6.  **Politique, Légal et Gouvernance** : Fait référence aux cadres réglementaires et institutionnels.
+
+Répartition Quantifiée des Thèmes
+
+Pour quantifier cette répartition, chaque occurrence de mot a été assignée à un thème principal. Les mots de liaison ou très génériques ont été regroupés sous "Général" pour une meilleure clarté des thèmes spécifiques.
+
+| Thème                                   | Nombre d'occurrences | Pourcentage (%) |
+| :-------------------------------------- | :------------------- | :-------------- |
+| Général (connecteurs, adjectifs divers) | 80                   | 31.5%           |
+| Agriculture et Production               | 75                   | 29.5%           |
+| Enjeux, Objectifs et Durabilité         | 46                   | 18.1%           |
+| Système Alimentaire et Consommation     | 19                   | 7.5%            |
+| Territoire, Local et Communauté         | 15                   | 5.9%            |
+| Économie et Finance                     | 12                   | 4.7%            |
+| Logistique et Services                  | 4                    | 1.6%            |
+| Politique, Légal et Gouvernance         | 3                    | 1.2%            |
+| **Total**                               | **254**              | **100%**        |
+
+Si l'on exclut le thème "Général" pour se concentrer sur les sujets de fond, la répartition relative des thèmes serait :
+
+*   **Agriculture et Production** : 43.1%
+*   **Enjeux, Objectifs et Durabilité** : 26.4%
+*   **Système Alimentaire et Consommation** : 10.9%
+*   **Territoire, Local et Communauté** : 8.6%
+*   **Économie et Finance** : 6.9%
+*   **Logistique et Services** : 2.3%
+*   **Politique, Légal et Gouvernance** : 1.7%
+
+Ce PAT met donc un accent fort sur l'activité agricole elle-même, en intégrant les enjeux de sa durabilité et les liens avec la consommation et le territoire.
+
+## PAT 427 - Economie alimentaire
+
+```{r}
+df_textes$texte[328]
+```
+
+Ce texte semble aborder différents sujets; 
+- la production agricole et le foncier agricole, 
+- l'économie alimentaire (légume , commercialisation, optimiser , plateforme, stockage, vente , économie )
+- les risques (changement climatique , inondation ; etc )
+
+```{r}
+# cat(gemini_generate(nail_textual(dataset = df_textes[328,], num.var = 1, num.text = 2,
+#                   introduction = "Ces mots sont des termes issus de la description d'un PAT.",
+#                   request = "Quel est le thème principal abordé dans ce texte ? Quels sont les autres thèmes abordés ? peux tu quantifier cette répartition entre thèmes?",
+#                   isolate.groups = F, drop.negative = T, generate = F)))
+```
+
+ Group 'text427'
+
+Thème principal
+
+Le thème principal abordé dans ce texte est le **développement et l'organisation des systèmes agricoles et alimentaires au niveau territorial**. Les termes soulignent une approche intégrée, axée sur la production locale, la gestion des terres et les dynamiques économiques des circuits courts.
+
+Autres thèmes et répartition
+
+Le texte aborde également plusieurs autres thèmes interdépendants. La répartition des 57 mots-clés entre ces thèmes est la suivante :
+
+*   **Circuits Courts, Commercialisation et Économie Locale (21.1%)** : 12 mots (ex: commercialisation, vente, économie, plateforme, local, optimiser, promouvoir, soutenir, stockage, expédier, intermédiaire)
+*   **Agriculture et Production Alimentaire (17.5%)** : 10 mots (ex: agricole, produit, producteur, fruit, légume, activité, intensifier)
+*   **Gestion Foncier et Aménagement du Territoire (17.5%)** : 10 mots (ex: foncier, terre, agglomération, usage, population, démographique, local, loisir)
+*   **Dynamiques, Développement et Valorisation (14.0%)** : 8 mots (ex: augmenter, développement, création, importance, fort, accru, souligner)
+*   **Pressions et Obstacles (10.5%)** : 6 mots (ex: pression, biais, détournement)
+*   **Contexte et Termes Génériques (10.5%)** : 6 mots (ex: contexte, cas, an, surtout, tels, soumettre)
+*   **Enjeux Environnementaux et Climatiques (8.8%)** : 5 mots (ex: changement, climatique, déchet, inondation, risque)
+
+---
+
+ Final Summary Task
+ 
+**Group 'text427'**:
+Ce groupe se caractérise par une forte orientation vers l'**agriculture locale et les systèmes alimentaires territoriaux**. Les préoccupations principales tournent autour de la **production** et de la **commercialisation locale** des produits agricoles, ainsi que de la **gestion foncière**. Le texte révèle également une conscience des **pressions (démographiques, économiques)** et des **défis environnementaux** (changement climatique, déchets, inondations) qui pèsent sur ces systèmes. L'accent est mis sur le **développement, l'optimisation et le soutien** de ces activités, suggérant une démarche proactive pour renforcer l'économie locale et la durabilité.
+
+*(Note: Étant donné qu'un seul groupe a été fourni, cette comparaison se limite à la description du profil de ce groupe unique.)*
+
+
+
+
+## Conclusion sur les pat purs 
+
+On a essayé de regarder les PAT les purs de chaque topic, pour voir si les PAT qui sont sensés abordés majoritairement certaines thématiques, le font réellement. Nous avons utilisé pour cela deux méthodologies: 
+- regarder les descriptions des PAT (mots lemmatisés issues de chaque description, pour chaque PAT), que l'on a comparés aux % de répartition des thèmes abordés dans chaque PAT, obtenu par la méthodologie développée ci - avant. Nous connaissons les limites de notre méthodologie, d'identifier les thématiques uniquement par les termes composant les topics fortifiés ; et nous voulions donc vérifier à posteriori si notre stratégie avait du sens, c'est à dire si sur TOUS LES LEMMES d'une description, nous retrouvions nos topics majoritaires. 
+
+afin de ne pas se limiter à cette seule analyse (pour éviter une sur-interprétation et de vouloir 'coller' à nos topcics), nous avons appliqué une deuxième stratégie : 
+
+- donner à un modèle de langage (gemini avec NaileR) l'ensemble des lemmes d'une description (exactement les mêmes termes analysés dans la méthodologie précédente), et lui demander d'identifier et de quantifier la thématiques (ou les thématiques principales). Cette méthodologie a pour objectif de savoir si finalement notre stratégie de passer par les fréquences grâce aux termes fortifiés, par comparaison donc avec le LLM sans a priori sur les topics, nous donne des résultats similaires. Nous avons pu observé que oui en majorité sur tous les PAT "purs". 
 
 
 # Comparaison de deux approches de classification 
@@ -318,17 +672,18 @@ res.ca <- FactoMineR::CA(df.ca, ncp = 2)
 barplot(res.ca$eig[,2])
 plot.CA(res.ca, invisible = "row")
 
-res.hcpc.ca <- HCPC(res.ca, nb.clust = -1)
+res.hcpc.ca <- HCPC(res.ca, nb.clust = 3)
 res.hcpc.ca$desc.var$`1` # territoire, secteur agri, eco alim 
 res.hcpc.ca$desc.var$`2` # education alim++ , env++ 
 res.hcpc.ca$desc.var$`3` # gouvernance 
 ```
 Individus caractéristiques des clusters
 
-Les PAT les plus purs des 6 topics se retrouvent ils dans les clusters surreprésentant leurs 
+Les PAT les plus purs des 6 topics se retrouvent ils dans les clusters surreprésentant ces thématiques ?
 
 ```{r}
 temp <- res.hcpc.ca$data.clust
+temp["211","clust"] # PAT pur gouvernance 
 
 
 res.hcpc.ca$desc.ind
@@ -341,5 +696,13 @@ res.hcpc.ca$desc.ind
 
 Une autre méthode pourrait être d'essayer d'utiliser des modèles de langage pour calculer un score (=> et au final un vecteur) d'association entre chaque description de PAT et les topics consolidés. C'est une approche que l'on peut utiliser pour comparer aux résultats obtenues par les méthodes de classifications réalisées précédemment. 
 
+Peut on réaliser la classification uniquement avec un modèle de langage ? 
 
+peut il, prendre en compte les textes (descriptions) lemmatisées, identifier des thèmes, et classifier les PAT selon les termes abordés ? 
+
+```{r}
+
+```
+
+ 
 
