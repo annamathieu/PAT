@@ -234,7 +234,26 @@ df.t[,max.col(df.t)] # on cherche les textes les plus purs de chaque topic et on
 Analyse de ces PAT "purs" 
 => qualitative : à la main, en comparant avec la base
 
+Exemple avec le PAT 211 - Gouvernance
+```{r}
+df_textes$texte[159]
+```
+"Caux Seine agglo est engagée dans divers programmes pour répondre aux problématiques et enjeux du territoire. Ainsi, le Projet Alimentaire Territorial vient renforcer les actions du Plan Climat Air Energie Territorial, du Plan Local des Déchets Ménagers et Assimilés, du Plan Local d'Urbanisme Intercommunal, du programme d'actions de la Protection de la Ressource en Eau et du Contrat Local de Santé."
 
+On retrouve des mots du vocabulaire de la gouvernance : plan, action, renforcer, enjeu, programme, problématique, contrat
+Environnement : climat, eau, déchet (eau et déchet ne sont pas dans le mots reconnu)
+Stats Agriculture : an (mais c'est pas clair)
+
+
+PAT 331 : Environnement
+```{r}
+df_textes$texte[250]
+```
+Environnement : biodiversite, changement, climatique, eau, environnement, fort, protection, ressource, usage
+Secteur agricole: activité, agricole, agriculture, an, exploitant
+Gouvernance : santé (pas clair)
+
+Petite observation "d'incohérence dans les thèmes" : métropole & ménage dans Stats agri
 
 => qualitative : avec modèle de langage 
 ```{r}
@@ -360,6 +379,7 @@ res.hcpc.ca <- HCPC(res.ca, nb.clust = -1)
 res.hcpc.ca$`1` # eco alim, env
 res.hcpc.ca$`2` # agri + alim coll durable 
 res.hcpc.ca$`3` # gouvernance 
+
 ```
 
 
