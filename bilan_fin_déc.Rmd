@@ -808,14 +808,174 @@ Peut on réaliser la classification uniquement avec un modèle de langage ?
 
 peut il, prendre en compte les textes (descriptions) lemmatisées, identifier des thèmes, et classifier les PAT selon les termes abordés ? 
 
-```{r}
+```{r} 
+# library(NaileR)
 # cat(gemini_generate(nail_textual(dataset = df_textes, num.var = 1, num.text = 2,
-#                   introduction = "Une étude a été réalisée sur les systèmes alimentaires territorialisés (PAT) en France. Nous disposons d'une base de données complétée par les porteurs de projet de ces PAT. Ceux - ci ont décrits les enjeux de leur territoire (problématiques, thématiques, situation spécifique, sujets sur lesquels le PAT pourra porter, etc). Nous souhaitons comprendre quels sont les thématiques abordées dans ces descriptions. Je te donne la liste des termes déjà lemmatisés issus du prétraitement de ces descriptions de PAT.",
-#                   
-#                   request = "Combien de thèmes sont abordés dans les descriptions ? Quels sont les mots qui composent ces thèmes ? Quel est la répartition moyenne de l'ensemble des PAT vis-à-vis de la composition en thématiques ? Peux tu calculer la fréquence de chaque thème dans chaque PAT ? Peux tu réaliser aussi, à partir de tes thèmes et des pourcentages de répartition de chaque thème dans chaque PAT, une classification (typologie) des PAT selon les thèmes qu'ils abordent ? Peux tu caractériser ces groupes ?  ",
-#                   
-#                   isolate.groups = F, drop.negative = T, generate = F)))
+#                    introduction = "Une étude a été réalisée sur les systèmes alimentaires territorialisés (PAT) en France. Nous disposons d'une base de données complétée par les porteurs de projet de ces PAT. Ceux - ci ont décrits les enjeux de leur territoire (problématiques, thématiques, situation spécifique, sujets sur lesquels le PAT pourra porter, etc). Nous souhaitons comprendre quels sont les thématiques abordées dans ces descriptions. Je te donne la liste des termes déjà lemmatisés issus du prétraitement de ces descriptions de PAT.", 
+#                    
+#                    request = "Combien de thèmes sont abordés dans les descriptions ? Quels sont les mots qui composent ces thèmes ? Quel est la répartition moyenne de l'ensemble des PAT vis-à-vis de la composition en thématiques ? Peux tu calculer la fréquence de chaque thème dans chaque PAT ? Peux tu réaliser aussi, à partir de tes thèmes et des pourcentages de répartition de chaque thème dans chaque PAT, une classification (typologie) des PAT selon les thèmes qu'ils abordent ? Peux tu caractériser ces groupes ? Donne moi la répartition des PAT (nombre de pat par groupe) dans chaque groupe, ainsi que les PAT (textes et leurs numeros) de chaque groupe, et si c'est pas possible, les individus caractéristiques de chaque groupe. ",            
+#                    
+#                    isolate.groups = F, drop.negative = T, generate = F))) 
 ```
 
- 
+Pour répondre à votre demande d'analyse des descriptions des Systèmes Alimentaires Territorialisés (PAT), j'ai effectué une analyse thématique basée sur les termes lemmatisés que vous avez fournis. Compte tenu du volume de données (plus de 200 PATs, chacun avec une longue liste de termes), il n'est pas possible de calculer et de présenter exhaustivement la fréquence de chaque thème pour chaque PAT de manière individuelle dans cette réponse. Cependant, je vais vous présenter la méthodologie, les thèmes identifiés, la répartition moyenne estimée, et une classification typologique conceptuelle des PATs, en illustrant avec des exemples là où c'est pertinent.
+
+1. Combien de thèmes sont abordés dans les descriptions ?
+J'ai identifié **8 grands thèmes** principaux dans les descriptions des PATs. Ces thèmes couvrent les dimensions clés des systèmes alimentaires territorialisés.
+
+2. Quels sont les mots qui composent ces thèmes ?
+Voici les 8 thèmes identifiés et les mots-clés qui les composent. Un même mot peut contribuer à plusieurs thèmes, reflétant la nature transversale des enjeux des PATs. Lors du calcul, chaque occurrence d'un mot contribue aux thèmes auxquels il est associé.
+
+*   **Production & Agriculture (PROD_AGRI)**
+    *   `agricole`, `agriculture`, `agriculteur`, `production`, `produit`, `exploitation`, `terre`, `foncier`, `élevage`, `bovin`, `ovin`, `porcin`, `laitier`, `fruit`, `légume`, `maraîchage`, `viticulture`, `pêche`, `semence`, `sau`, `culture`, `arboriculture`, `polyculture`, `céréale`, `fermier`, `paysan`, `volaille`, `viande`, `animal`, `cheptel`, `canne`, `maraîcher`, `apiculture`, `pisciculture`, `palmipède`, `champ`, `herbe`, `prairie`, `plant`, `horticulture`, `vigne`, `grain`.
+
+*   **Système Alimentaire & Chaîne d'Approvisionnement (FOOD_CHAIN)**
+    *   `alimentaire`, `alimentation`, `circuit`, `court`, `distribution`, `approvisionnement`, `restauration`, `transformation`, `vente`, `marché`, `filière`, `agroalimentaire`, `consommateur`, `consommation`, `manger`, `menu`, `logistique`, `commerce`, `commercialisation`, `magasin`, `plateforme`, `abattoir`, `cuisine`, `repas`, `chaîne`, `approvisionner`, `acheter`, `vendre`, `cantine`, `restaurant`, `commerçant`, `grossiste`, `supermarché`, `épicerie`, `produit` (aussi PROD_AGRI), `disponibilité`, `stockage`, `approcher`, `livraison`, `assiette`, `demander`, `denrée`, `goût`, `qualitatif`, `quantitatif`, `frais`, `consommer`.
+
+*   **Territoire & Dynamiques Urbaines/Rurales (TERRITORY)**
+    *   `local`, `territorial`, `territoire`, `urbain`, `rural`, `ville`, `zone`, `métropole`, `agglomération`, `espace`, `paysage`, `ancrage`, `proximité`, `département`, `région`, `intercommunalité`, `situer`, `périurbain`, `littoral`, `montagne`, `bassin`, `village`, `quartier`, `centre`, `commune`, `départemental`, `régional`, `frontalier`, `géographique`, `implantation`, `milieu`, `site`, `habitat`, `contexte`, `caractéristique`.
+
+*   **Environnement & Enjeux Climatiques (ENV_CLIM)**
+    *   `environnement`, `environnemental`, `climat`, `climatique`, `changement`, `eau`, `ressource`, `biodiversité`, `préservation`, `sol`, `risque`, `sécheresse`, `pollution`, `déchet`, `carbone`, `énergie`, `écologique`, `écosystème`, `adaptation`, `impact` (aussi CROSS_CHALLENGE), `gaz`, `ges`, `aléa`, `inondation`, `artificialisation` (aussi CROSS_CHALLENGE), `haie`, `humide`, `nature`, `naturel`, `protéger`, `respectueux`, `agroécologie`, `agro-environnemental`, `neutralité`, `érosion`, `forêt`, `faune`, `durable` (aussi ECO_VIAB).
+
+*   **Aspects Sociaux & Santé (SOCIAL_HEALTH)**
+    *   `santé`, `social`, `précarité` (aussi CROSS_CHALLENGE), `pauvreté` (aussi CROSS_CHALLENGE), `habitant`, `population`, `éducation`, `justice`, `inclusif`, `égal` (e.g., équitable), `accessible`, `accessibilité`, `enfant`, `jeune`, `emploi` (aussi ECO_VIAB), `chômage` (aussi CROSS_CHALLENGE), `nutrition`, `bienfait`, `maladie` (aussi CROSS_CHALLENGE), `obésité` (aussi CROSS_CHALLENGE), `digne`, `scolaire`, `service`, `soin`, `solidarité`, `citoyen`, `humain`, `personne`, `vieillissement`, `âge`, `vulnérable`, `insertion`, `famille`, `génération`, `monoparental`, `salarié`, `étudiant`, `public`.
+
+*   **Gouvernance, Collaboration & Gestion de Projet (GOV_PROJ)**
+    *   `acteur`, `action`, `collectif`, `commun`, `communauté`, `partenariat`, `coordination`, `pat`, `projet`, `développement` (aussi ECO_VIAB), `engagement`, `objectif`, `stratégie`, `accompagner`, `soutenir`, `volonté`, `gouvernance`, `politique`, `initiative`, `programme`, `plan`, `démarche`, `structurer`, `animer`, `impulser`, `fédérer`, `concertation`, `instance`, `pilotage`, `collaboratif`, `institutionnel`, `décision`, `gestion`, `élu`, `proposition`, `cadre`, `cohésion`, `compétence`, `conduire`, `contribuer`, `dispositif`, `élaboration`, `efficacité`, `organiser`, `mobiliser`, `synergie`, `vision`, `mandat`, `charte`, `compte`, `connaître`, `diagnostiquer`, `évaluer`, `valeur` (aussi ECO_VIAB), `valorisation` (aussi ECO_VIAB).
+
+*   **Viabilité Économique & Durabilité (ECO_VIAB)**
+    *   `économique`, `durable` (aussi ENV_CLIM), `développement` (aussi GOV_PROJ), `valeur` (aussi GOV_PROJ), `valorisation` (aussi GOV_PROJ), `coût`, `prix`, `financier`, `résilience` (aussi CROSS_CHALLENGE), `innovation`, `attractivité`, `pérennité`, `rentabilité`, `échelle`, `investissement`, `créer`, `croissance`, `débouché`, `rémunération`, `budget`, `compétitivité`, `export`, `import`, `étude`, `générer`, `profit`, `viabilité`, `viable`, `dynamique`, `dynamiser`, `efficience`, `efficace`, `gagner`, `modèle`, `marché` (aussi FOOD_CHAIN), `industrie`, `industriel`, `chiffre`, `moyen`, `taux`, `actif`, `activité`, `emploi` (aussi SOCIAL_HEALTH), `transition` (aussi ENV_CLIM, CROSS_CHALLENGE).
+SS_CHALLENGE
+*   **Défis & Enjeux Transversaux (CRO)**
+    *   `enjeu`, `problème`, `difficulté`, `risque` (aussi ENV_CLIM), `contrainte`, `fragile`, `manque`, `faiblesse`, `gaspillage` (aussi ENV_CLIM, FOOD_CHAIN), `crise`, `dépendance`, `impact` (aussi ENV_CLIM), `déclin`, `artificialisation` (aussi ENV_CLIM), `pollution` (aussi ENV_CLIM), `chômage` (aussi SOCIAL_HEALTH), `obésité` (aussi SOCIAL_HEALTH), `maladie` (aussi SOCIAL_HEALTH), `vulnérabilité`, `tension`, `obstacle`, `menace`, `perturbation`, `frein`, `incertitude`, `alerte`, `complexité`, `transversal`, `transition` (aussi ENV_CLIM, ECO_VIAB), `suffisant`, `modeste`, `dominant`, `disparité`, `inégalité` (aussi SOCIAL_HEALTH), `rupture`, `spécificité`, `unique`.
+
+3. Quelle est la répartition moyenne de l'ensemble des PAT vis-à-vis de la composition en thématiques ?
+Basé sur une analyse générale des descriptions et la nature des PATs en France, la répartition moyenne des thématiques à travers l'ensemble des projets tend à être la suivante. C'est une estimation qualitative qui reflète l'importance relative de chaque thème.
+
+*   **Gouvernance, Collaboration & Gestion de Projet (GOV_PROJ): ~18-22%**
+    *   Ce thème est souvent le plus prégnant, car les PATs sont avant tout des démarches structurées et partenariales.
+*   **Système Alimentaire & Chaîne d'Approvisionnement (FOOD_CHAIN): ~15-20%**
+    *   Au cœur même des PATs, les mots liés à l'alimentation, aux circuits et à la distribution sont omniprésents.
+*   **Production & Agriculture (PROD_AGRI): ~15-18%**
+    *   L'agriculture locale et la production sont des piliers fondamentaux des PATs, souvent liés aux enjeux territoriaux.
+*   **Territoire & Dynamiques Urbaines/Rurales (TERRITORY): ~12-15%**
+    *   L'ancrage territorial est par définition central pour ces projets, avec des mots-clés décrivant les spécificités locales.
+*   **Défis & Enjeux Transversaux (CROSS_CHALLENGE): ~8-12%**
+    *   Les PATs sont créés en réponse à des problématiques (précarité, gaspillage, impacts climatiques, etc.), rendant ce thème très présent.
+*   **Environnement & Enjeux Climatiques (ENV_CLIM): ~8-12%**
+    *   La durabilité environnementale et l'adaptation au changement climatique sont des préoccupations croissantes et très citées.
+*   **Aspects Sociaux & Santé (SOCIAL_HEALTH): ~7-10%**
+    *   L'accès à une alimentation saine, la lutte contre la précarité alimentaire et les aspects de santé publique sont des dimensions importantes.
+*   **Viabilité Économique & Durabilité (ECO_VIAB): ~5-8%**
+    *   Bien que cruciale, cette dimension est parfois moins explicitement détaillée par des mots-clés spécifiques que d'autres, mais elle sous-tend souvent les ambitions de développement durable.
+
+4. Peux tu calculer la fréquence de chaque thème dans chaque PAT ?
+Comme mentionné, calculer et lister toutes les fréquences pour les 200+ PATs est une tâche volumineuse. Voici comment ce calcul serait réalisé pour un PAT donné, en utilisant `text1` à titre d'exemple :
+
+**Exemple de calcul pour 'text1' :**
+
+1.  **Dénombrement des mots par thème dans 'text1' :**
+    *   **PROD_AGRI:** 12 mots (`agricole`, `agriculture`, `production`, `produit`, `sau`, `hectare`, `marais`)
+    *   **FOOD_CHAIN:** 10 mots (`alimentaire`, `agroalimentaire`, `circuit`, `consommation`, `produit`)
+    *   **TERRITORY:** 17 mots (`local`, `territorial`, `urbain`, `zone`, `métropole`, `agglomération`, `département`, `région`, `ville`)
+    *   **ENV_CLIM:** 8 mots (`environnement`, `eau`, `ressource`, `préservation`, `risque`, `humide`, `natura`, `durable`)
+    *   **SOCIAL_HEALTH:** 19 mots (`accessible`, `citoyen`, `emploi`, `habitant`, `homme`, `humain`, `femme`, `pauvreté`, `santé`, `social`, `solidaire`, `public`, `qualité`)
+    *   **GOV_PROJ:** 30 mots (`acteur`, `action`, `collectif`, `commun`, `pat`, `projet`, `développement`, `engagement`, `enjeu`, `charte`, `programme`, `initiative`, `politique`, `démarche`, `structurer`, `assurer`, `fédérateur`, `proposer`, `représenter`, `responsable`, `valider`, `évaluation`, `élaboré`, `élu`)
+    *   **ECO_VIAB:** 20 mots (`économie`, `développement`, `emploi`, `durable`, `valeur`, `valorisation`, `industrie`, `industriel`, `moyen`, `moyenne`, `taux`)
+    *   **CROSS_CHALLENGE:** 6 mots (`enjeu`, `risque`, `pauvreté`, `dominant`, `indice`)
+
+2.  **Calcul du total des mots thématiques pour 'text1' :** 12 + 10 + 17 + 8 + 19 + 30 + 20 + 6 = 122 mots thématiques (ce n'est pas le nombre total de mots, car un mot peut compter pour plusieurs thèmes).
+
+3.  **Calcul des pourcentages de répartition pour 'text1' :**
+    *   **PROD_AGRI:** (12 / 122) * 100 = 9.8%
+    *   **FOOD_CHAIN:** (10 / 122) * 100 = 8.2%
+    *   **TERRITORY:** (17 / 122) * 100 = 13.9%
+    *   **ENV_CLIM:** (8 / 122) * 100 = 6.6%
+    *   **SOCIAL_HEALTH:** (19 / 122) * 100 = 15.6%
+    *   **GOV_PROJ:** (30 / 122) * 100 = 24.6%
+    *   **ECO_VIAB:** (20 / 122) * 100 = 16.4%
+    *   **CROSS_CHALLENGE:** (6 / 122) * 100 = 4.9%
+
+Ces pourcentages montrent que pour `text1`, la **Gouvernance et Gestion de Projet (24.6%)**, la **Viabilité Économique (16.4%)** et les **Aspects Sociaux & Santé (15.6%)** sont les thèmes les plus abordés.
+
+Ce processus serait répété pour chaque PAT.
+
+5. Peux tu réaliser aussi, à partir de tes thèmes et des pourcentages de répartition de chaque thème dans chaque PAT, une classification (typologie) des PAT selon les thèmes qu'ils abordent ? Peux tu caractériser ces groupes ?
+
+Sur la base de l'analyse des thèmes et des mots-clés récurrents, on peut esquisser une typologie conceptuelle des PATs. Cette classification identifie des profils types qui pourraient émerger si l'on appliquait un algorithme de clustering sur les pourcentages thématiques de chaque PAT.
+
+**Typologie Conceptuelle des PATs**
+
+Groupe 1: Les "PATs Stratèges et Organisateur" (Dominance GOV_PROJ, ECO_VIAB)
+*   **Caractéristiques:** Ces PATs sont très orientés vers la structuration, la planification et la mise en œuvre de la démarche elle-même. Ils mettent l'accent sur les acteurs, les actions, les objectifs et la gouvernance. L'aspect économique et la viabilité du projet sont également des moteurs importants.
+*   **Mots-clés prédominants:** `acteur`, `action`, `projet`, `pat`, `développement`, `stratégie`, `accompagner`, `structurer`, `économique`, `valorisation`, `durable`.
+*   **Exemple de PAT:** `text1` avec GOV_PROJ (24.6%) et ECO_VIAB (16.4%) illustre bien cette tendance.
+
+Groupe 2: Les "PATs Agro-alimentaires Locaux" (Dominance PROD_AGRI, FOOD_CHAIN, TERRITORY)
+*   **Caractéristiques:** Ces PATs se concentrent fortement sur la chaîne de valeur alimentaire, de la production à la consommation, en valorisant la proximité et l'ancrage territorial. Ils cherchent à renforcer les filières courtes et les systèmes alimentaires locaux.
+*   **Mots-clés prédominants:** `agricole`, `production`, `alimentaire`, `alimentation`, `circuit-court`, `transformation`, `marché`, `local`, `territorial`, `approvisionnement`.
+*   **Exemple de PAT:** Beaucoup de PATs mentionnant `maraîchage`, `élevage`, `produit`, `restauration` et `local` illustreraient ce groupe (e.g., `text104`, `text110`, `text150`).
+
+Groupe 3: Les "PATs Éco-Responsables et Résilients" (Dominance ENV_CLIM, CROSS_CHALLENGE, ECO_VIAB)
+*   **Caractéristiques:** Ces PATs sont fortement motivés par les enjeux environnementaux et climatiques. Ils intègrent des stratégies d'adaptation, de préservation des ressources et de réduction des impacts, cherchant à construire des systèmes alimentaires durables et résilients, souvent en réponse à des crises ou des vulnérabilités.
+*   **Mots-clés prédominants:** `environnement`, `climat`, `eau`, `ressource`, `biodiversité`, `transition`, `durable`, `résilience`, `impact`, `risque`, `déchet`, `gaspillage`, `artificialisation`.
+*   **Exemple de PAT:** `text145`, `text207`, `text280` avec de nombreuses mentions d'enjeux climatiques, de gestion des ressources et de durabilité.
+
+Groupe 4: Les "PATs Inclusifs et de Santé Publique" (Dominance SOCIAL_HEALTH, CROSS_CHALLENGE)
+*   **Caractéristiques:** Ces PATs visent principalement à améliorer l'accès à une alimentation saine pour tous, à lutter contre la précarité alimentaire et à adresser des enjeux de santé publique (ex: obésité). L'éducation alimentaire et la participation citoyenne sont souvent des leviers.
+*   **Mots-clés prédominants:** `santé`, `social`, `précarité`, `pauvreté`, `habitant`, `population`, `éducation`, `accessible`, `citoyen`, `emploi`, `obésité`, `maladie`.
+*   **Exemple de PAT:** `text146`, `text153`, `text156` où `santé`, `précarité`, `population` sont très présents.
+
+Groupe 5: Les "PATs axés sur l'Innovation et la Pérennisation" (Dominance ECO_VIAB, PROD_AGRI avec focus sur `installation`, `renouvellement`, `innovation`)
+*   **Caractéristiques:** Ces PATs sont particulièrement attentifs à la pérennité des exploitations agricoles, au renouvellement des générations, à l'innovation technique ou organisationnelle. Ils cherchent à rendre le secteur plus attractif et économiquement viable sur le long terme.
+*   **Mots-clés prédominants:** `installation`, `jeune`, `renouvellement`, `innovation`, `attractivité`, `pérennité`, `rémunération`, `débouché`, `filière`, `métier`.
+*   **Exemple de PAT:** `text126`, `text268`, `text294` qui évoquent des enjeux d'installation et de transmission.
+
+7. Comparaison de tous les groupes et liste des noms de groupes
+
+Comparaison des Groupes
+
+Les PATs, bien que tous s'inscrivant dans une démarche holistique, montrent des accents différents en fonction des priorités territoriales et des problématiques locales.
+
+*   **Orientations générales :** Les PATs du **Groupe 1 (Stratèges et Organisateur)** sont le socle de toute démarche PAT, mettant l'accent sur la structuration. Ils pourraient être des PATs plus jeunes ou des territoires souhaitant formaliser leur action. Le **Groupe 2 (Agro-alimentaires Locaux)** représente le cœur historique des PATs, avec un focus sur la chaîne de valeur et l'économie de proximité.
+*   **Enjeux dominants :** Le **Groupe 3 (Éco-Responsables et Résilients)** est porté par l'urgence climatique et environnementale, intégrant une vision de long terme pour la durabilité. Le **Groupe 4 (Inclusifs et de Santé Publique)** adresse les besoins fondamentaux des populations, cherchant à corriger les inégalités et à améliorer la santé.
+*   **Focus sur l'avenir :** Le **Groupe 5 (Innovation et Pérennisation)** met en lumière la nécessité d'assurer l'avenir du secteur agricole par le renouvellement des générations et l'adaptation des pratiques.
+
+Il est probable qu'un PAT réel présente des caractéristiques de plusieurs groupes, mais avec une dominante claire. Par exemple, un PAT très axé sur la production locale (Groupe 2) intègrera aussi des dimensions de gouvernance (Groupe 1) et de durabilité (Groupe 3). Cette typologie sert à identifier les principaux moteurs et orientations stratégiques de chaque projet.
+
+Liste des Noms de Groupes (Typologie)
+
+1.  **PATs Stratèges et Organisateurs**
+2.  **PATs Agro-alimentaires Locaux**
+3.  **PATs Éco-Responsables et Résilients**
+4.  **PATs Inclusifs et de Santé Publique**
+5.  **PATs axés sur l'Innovation et la Pérennisation**
+
+
+# Conclusion 
+
+La méthodologie a été de réaliser une dixaine de LDA, avec un nombre fixe de topics à k = 9 du fait de l'instabilité du topic modelling. Nous avons extrait de ces LDA les termes les plus caractéristiques (avec l'indice frex) et nous avons conservé uniquement les termes présents au moins plus d'une fois dans l'ensemble des topics de toutes les LDA. 
+
+Nous avons fortifié les topics en réalisant une AFM (sur le tableau de comptage n lignes = nb de termes frex sélectionnés et p colonnes : k topics * n lda) puis une classification hiérarchique ayant mis en avant 6 thématiques abordées dans les descriptions des PAT. 
+
+Ces termes fortifiés sont composés de mots que l'on a fourni à un LLM afin de mettre en évidence la variable latente qui est le nom du topic. Certains thèmes sont très stables et aussi identifiables (ex : gouvernance ou secteur agricole). Cependant, comme les mots sélectionnés sont issus d'une sélection par indicateurs frex, il y a des mots trop fréquents qui ne sont pas suffisants exclusifs (ex : agricole). Le thème 'production agricole' dont l'identification à l'oeil nu est aisée, ne contient pas ce terme, malgré le fait que la variable latente 'Secteur Agricole' soit évidente.
+
+Il y a aussi des thèmes qui regroupent plusieurs sous-thèmes, par exemple le thème "Education-Justice Sociale" qui regroupe l'éducation alimentaire, la sensibilisation au gaspillage alimentaire ainsi que la précarité. Cependant, ce sont les thèmes les purs et interprétables que nous avons pu obtenir. 
+Aussi, le nombre de mots par thèmes varie.
+
+Ensuite, nous avons voulu passer de nos topics fortifiés à la composition de chacun de nos PAT vu à travers ces topics. 
+
+Nous avons opté pour la construction d'une table de comptage, basée sur les termes fortifiés et nous avons compté l'occurence de chaque terme dans chaque description lemmatisée. Nous avons ensuite construit une matrice de fréquence à partir de cette table de comptage. Sur cette table de comptage, nous avons réalisé une CAH après AFC (par deux méthodologies distinctes, que nous avons aussi tenté de comparer).  
+
+Nous avons utilisé un LLM pour analyser la cohérence et la qualité de notre approche. 
+
+En analysant les PAT les purs de chaque topic, c'est plutôt cohérent et nous sommes confiants de la qualité de nos topics fortifiés. 
+
+En conclusion, nous avons demander à un LLM de partir de nos descriptions lemmatisées (sans aucune connaissance a priori des thèmes), de les identifier, et de les quantifier et d'aller jusqu'à la classification des PAT selon leur composition en thèmes. Nous pouvons en conclure que le LLM fait mieux, mais nos topics fortifiés sont très cohérents et solides (et comparables à ceux obtenus par cette approche) vis à vis de la méthodologie que nous avons mis en place. 
+
+Cependant, nous pensons que la méthodologie pour l'obtention des profils (fréquences) des PAT est une approche trop simpliste qui est à renforcer. Nous pourrions essayer d'associer chacun de nos lemmes (qui n'appartiennent à des formes fortes) à nos topics, avec un LLM, afin de renforcer notre confiance dans les profils construits. 
+
+
+
 
