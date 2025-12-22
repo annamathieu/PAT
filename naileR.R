@@ -54,7 +54,8 @@ gemini_generate(
 
 Sys.setenv(GEMINI_API_KEY = "AIzaSyCl1Sm2rtMwXfBfAGw9n2TZMYP-aolgoow")
 
+Sys.setenv(GEMINI_API_KEY = "AIzaSyA1UCATqGqUpQuVRJBPEKTcilR9H-OF-g4")
 
+Sys.setenv(GEMINI_API_KEY = "AIzaSyCT_RzdrUtkY5TdvPetzLvaVP5j-f6XbAA")
 
-
-
+Sys.setenv(GEMINI_API_KEY = "AIzaSyA4RWX271sierisgnKp0swxft9qh5uB3fY")
