@@ -1,0 +1,206 @@
+---
+title: "Rapport avancement projet PAT - début janvier"
+author: "Erwan Gouhier, Anna Mathieu"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 3
+    number_sections: true
+    toc_float: true
+    self_contained: true
+    df_print: paged
+    highlight: tango
+    tabset: true
+  pdf_document:
+    toc: true
+    toc_depth: '3'
+editor_options:
+  markdown:
+    wrap: 80
+---
+
+```{r setup, include=FALSE}
+knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
+knitr::opts_chunk$set(echo = TRUE, message = F, warning = F)
+
+```
+
+```{r}
+# packages à charger
+library(ggplot2)
+library(NaileR)
+library(dplyr)
+```
+
+
+# Objectifs
+
+Nous allons essayer de réaliser la classification des PAT selon les thèmes abordés dans les descriptions de leurs enjeux. Nous allons essayer de comprendre le sens porté par cette typologie dans un second temps.
+
+La méthodologie à tester repose sur essayer d'associer les lemmes qui n'ont pas été retenus pour caractériser un topic, avec un topic. On veut ensuite essayer de classifier les PAT selon leurs composition en topics. 
+
+# Mise en oeuvre de la méthodologie 
+
+## Préparation des données
+
+Il faut extraire les lemmes utilisés dans les descriptions et qui ne sont pas utilisés pour construire les topics fortifiés. 
+
+
+```{r}
+load(file = "data/clust.RData")     # coordonnéees des mots = formes fortes 
+load(file = "data/res.lemmat.RData") # tokens associés à leurs textes 
+
+```
+
+Liste de mots sans clusters 
+```{r}
+# calcul de la fréquence de chaque mot
+
+freq_lemmes <- res.lemmat %>% group_by(lem.f) %>% summarise(freq = n())
+# on calcule la fréquence d'apparition de chaque terme dans l'ensemble des description (ayant plus de 20 lemmes)
+
+freq_lemmes <- freq_lemmes %>% rename("word"="lem.f")
+
+head(freq_lemmes)
+
+# On va conserver uniquement les lemmes apparaissant à une fréquence supérieure à un certain seuil 
+
+# On va tracer l'histogramme de la répartition des mots pour voir quel seuil choisir
+
+freq_lemmes <- freq_lemmes %>% arrange(desc(freq)) # on réarrange par ordre décroissant de fréquence
+```
+
+```{r}
+# avec toutes les valeurs 
+freq_lemmes %>% ggplot() +
+  geom_histogram(aes(x = freq), 
+                 fill = "red4", 
+                 bins = 250,
+                 color = "black") +
+  ggtitle("Histogramme des fréquences des lemmes des textes ayant >= lemmes")
+
+```
+
+### Limite supérieure 
+
+On va supprimer les termes "trop fréquents" qui sont très fréquents dans l'ensemble des descriptions mais sont peu caractéristiques d'un seul topic.
+```{r}
+head(freq_lemmes, 20)
+```
+
+Il y a en tout : 
+```{r}
+length(unique(res.lemmat$doc))
+```
+349 PAT différents 
+
+```{r}
+data.frame(head(freq_lemmes$freq,20)) %>% ggplot() +
+  geom_histogram(aes(x = head.freq_lemmes.freq..20.), bins = 10,
+                 fill ="yellow3", color = "black" ) +
+  geom_vline(xintercept = 750, colour = 'red4', linewidth = 2) +
+  ggtitle("Histogram of count of most frequent terms in PAT description") +
+  xlab("Frequency of terms") +
+  ylab("Amount of terms in the category")
+  
+
+
+
+```
+
+Les 5 mots les plus fréquents sont : 
+
+- alimentaire	 : 1211	occurences 		
+- agricole	   : 1113	occurences		
+- local	       : 963 occurences			
+- alimentation : 674 occurences
+- enjeu        : 659 occurences
+
+On va retirer les mots avec une fréquence totale supérieure à 750.
+
+```{r}
+freq_lem_final <- freq_lemmes %>% filter(freq<=750) 
+```
+
+
+### Limite inférieure 
+```{r}
+# valeurs de 1 à 50
+freq_lemmes %>% ggplot() +
+  geom_histogram(aes(x = freq), 
+                 fill = "green4", 
+                 color = "black",
+                 bins = 50, 
+                 breaks = c(seq(from = 0,to = 50, by = 1))) +
+    geom_vline(xintercept = 3, colour = 'red4', linewidth = 2) +
+  ggtitle("Histogramme des fréquences des lemmes des textes ayant >= lemmes")
+```
+
+
+```{r}
+sum(freq_lemmes$freq==1)
+
+100*sum(freq_lemmes$freq==1)/nrow(freq_lemmes)
+
+```
+
+Il y a 1526 n'apparaissant qu'une seule fois (donc dans une seule description de PAT), ce qui correspond à 35 % des lemmes. 
+
+Si on retire ces mots - partant du principe qu'un mot n'apparaissant que dans un PAT n'est pas assez représentatif des enjeux de suffisamment de pat - on va donc retirer environ 1500 mots (sur les 4202 lemmes uniques non utilisés pour les formes fortes), donc il en restera environ 2700 à associer avec les topics créés.
+
+On regarde ensuite la répartition des fréquences des lemmes, ayant une fréquence de 0 à 50. 
+
+
+Si on supprime les mots qui apparaissent dans moins de 3 textes, on supprime : 
+
+```{r}
+sum(freq_lemmes$freq<=3)
+
+100*sum(freq_lemmes$freq<=3)/nrow(freq_lemmes)
+```
+
+- 2515 termes
+- ~ 60 % des lemmes non associés 
+
+Il restera donc environ 1800 termes à associer aux formes fortes. 
+
+```{r}
+freq_lem_final <- freq_lem_final %>% filter(freq>3) %>% select(word)
+
+freq_lem_final$clust <- NA
+
+freq_lem_final <- data.frame(rbind(freq_lem_final, clust[,1:2]))
+
+str_lemm_final <- as.character(freq_lem_final$word)
+```
+
+## Avec LLM
+On peut essayer de donner cette tâche à un LLM afin d'utiliser les connaissances à priori des mots pour les associer à un topic. 
+
+On va lui fournir la liste des mots qui composent chaque topic (fortifié) ainsi que la liste des mots à associer avec ces topics. On peut lui laisser le droit de laisser des mots de côté / créer un topic autre (tester plusieurs consignes).
+
+```{r}
+cat(gemini_generate(nail_textual(dataset = df_textes, num.var = 1, num.text = 2,
+                    introduction = "Une étude a été réalisée sur les systèmes alimentaires territorialisés (PAT) en France. Nous disposons d'une base de données complétée par les porteurs de projet de ces PAT. Ceux - ci ont décrits les enjeux de leur territoire (problématiques, thématiques, situation spécifique, sujets sur lesquels le PAT pourra porter, etc). Nous souhaitons comprendre quels sont les thématiques abordées dans ces descriptions. Je te donne la liste des termes déjà lemmatisés issus du prétraitement de ces descriptions de PAT.", 
+                    
+                    request = "Combien de thèmes sont abordés dans les descriptions ? Quels sont les mots qui composent ces thèmes ? Quel est la répartition moyenne de l'ensemble des PAT vis-à-vis de la composition en thématiques ? Peux tu calculer la fréquence de chaque thème dans chaque PAT ? Peux tu réaliser aussi, à partir de tes thèmes et des pourcentages de répartition de chaque thème dans chaque PAT, une classification (typologie) des PAT selon les thèmes qu'ils abordent ? Peux tu caractériser ces groupes ? Donne moi la répartition des PAT (nombre de pat par groupe) dans chaque groupe, ainsi que les PAT (textes et leurs numeros) de chaque groupe, et si c'est pas possible, les individus caractéristiques de chaque groupe. ",            
+                    
+                    isolate.groups = F, drop.negative = T, generate = F))) 
+```
+
+
+
+## Avec du word matching
+
+On peut utiliser des stratégies de word matching pour associer les lemmes aux topics fortifiés.
+
+```{r}
+
+```
+
+
+
+
+
+

@@ -94,7 +94,7 @@ pat2025$descriptions_libre_des_enjeux_du_territoire_par_le_porteur <- gsub("www.
 # df pour desc 
 textdata <- as.data.frame(cbind(doc_id = pat2025$nom_administratif, text = pat2025$descriptions_libre_des_enjeux_du_territoire_par_le_porteur))
 
-
+save(pat2025, file = "data/pat2025.RData")
 ```
 
 ## Saut de lignes
@@ -283,6 +283,8 @@ tokens_df <- data.frame(
   doc = rep(names(toks), lengths(toks)),
   token = unlist(toks)
 )
+
+save(tokens_df, file = "data/tokens_df.RData" )
 ```
 
 # Lemmatisation
@@ -360,6 +362,7 @@ correspond à hash_lemma_fr - lemma.y à lexique382 - lemma à notre base de git
 
 ```{r}
 head(res.lemmat)
+
 ```
 
 En regardant les lemmatisation proposées, nous avons conclus que lexique382
