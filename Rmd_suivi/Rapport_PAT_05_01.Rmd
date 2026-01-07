@@ -20,6 +20,15 @@ editor_options:
     wrap: 80
 ---
 
+NB !!!!!!!!!!!!!!!! 
+dans le pat.df => après la ligne 289 de la bdd (pat lozère : "le diagnostic complet des enjeux du territoire..." ), décalage de 2 et non de 1 
+car il y a une ligne supprimée (au moment ou il y a 3 lignes completes de NA  entre la ligne 290 et 292)
+Le pat n°288 de la bdd (ligne 289) correspond au pat 288 de df_textes et à la ligne 288 de pat.df 
+MAIS après cela, il y a un décalalage de 2 : 
+par exemple, le PAT n°390 (guadeloupe "renforcer l'indépendance alimentaire de l'ile...") (dans le doc pat.df) correspond à la ligne n°392 de la bdd 
+!!!!!!!!!!!!!!!!!!
+
+
 ```{r setup, include=FALSE}
 knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
 knitr::opts_chunk$set(echo = TRUE, message = F, warning = F)
