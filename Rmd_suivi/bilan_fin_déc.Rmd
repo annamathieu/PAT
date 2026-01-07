@@ -55,6 +55,7 @@ load(file = "data/res.lemmat.RData")
 load(file = "data/res.hcpc.RData")
 load(file = "data/clust.RData")
 load(file = "data/res.mfa.RData")
+load(file = "data/pat.df.RData")
 
 ```
 
@@ -736,10 +737,21 @@ res.hcpc.ca <- HCPC(res.ca, nb.clust = 3)
 
 Description des clusters 
 ```{r}
-res.hcpc.ca$desc.var$`1` # territoire, secteur agri, eco alim 
-res.hcpc.ca$desc.var$`2` # education alim++ , env++ 
+res.hcpc.ca$desc.var$`1` # territoire, secteur agri
+res.hcpc.ca$desc.var$`2` # education alim++ , env++ , eco alim ++
 res.hcpc.ca$desc.var$`3` # gouvernance 
 ```
+
+```{r}
+# ou : 
+res.catdes <- catdes(donnee = res.hcpc.ca$data.clust, num.var = 7, proba = 0.10 )
+
+res.catdes$quanti.var
+
+res.catdes$quanti
+
+```
+
 
 Description des individus
 
@@ -760,6 +772,94 @@ temp["427","clust"] # clust 1 ? oui
 ```{r}
 res.hcpc.ca$desc.ind
 ```
+
+### Analyse des individus 
+
+```{r}
+# cluster 1 : sur représentation de secteur agri + territoire 
+# indice para :  270       184       398        14       452 
+subset(df.ca, rownames(df.ca) %in% c("270", "184", "398", "14", "452"))
+```
+
+
+```{r}
+# cluster 2 : env, justice sociale-éducation , eco alim
+# para : 252         6       453       385       241
+subset(df.ca, rownames(df.ca) %in% c("252", "6", "453", "385", "241"))
+
+```
+
+
+```{r}
+# cluster 3 : gouvernance 
+# para :  372       212       283       260       110 
+subset(df.ca, rownames(df.ca) %in% c("372", "212", "283", "260", "110"))
+
+
+```
+On est allés lire les descriptions des individus les plus proches des centroides des clusters. Ils représentent en majorité assez bien leurs clusters.
+
+
+### Ajout à pat.df des colonnes de fréquence + clust
+```{r}
+# temp2 <- df
+# temp2$num = rownames(temp2)
+# pat.df$num = rownames(pat.df)
+# pat.df <- left_join(pat.df, temp2, by="num" )
+# colnames(pat.df)[4:9]<- c("1:Gouvernance", "2:Education/Justice Sociale", "3:Territoires", "4:Environnement", "5:Secteur Agricole", "6:Economie alimentaire")
+# 
+# temp.clust<- data.frame(cbind(num = rownames(res.hcpc.ca$data.clust), clust_afc_freq = res.hcpc.ca$data.clust$clust))
+# pat.df <- left_join(pat.df,temp.clust , by = "num")
+
+# save(pat.df, file = "data/pat.df.RData")
+```
+
+### Compréhension des clusters : box plot de la répartition des thématiques par la méthode de la fréquence simple 
+
+```{r}
+temp3 <- data.frame(cbind(df, clust = res.hcpc.ca$data.clust$clust)) # on combine les % de topics et les clusters attribués aux PAT 
+
+
+# puis on calcule les stat descriptives par clusters : 
+long_df <- temp3 %>%
+  pivot_longer(
+    cols = -clust,          
+    names_to = "Theme",
+    values_to = "Valeur"
+  )
+
+
+# vérification des valeurs des stats descriptives du boxplot
+# temp3 %>%
+#   group_by(clust) %>% 
+#   summarise(min = min(Economie.alimentaire), median = median(Economie.alimentaire), mean = mean(Economie.alimentaire), max = max(Economie.alimentaire))
+
+
+
+```
+
+
+```{r}
+# box plot par clust 
+
+plot <- long_df %>%  ggplot(aes(x = Theme, y = Valeur, fill = clust)) +
+
+  geom_boxplot() +
+
+  scale_fill_manual(values = c("gold1", "springgreen4", "royalblue")) +
+  theme_minimal() +
+  labs(title = "Distribution par groupe",
+       x = "Groupe",
+       y = "Valeur") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1), 
+        title = element_text(hjust = 0.5))
+
+plot + ylim(0, 50)
+```
+
+
+On voit finalement que les différences de composition des topics entre PAT des différents clusters ne sont pas tellement marqués
+
 
 
 ## Comparaison des deux classifications 
