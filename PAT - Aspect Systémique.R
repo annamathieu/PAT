@@ -6,6 +6,7 @@ library(emmeans)
 
 #Importation jeu de données
 pat2025 <- read.csv("data/pats-20250710-win1252.csv", header = T, sep = ";", fileEncoding = "CP1252", dec = ".") # CP1252 permet de gérer les apostrophes non détectées 
+load(file = "df.RData")
 
 #On cherche à reconnaître le nombre d'axes qui sont abordées par les PAT pour connaître l'aspect systémique
 pat2025$axes_thematiques <- str_replace(pat2025$axes_thematiques,"Tourisme,","Tourisme")
@@ -53,6 +54,8 @@ A2 <- df %>%
     by = "Symbol"
   ) %>%
   column_to_rownames("Symbol")
+
+rownames(A2) <- rownames(df)
 
 #On regarde le nombre de sujets abordés par le PAT en regardant le nombre de sujet où le pourcentage de composition du texte est supérieur à 1% (on considère ça comme un artefact)
 A2$Sujets <- apply(A2[,1:6],MARGIN = 1,function(x) sum(x>=1))
@@ -259,3 +262,5 @@ mod_poisson <- glm(data=A2, Sujets ~ niveaux_de_labelisation, family = poisson)
 tidy(mod_poisson)
 summary(mod_poisson)
 glance(mod_poisson)
+
+
