@@ -18,18 +18,19 @@ motifs <- c("Éducation alimentaire","Économie alimentaire dont structuration d
             "Urbanisme et Aménagement du territoire","Gouvernance alimentaire du territoire","Autres")
 
 pat2025 <- pat2025 %>%
-  mutate(Gouvernance = ifelse(test = str_detect(pat2025$axes_thematiques,"Gouvernance alimentaire du territoire"),1,0),
-         Education_alim = ifelse(test = str_detect(pat2025$axes_thematiques,"Éducation alimentaire"),1,0),
-         Economie = ifelse(test = str_detect(pat2025$axes_thematiques,"Économie alimentaire dont structuration des filières"),1,0),
-         Nutrition_sante = ifelse(test = str_detect(pat2025$axes_thematiques,"Nutrition et santé"),1,0),
-         Justice_sociale = ifelse(test = str_detect(pat2025$axes_thematiques,"Justice sociale dont lutte contre la précarité alimentaire"),1,0),
-         Culture = ifelse(test = str_detect(pat2025$axes_thematiques,"Tourisme mise en valeur du patrimoine alimentaire et gastronomie"),1,0),
-         Environnement = ifelse(test = str_detect(pat2025$axes_thematiques,"Environnement dont lutte contre le gaspillage alimentaire"),1,0),
-         Restauration = ifelse(test = str_detect(pat2025$axes_thematiques,"Accompagnement de la restauration collective"),1,0),
-         Urbanisme = ifelse(test = str_detect(pat2025$axes_thematiques,"Urbanisme et Aménagement du territoire"),1,0),
-         Autres = ifelse(test = str_detect(pat2025$axes_thematiques,"Autres"),1,0))
+  mutate(Gouvernance = ifelse(themes_abordes = str_detect(pat2025$axes_thematiques,"Gouvernance alimentaire du territoire"),1,0),
+         Education_alim = ifelse(themes_abordes = str_detect(pat2025$axes_thematiques,"Éducation alimentaire"),1,0),
+         Economie = ifelse(themes_abordes = str_detect(pat2025$axes_thematiques,"Économie alimentaire dont structuration des filières"),1,0),
+         Nutrition_sante = ifelse(themes_abordes = str_detect(pat2025$axes_thematiques,"Nutrition et santé"),1,0),
+         Justice_sociale = ifelse(themes_abordes = str_detect(pat2025$axes_thematiques,"Justice sociale dont lutte contre la précarité alimentaire"),1,0),
+         Culture = ifelse(themes_abordes = str_detect(pat2025$axes_thematiques,"Tourisme mise en valeur du patrimoine alimentaire et gastronomie"),1,0),
+         Environnement = ifelse(themes_abordes = str_detect(pat2025$axes_thematiques,"Environnement dont lutte contre le gaspillage alimentaire"),1,0),
+         Restauration = ifelse(themes_abordes = str_detect(pat2025$axes_thematiques,"Accompagnement de la restauration collective"),1,0),
+         Urbanisme = ifelse(themes_abordes = str_detect(pat2025$axes_thematiques,"Urbanisme et Aménagement du territoire"),1,0),
+         Autres = ifelse(themes_abordes = str_detect(pat2025$axes_thematiques,"Autres"),1,0))
 
-test <- pat2025[,c(1,3,c((ncol(pat2025)-9):ncol(pat2025)))]
+themes_abordes <- pat2025[,c(1,3,c((ncol(pat2025)-9):ncol(pat2025)))]
+save(themes_abordes, file = "data/themes_abordes")
 
 temp.df <- temp.df %>%
   mutate(clust = recode(clust,
