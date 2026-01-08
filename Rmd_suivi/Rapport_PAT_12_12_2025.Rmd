@@ -415,8 +415,8 @@ model9 <- lda.model(k = k, seed = seeds[9])
 model10 <- lda.model(k = k, seed = seeds[10])
 
 # save(model1,model2,model3,model4,model5,model6,model7,model8,model9,model10, file = "data/modeles.RData")
-# 
-# load("data/modeles.RData")
+# save(model1, file = "model1.RData") 
+load("data/modeles.RData")
 
 ```
 
@@ -570,8 +570,78 @@ res.mfa <- MFA(base = mfa.df.final,
               # graph = F
               )
 
-save(res.mfa, file = "data/res.mfa.RData")
+plot.MFA(res.mfa, choix = "freq", invisible = "ind")
+
+coord_topics <- as.matrix(res.mfa$freq$coord)
 ```
+
+
+```{r}
+clusters_topics <- kmeans(x = coord_topics, centers = 6)
+
+centers <- clusters_topics$centers
+
+temp.df <- data.frame(cbind(coord_topics,clust = clusters_topics$cluster))
+temp.df$clust <- as.factor(temp.df$clust)
+
+save(res.mfa, file = "data/res.mfa.RData")
+
+# On va renommer les noms des clusters de 1 à 6 avec le nom du clusters
+# On va ensuite extraire quels topics de quels lda ont permis de construire ce cluster 
+
+library(forcats)
+library(ggforce)
+
+temp.df <- temp.df %>%
+  mutate(clust = fct_recode(clust,
+    secteur_agri        = "1",
+    territoires         = "2",
+    environnement       = "3",
+    economie_alimentaire= "4",
+    gouvernance         = "5",
+    education           = "6"
+  ))
+
+temp.df %>%  
+  ggplot() +
+  aes(x= Dim.1, y = Dim.2, col = clust) +
+  geom_point() +
+  scale_color_manual(values = c("chartreuse2","saddlebrown","springgreen4", "gold1","royalblue","tomato2")) 
+```
+
+On va reprendre le dataframe avec les theta, on va tous les combiner avec l'ensemble des topics de l'ensemble des LDA. On va renommer les colonnes, le nom du topic de la lda 
+
+
+```{r}
+# theta_all contient 90 colonnes : 9 topics * 10 LDA 
+theta_all <- data.frame(cbind(model1$theta, model2$theta, model3$theta, model4$theta, model5$theta, 
+                              model6$theta, model7$theta, model8$theta, model9$theta , model10$theta))
+
+colnames(theta_all) <- colnames(mfa.df.final)
+
+theta_all <- round((theta_all*100),2)
+
+# save(theta_all, file = "data/theta_all.RData")
+
+# on va renommer ensuite les colonnes avec le nom des clusters, et aggréger ensuite par cluster dans "theta_resume" 
+theta_resume <- theta_all
+
+# on renomme les noms des colonnes de theta_resume 
+colnames(theta_resume) <- temp.df$clust    # => correspondance entre le nom des clusters et chaque topic de chaque lda 
+
+# et on calcule les nouvelles fréquences sur les 6 thématiques fortifiées 
+theta_resume_unique <- as.data.frame(
+  t(rowsum(
+      t(theta_resume),
+      group = colnames(theta_resume)
+    )))
+
+theta_resume_unique <- 100*theta_resume_unique / 1000 # on passe en %
+
+# save(theta_resume_unique, file = "data/theta_resume_unique.RData")
+
+```
+
 
 On réalise ensuite une classification hierarchique de nos individus (mots).
 
@@ -698,6 +768,34 @@ descr.topic <- gemini_generate(res)
 cat(descr.topic)
 
 ```
+
+
+Comparison of All Groups
+
+Les six groupes de mots, identifiés comme des thèmes distincts au sein des systèmes alimentaires territoriaux (SAT), révèlent des facettes complémentaires de ces dynamiques complexes:
+
+*   **Planification et Animation Territoriale (Groupe 1)**: Ce thème met l'accent sur les processus de gouvernance, de collaboration et de mise en œuvre stratégique des projets alimentaires territoriaux. Il souligne l'importance des partenariats, de l'engagement communautaire et des cadres d'action pour structurer le SAT.
+
+*   **Restauration Collective et Éducation Alimentaire (Groupe 2)**: Ce groupe se concentre sur les enjeux de la demande et de la consommation, en particulier au sein de la restauration collective (notamment scolaire). Il aborde les initiatives visant à promouvoir une alimentation saine, durable et locale, la lutte contre le gaspillage, et l'éducation des consommateurs, souvent en lien avec des politiques publiques comme EGalim.
+
+*   **Typologies Territoriales et Productions Spécifiques (Groupe 3)**: Ce thème décrit les caractéristiques géographiques, démographiques et productives des territoires. Il distingue différents types d'espaces (urbains, ruraux, montagneux, périurbains) et les productions agricoles ou transformées spécifiques qui y sont associées, offrant un aperçu du contexte intrinsèque de chaque SAT.
+
+*   **Enjeux Climatiques, Environnementaux et Santé (Groupe 4)**: Ce groupe met en lumière les défis majeurs auxquels les SAT sont confrontés. Il couvre les impacts du changement climatique (sécheresse, gestion de l'eau), la préservation de la biodiversité, ainsi que les questions de santé publique liées à l'alimentation (obésité, maladies), soulignant la nécessité d'adaptation et de résilience.
+
+*   **Analyse Socio-Économique et Agricole (Groupe 5)**: Ce thème est axé sur les indicateurs quantitatifs et les dynamiques économiques et sociales. Il analyse les données statistiques concernant la production agricole (cheptel, céréales, SAU), les conditions socio-économiques des ménages (pauvreté) et les tendances générales à différentes échelles territoriales.
+
+*   **Logistique et Commercialisation des Filières (Groupe 6)**: Ce groupe aborde les aspects pratiques de la chaîne d'approvisionnement et de la mise sur le marché des produits. Il traite des défis liés à la distribution, à la commercialisation, à la logistique et aux débouchés pour les producteurs, notamment pour les fruits et légumes, identifiant les freins et les leviers d'action.
+
+En somme, ces thèmes dessinent un panorama holistique des systèmes alimentaires territoriaux, couvrant leur gouvernance, leurs interactions avec les consommateurs, leurs spécificités géographiques, leurs vulnérabilités environnementales, leurs fondements socio-économiques et leurs mécanismes de marché.
+
+Liste des Noms de Groupe Attribués
+
+*   **Groupe 1**: Planification et Animation Territoriale
+*   **Groupe 2**: Restauration Collective et Éducation Alimentaire
+*   **Groupe 3**: Typologies Territoriales et Productions Spécifiques
+*   **Groupe 4**: Enjeux Climatiques, Environnementaux et Santé
+*   **Groupe 5**: Analyse Socio-Économique et Agricole
+*   **Groupe 6**: Logistique et Commercialisation des Filières
 
 
 ## Test AFM quali
