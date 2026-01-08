@@ -577,6 +577,7 @@ plot.MFA(res.mfa, choix = "freq", invisible = "ind")
 coord_topics <- as.matrix(res.mfa$freq$coord)
 ```
 
+### Classification des ldas des topics en 6 clusters par Kmeans 
 
 ```{r}
 clusters_topics <- kmeans(x = coord_topics, centers = 6)
@@ -611,7 +612,7 @@ temp.df %>%
 
 On va reprendre le dataframe avec les theta, on va tous les combiner avec l'ensemble des topics de l'ensemble des LDA. On va renommer les colonnes, le nom du topic de la lda 
 
-
+### Obtention des vecteurs de composition FORTIFIES 
 ```{r}
 # theta_all contient 90 colonnes : 9 topics * 10 LDA 
 
@@ -665,6 +666,8 @@ theta_resume_unique <- 100*theta_resume_unique / 1000 # on passe en %
 head(theta_resume_unique)
 ```
 
+
+### Fortification des topics 
 
 On réalise ensuite une classification hierarchique de nos individus (mots).
 
