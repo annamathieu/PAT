@@ -607,6 +607,7 @@ temp.df %>%
   ggplot() +
   aes(x= Dim.1, y = Dim.2, col = clust) +
   geom_point() +
+  stat_ellipse() +
   scale_color_manual(values = c("chartreuse2","saddlebrown","springgreen4", "gold1","royalblue","tomato2")) 
 ```
 
