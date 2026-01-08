@@ -739,29 +739,27 @@ Liste des Noms de Groupe Attribués
 ```{r}
 clusters_topics <- kmeans(x = coord_topics, centers = 6)
 
-centers <- clusters_topics$centers
+clusters_topics_df <- data.frame(cbind(coord_topics,clust = clusters_topics$cluster))
+clusters_topics_df$clust <- as.factor(clusters_topics_df$clust)
 
-temp.df <- data.frame(cbind(coord_topics,clust = clusters_topics$cluster))
-temp.df$clust <- as.factor(temp.df$clust)
-
-save(temp.df, file = "data/temp.df.RData")
-save(res.mfa, file = "data/res.mfa.RData")
+# save(clusters_topics_df, file = "data/clusters_topics_df.RData")
+# save(res.mfa, file = "data/res.mfa.RData")
+load(file = "data/clusters_topics_df.RData")
 
 # On va renommer les noms des clusters de 1 à 6 avec le nom du clusters
 # On va ensuite extraire quels topics de quels lda ont permis de construire ce cluster 
 
-
-temp.df <- temp.df %>%
+clusters_topics_df <- clusters_topics_df %>%
   mutate(clust = fct_recode(clust,
-    secteur_agri        = "1",
-    territoires         = "2",
-    environnement       = "3",
-    economie_alimentaire= "4",
-    gouvernance         = "5",
-    education           = "6"
+    secteur_agri        = "4",
+    territoires         = "5",
+    environnement       = "2",
+    economie_alimentaire= "1",
+    gouvernance         = "6",
+    education           = "3"
   ))
 
-temp.df %>%  
+clusters_topics_df %>%  
   ggplot() +
   aes(x= Dim.1, y = Dim.2, col = clust) +
   geom_point() +
@@ -804,7 +802,7 @@ head(theta_all)
 theta_resume <- theta_all
 
 # on renomme les noms des colonnes de theta_resume 
-colnames(theta_resume) <- temp.df$clust    # => correspondance entre le nom des clusters et chaque topic de chaque lda 
+colnames(theta_resume) <- clusters_topics_df$clust    # => correspondance entre le nom des clusters et chaque topic de chaque lda 
 
 head(theta_resume)
 ```
@@ -889,9 +887,59 @@ colnames(theta_resume2) <- freq$clust
 theta_resume2 <- t(rowsum(t(as.matrix(theta_resume2)), group = colnames(theta_resume2), na.rm = T))
 theta_resume2 <- theta_resume2/10
 
+colnames(theta_resume2) <- paste0(colnames(theta_resume_unique),"_2")
+
 diff <- theta_resume_unique-theta_resume2
 
+
+diff$sum_diff <- apply(X = diff, 1, function(x) sum(abs(x)) )  
+
 ```
+
+
+Pour réaliser la typologie à partir de ces vecteurs de proportions en 6 topics fortifiés, on va utiliser ces deux approches méthodologiques et réaliser une AFM 
+
+```{r}
+theta_df_combine <- data.frame(cbind(theta_resume_unique, theta_resume2))
+
+res.mfa.combine <- FactoMineR::MFA(base = theta_df_combine, 
+                                   group = c(6,6),
+                                   type = c("f","f"))
+
+
+plot.MFA(x = res.mfa.combine, choix = "freq", invisible = "ind")
+```
+
+
+```{r}
+# On va faire la classification sur l'un de ces tableaux de données
+res.afc.theta.1 <- FactoMineR::CA(theta_resume_unique,ncp=3)
+barplot(res.afc.theta.1$eig[,2])
+
+res.hcpc.combine <- HCPC(res.afc.theta.1,nb.clust=-1)
+
+res.hcpc.combine$desc.var
+```
+
+Nos clusters sont totalement cohérents avec les clusters précédemment formés avec la méthode "basique". 
+Ils surreprésentent les mêmes thématiques et en opposition sous-représentent également les mêmes thématiques.
+
+On va faire la classification avec l'autre méthode utilisant les centroides. 
+
+```{r}
+# On va faire la classification sur l'un de ces tableaux de données
+res.afc.theta.2 <- FactoMineR::CA(theta_resume2, ncp = 3)
+barplot(res.afc.theta.2$eig[,2])
+
+res.hcpc.combine2 <- HCPC(res.afc.theta.2,nb.clust=-1)
+
+res.hcpc.combine2$desc.var
+
+```
+
+
+Illustration des clusters  : 
+
 
 
 ## Test AFM quali
