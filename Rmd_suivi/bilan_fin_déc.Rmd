@@ -858,7 +858,192 @@ plot + ylim(0, 50)
 ```
 
 
-On voit finalement que les différences de composition des topics entre PAT des différents clusters ne sont pas tellement marqués
+On voit finalement que les différences de composition des topics entre PAT des différents clusters ne sont pas tellement marquées
+
+### Illustration des clusters formés
+
+Sélection des variables illustratives : 
+
+Les variables que l'on souhaite ajouter pour illustrer nos clusters sont :
+
+nombre_dexploitations_agricoles
+pourcentage_de_la_sau
+nombre_demplois_dans_la_transformation
+nombre_denseignes_de_distribution
+nombre_denseignes_de_distribution_de_gms
+
+repartition_des_exploitations_par_otex_grandes_cultures
+repartition_des_exploitations_par_otex_maraichage_ou_horticulture
+repartition_des_exploitations_par_otex_viticulture
+repartition_des_exploitations_par_otex_cultures_fruitieres_ou_autres_cultures_permanentes
+repartition_des_exploitations_par_otex_bovins_lait
+repartition_des_exploitations_par_otex_bovins_viande
+repartition_des_exploitations_par_otex_bovins_mixtes
+repartition_des_exploitations_par_otex_ovins_et_ou_caprins_et_ou_autres_herbivores
+repartition_des_exploitations_par_otex_porcins_et_ou_volailles
+repartition_des_exploitations_par_otex_polyculture_et_ou_polyelevage_et_ou_non_classe
+
+pourcentage_de_la_sau_en_bio
+emission_de_ges
+pourcentage_de_la_surface_des_prairies_permanentes
+pourcentage_de_la_surface_des_cultures_de_legumineuses
+metres_de_haie_par_hectare_de_sau
+m3_deau_utilise_pour_lirragation
+evolution_de_lirrigation_depuis_5_ans
+milligrammes_de_nitrates_par_litre_deau
+
+regions
+departement
+taux_de_pauvrete_du_territoire
+taux_de_chomage_annuel_moyen
+revenu_median
+nombre_dassociations_luttant_contre_la_precarite_alimentaire
+nombre_de_restaurants_collectifs_sur_le_territoire_qui_ont_fait_leur_teledeclaration_sur_ma_cantine
+nombre_de_cantines_inscrites
+nombre_de_captage_prioritaire_grenelle_dans_le_perimetre
+microgrammes_de_produits_phytopharmaceutiques_par_litre_deau
+nombre_dhabitants_permanents_du_territoire
+surface_des_communes_du_perimetre_en_km2
+densite_de_population_hab_km2
+part_de_la_surface_du_perimetre_artificialisee
+
+
+On va aussi ajouter : 
+
+annee_de_premiere_labellisation 
+niveau_de_labellisation 
+compte_theme (intensite systémique => nb de thème sur lesquels le PAT est engagé)
+
+
+Création du tableau de données 
+```{r}
+load(file = "data/pat2025.RData")
+
+df_clust_ill <- pat2025[,c("regions", "departement", "nombre_dhabitants_permanents_du_territoire",
+ "densite_de_population_hab_km2", "surface_du_territoire_artificialisee",
+ "revenu_median", "pourcentage_de_chomage",
+ "repartition_des_exploitations_par_otex_toutes_exploitations",
+ "repartition_des_exploitations_par_otex_grandes_cultures",
+ "repartition_des_exploitations_par_otex_maraichage_ou_horticulture",
+ "repartition_des_exploitations_par_otex_viticulture",
+ "repartition_des_exploitations_par_otex_cultures_fruitieres_ou_autres_cultures_permanentes",
+ "repartition_des_exploitations_par_otex_bovins_lait",
+ "repartition_des_exploitations_par_otex_bovins_viande",
+ "repartition_des_exploitations_par_otex_bovins_mixtes",
+ "repartition_des_exploitations_par_otex_ovins_et_ou_caprins_et_ou_autres_herbivores",
+ "repartition_des_exploitations_par_otex_porcins_et_ou_volailles" ,
+ "repartition_des_exploitations_par_otex_polyculture_et_ou_polyelevage_et_ou_non_classe",
+ "taux_de_pauvrete_du_territoire",
+ "emission_de_ges",
+ "niveaux_de_labelisation",
+ "annee_de_signature_de_la_convention",
+  "surface_des_communes_du_territoire_en_km2" ,
+ "nombre_dassociations_luttant_contre_la_precarite_alimentaire",
+ "nombre_de_restaurants_collectifs_sur_le_territoire_qui_ont_fait_leur_teledeclaration_sur_ma_cantine",
+ "nombre_de_cantines_inscrites",
+ "nombre_de_captage_prioritaire_grenelle_dans_le_perimetre",
+ "microgrammes_de_produits_phytopharmaceutiques_par_litre_deau",
+ "milligrammes_de_nitrates_par_litre_deau",
+ "m3_deau_utilise_pour_lirragation",
+ "evolution_de_lirrigation_depuis_5_ans",
+ "metres_de_haie_par_hectare_de_sau",
+ "pourcentage_de_la_sau_en_bio",
+ "pourcentage_de_la_surface_des_prairies_permanentes",
+ "pourcentage_de_la_surface_des_cultures_de_legumineuses" ,
+ "nombre_denseignes_de_distribution" ,
+ "nombre_denseignes_de_distribution_de_gms"   ,
+ "nombre_demplois_dans_la_transformation" ,
+ "nombre_dexploitations_agricoles",
+ "pourcentage_de_la_sau"
+                           )]
+
+
+df_clust_ill$num <- rownames(df_clust_ill)
+
+# on récupère la colonne compte_themes depuis A2
+compte_theme <- data.frame(num = rownames(A2), compte_theme = A2$compte_theme )
+
+df_clust_ill <- left_join(df_clust_ill, compte_theme, by = "num")
+
+# save(df_clust_ill, file = "data/df_clust_ill.RData")
+
+
+load(file = "data/df_clust_ill.RData")
+
+
+# il faut prendre le tableau disjonctif des thèmes abordés et non comptes_themes
+
+
+
+df_ca_ill<- df.ca
+df_ca_ill$num = rownames(df.ca)
+
+df_ca_ill <- left_join(df_ca_ill, df_clust_ill, by = "num" )
+
+# save(df_ca_ill, file = "data/df_ca_ill.RData")
+
+
+```
+
+On vérifie le type des variables 
+
+```{r}
+load(file="data/df_ca_ill.RData")
+summary(df_ca_ill)
+names(df_ca_ill)
+
+
+# passer les colonnes nécessaires en quali 
+df_ca_ill[, c(8:9,28:29,48) ] <- lapply(df_ca_ill[, c(8:9,28:29,48 )], factor)
+summary(df_ca_ill)
+
+# passer les colonnes nécessaires en quanti 
+
+head(df_ca_ill[,11])
+
+cols <- c(10:16, 18, 24:27, 30, 32:43, 45,47)
+
+# supprimer tous les espaces dans les colonnes quanti 
+df_ca_ill[, cols] <- lapply(df_ca_ill[, cols ], function(x) gsub(pattern = " ", replacement = "", x))
+
+# remplacer virgules par des points 
+df_ca_ill[, cols] <- lapply(df_ca_ill[, cols ], function(x) gsub(pattern = ",", replacement = ".", x))
+
+
+# transformer les caractères en variables numériques  
+df_ca_ill[, cols ] <- lapply(df_ca_ill[,cols ], as.numeric)
+
+
+# supprimer la colonne "repartition_des_exploitations_par_otex_toutes_exploitations " => information redondante 
+df_ca_ill <- df_ca_ill[,-15] 
+
+
+
+
+
+# on resave le RData 
+# save(df_ca_ill, file = "data/sdf_ca_ill.RData")
+
+```
+
+
+
+
+On refait l'AFC avec les variables illustratives 
+```{r}
+df_ca_ill_f <- df_ca_ill[,-7] # on retire la colonne num 
+
+quanti.sup <- which(sapply(df_ca_ill_f, is.numeric))
+quanti.sup <- quanti.sup[-c(1:6)] # on retire les colonnes 1 à 6 qui seront les colonnes actives 
+quali.sup  <- which(sapply(df_ca_ill_f, function(x) is.factor(x) || is.character(x)))
+
+res.ca.ill <- FactoMineR::CA(df_ca_ill_f, quanti.sup = quanti.sup, quali.sup =  quali.sup  )
+plot.CA(res.ca.ill)
+
+
+
+
+```
 
 
 
