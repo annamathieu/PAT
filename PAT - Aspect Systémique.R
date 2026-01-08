@@ -32,7 +32,7 @@ pat2025 <- pat2025 %>%
          Autres = ifelse(themes_abordes = str_detect(pat2025$axes_thematiques,"Autres"),1,0))
 
 themes_abordes <- pat2025[,c(1,3,c((ncol(pat2025)-9):ncol(pat2025)))]
-save(themes_abordes, file = "data/themes_abordes")
+save(themes_abordes, file = "data/themes_abordes.RData")
 
 temp.df <- temp.df %>%
   mutate(clust = recode(clust,
