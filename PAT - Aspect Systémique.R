@@ -7,6 +7,8 @@ library(emmeans)
 #Importation jeu de données
 pat2025 <- read.csv("data/pats-20250710-win1252.csv", header = T, sep = ";", fileEncoding = "CP1252", dec = ".") # CP1252 permet de gérer les apostrophes non détectées 
 load(file = "data/temp.df.RData")
+load(file = "data/aspect_systemiq.RData")
+
 
 #On cherche à reconnaître le nombre d'axes qui sont abordées par les PAT pour connaître l'aspect systémique
 pat2025$axes_thematiques <- str_replace(pat2025$axes_thematiques,"Tourisme,","Tourisme")
