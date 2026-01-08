@@ -662,6 +662,7 @@ theta_resume_unique <- as.data.frame(
 theta_resume_unique <- 100*theta_resume_unique / 1000 # on passe en %
 
 # save(theta_resume_unique, file = "data/theta_resume_unique.RData")
+load(file="data/theta_resume_unique")
 
 head(theta_resume_unique)
 ```
