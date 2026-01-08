@@ -17,6 +17,29 @@ motifs <- c("Éducation alimentaire","Économie alimentaire dont structuration d
             "Environnement dont lutte contre le gaspillage alimentaire","Accompagnement de la restauration collective",
             "Urbanisme et Aménagement du territoire","Gouvernance alimentaire du territoire","Autres")
 
+pat2025 <- pat2025 %>%
+  mutate(Gouvernance = ifelse(test = str_detect(pat2025$axes_thematiques,"Gouvernance alimentaire du territoire"),1,0),
+         Education_alim = ifelse(test = str_detect(pat2025$axes_thematiques,"Éducation alimentaire"),1,0),
+         Economie = ifelse(test = str_detect(pat2025$axes_thematiques,"Économie alimentaire dont structuration des filières"),1,0),
+         Nutrition_sante = ifelse(test = str_detect(pat2025$axes_thematiques,"Nutrition et santé"),1,0),
+         Justice_sociale = ifelse(test = str_detect(pat2025$axes_thematiques,"Justice sociale dont lutte contre la précarité alimentaire"),1,0),
+         Culture = ifelse(test = str_detect(pat2025$axes_thematiques,"Tourisme mise en valeur du patrimoine alimentaire et gastronomie"),1,0),
+         Environnement = ifelse(test = str_detect(pat2025$axes_thematiques,"Environnement dont lutte contre le gaspillage alimentaire"),1,0),
+         Restauration = ifelse(test = str_detect(pat2025$axes_thematiques,"Accompagnement de la restauration collective"),1,0),
+         Urbanisme = ifelse(test = str_detect(pat2025$axes_thematiques,"Urbanisme et Aménagement du territoire"),1,0),
+         Autres = ifelse(test = str_detect(pat2025$axes_thematiques,"Autres"),1,0))
+
+test <- pat2025[,c(1,3,c((ncol(pat2025)-9):ncol(pat2025)))]
+
+temp.df <- temp.df %>%
+  mutate(clust = recode(clust,
+                       `1` = "secteur_agri",
+                       `2` = "territoires",
+                       `3` = "environnement",
+                       `4` = "economie_alimentaire",
+                       `5` = "gouvernance",
+                       `6` = "education"))
+  
 #On compte le nomnbre de thème et on créé un tableau pour pouvoir faire des analyses/visu
 compte_theme <- str_count(theme, str_c(motifs, collapse = "|"))
 compte_theme <- as.data.frame(compte_theme)
