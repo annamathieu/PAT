@@ -577,97 +577,6 @@ plot.MFA(res.mfa, choix = "freq", invisible = "ind")
 coord_topics <- as.matrix(res.mfa$freq$coord)
 ```
 
-### Classification des ldas des topics en 6 clusters par Kmeans 
-
-```{r}
-clusters_topics <- kmeans(x = coord_topics, centers = 6)
-
-centers <- clusters_topics$centers
-
-temp.df <- data.frame(cbind(coord_topics,clust = clusters_topics$cluster))
-temp.df$clust <- as.factor(temp.df$clust)
-
-save(res.mfa, file = "data/res.mfa.RData")
-
-# On va renommer les noms des clusters de 1 à 6 avec le nom du clusters
-# On va ensuite extraire quels topics de quels lda ont permis de construire ce cluster 
-
-
-temp.df <- temp.df %>%
-  mutate(clust = fct_recode(clust,
-    secteur_agri        = "1",
-    territoires         = "2",
-    environnement       = "3",
-    economie_alimentaire= "4",
-    gouvernance         = "5",
-    education           = "6"
-  ))
-
-temp.df %>%  
-  ggplot() +
-  aes(x= Dim.1, y = Dim.2, col = clust) +
-  geom_point() +
-  stat_ellipse() +
-  scale_color_manual(values = c("chartreuse2","saddlebrown","springgreen4", "gold1","royalblue","tomato2")) 
-```
-
-On va reprendre le dataframe avec les theta, on va tous les combiner avec l'ensemble des topics de l'ensemble des LDA. On va renommer les colonnes, le nom du topic de la lda 
-
-### Obtention des vecteurs de composition FORTIFIES 
-```{r}
-# theta_all contient 90 colonnes : 9 topics * 10 LDA 
-
-theta_all <- data.frame(cbind(model1$theta, model2$theta, model3$theta, model4$theta, model5$theta, 
-                              model6$theta, model7$theta, model8$theta, model9$theta , model10$theta))
-
-rm(model1)
-rm(model2)
-rm(model3)
-rm(model4)
-rm(model5)
-rm(model6)
-rm(model7)
-rm(model8)
-rm(model9)
-rm(model10)
-
-colnames(theta_all) <- colnames(mfa.df.final)
-
-theta_all <- round((theta_all*100),2)
-
-head(theta_all)
-
-# save(theta_all, file = "data/theta_all.RData")
-```
-
-
-```{r}
-# on va renommer ensuite les colonnes avec le nom des clusters, et aggréger ensuite par cluster dans "theta_resume" 
-theta_resume <- theta_all
-
-# on renomme les noms des colonnes de theta_resume 
-colnames(theta_resume) <- temp.df$clust    # => correspondance entre le nom des clusters et chaque topic de chaque lda 
-
-head(theta_resume)
-```
-
-
-```{r}
-# et on calcule les nouvelles fréquences sur les 6 thématiques fortifiées 
-theta_resume_unique <- as.data.frame(
-  t(rowsum(
-      t(theta_resume),
-      group = colnames(theta_resume)
-    )))
-
-theta_resume_unique <- 100*theta_resume_unique / 1000 # on passe en %
-
-# save(theta_resume_unique, file = "data/theta_resume_unique.RData")
-load(file="data/theta_resume_unique")
-
-head(theta_resume_unique)
-```
-
 
 ### Fortification des topics 
 
@@ -824,6 +733,165 @@ Liste des Noms de Groupe Attribués
 *   **Groupe 4**: Enjeux Climatiques, Environnementaux et Santé
 *   **Groupe 5**: Analyse Socio-Économique et Agricole
 *   **Groupe 6**: Logistique et Commercialisation des Filières
+
+### Classification des ldas des topics en 6 clusters par Kmeans 
+
+```{r}
+clusters_topics <- kmeans(x = coord_topics, centers = 6)
+
+centers <- clusters_topics$centers
+
+temp.df <- data.frame(cbind(coord_topics,clust = clusters_topics$cluster))
+temp.df$clust <- as.factor(temp.df$clust)
+
+save(temp.df, file = "data/temp.df.RData")
+save(res.mfa, file = "data/res.mfa.RData")
+
+# On va renommer les noms des clusters de 1 à 6 avec le nom du clusters
+# On va ensuite extraire quels topics de quels lda ont permis de construire ce cluster 
+
+
+temp.df <- temp.df %>%
+  mutate(clust = fct_recode(clust,
+    secteur_agri        = "1",
+    territoires         = "2",
+    environnement       = "3",
+    economie_alimentaire= "4",
+    gouvernance         = "5",
+    education           = "6"
+  ))
+
+temp.df %>%  
+  ggplot() +
+  aes(x= Dim.1, y = Dim.2, col = clust) +
+  geom_point() +
+  stat_ellipse() +
+  scale_color_manual(values = c("chartreuse2","saddlebrown","springgreen4", "gold1","royalblue","tomato2")) 
+```
+
+On va reprendre le dataframe avec les theta, on va tous les combiner avec l'ensemble des topics de l'ensemble des LDA. On va renommer les colonnes, le nom du topic de la lda 
+
+### Obtention des vecteurs de composition FORTIFIES 
+```{r}
+# theta_all contient 90 colonnes : 9 topics * 10 LDA 
+
+theta_all <- data.frame(cbind(model1$theta, model2$theta, model3$theta, model4$theta, model5$theta, 
+                              model6$theta, model7$theta, model8$theta, model9$theta , model10$theta))
+
+rm(model1)
+rm(model2)
+rm(model3)
+rm(model4)
+rm(model5)
+rm(model6)
+rm(model7)
+rm(model8)
+rm(model9)
+rm(model10)
+
+colnames(theta_all) <- colnames(mfa.df.final)
+
+theta_all <- round((theta_all*100),2)
+
+head(theta_all)
+
+# save(theta_all, file = "data/theta_all.RData")
+```
+
+
+```{r}
+# on va renommer ensuite les colonnes avec le nom des clusters, et aggréger ensuite par cluster dans "theta_resume" 
+theta_resume <- theta_all
+
+# on renomme les noms des colonnes de theta_resume 
+colnames(theta_resume) <- temp.df$clust    # => correspondance entre le nom des clusters et chaque topic de chaque lda 
+
+head(theta_resume)
+```
+
+
+```{r}
+# et on calcule les nouvelles fréquences sur les 6 thématiques fortifiées 
+theta_resume_unique <- as.data.frame(
+  t(rowsum(
+      t(theta_resume),
+      group = colnames(theta_resume)
+    )))
+
+theta_resume_unique <- 100*theta_resume_unique / 1000 # on passe en %
+
+# save(theta_resume_unique, file = "data/theta_resume_unique.RData")
+load(file="data/theta_resume_unique.RData")
+
+head(theta_resume_unique)
+```
+
+
+
+###Vecteur de composition en se basant sur les formes fortes
+
+Une autre approche pour obtenir les compositions des PAT avec les formes fortes et d'assigner chaque topic de lda à une forme forte en calculant la distance avec les centroides et d'assigner chaque topic de lda à la forme forte avec laquelle il a la plus petite distance.
+
+```{r}
+#Determination de l'association entre forme forte et topics de lda
+
+#On recupère les coordonnées de nos topics de LDA sur l'AFM que nous avons fait
+freq <- as.data.frame(res.mfa$freq$coord)
+freq$clust <- NA
+
+#On récupère les coordonnées des PAT et on rajoute le cluster auquel ils sont associés pour calculer les centroides
+PAT_coord <- res.mfa$ind$coord
+PAT_coord <- as.data.frame(cbind(PAT_coord,res.hcpc$data.clust$clust))
+colnames(PAT_coord)[6] <- c("clust")
+
+#On calcule les centroides
+centre <- PAT_coord %>% 
+  group_by(clust) %>% 
+  summarise(across(c(Dim.1,Dim.2,Dim.3,Dim.4,Dim.5), mean))
+
+#On réordonne notre tableau pour avoir les 5 dimensions et le cluster pour ensuite calculer la distance
+centre <- centre[,c(2:6,1)]
+
+#On fusionne les 2 tableaux, on calcule les distances entre toutes nos lignes
+combined <- rbind(freq[,-6], centre[,-6])
+d <- as.matrix(dist(combined))
+
+nA <- nrow(freq)
+nB <- nrow(centre)
+
+D <- d[1:nA, (nA + 1):(nA + nB)]
+colnames(D) <- c("Gouvernance","Education alim","Territoires","Environnement","Secteur agricole","Economie alimentaire")
+
+
+class <- apply(D,1, which.min)
+freq$clust <- as.factor(class)
+
+freq <- freq %>%
+  mutate(clust = fct_recode(clust,
+                            gouvernance        = "1",
+                            education_alim         = "2",
+                            territoires       = "3",
+                            environnement= "4",
+                            secteur_agri         = "5",
+                            economie           = "6"
+  ))
+
+library(tidyverse)
+
+freq %>% 
+  ggplot(aes(x=Dim.1,y=Dim.2, col = clust)) +
+  geom_point() +
+  stat_ellipse()+
+  theme_bw()
+
+theta_resume2 <- theta_all
+colnames(theta_resume2) <- freq$clust
+theta_resume2 <- t(rowsum(t(as.matrix(theta_resume2)), group = colnames(theta_resume2), na.rm = T))
+theta_resume2 <- theta_resume2/10
+
+diff <- theta_resume_unique-theta_resume2
+
+```
 
 
 ## Test AFM quali
