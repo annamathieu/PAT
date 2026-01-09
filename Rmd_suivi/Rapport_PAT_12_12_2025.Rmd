@@ -913,12 +913,15 @@ plot.MFA(x = res.mfa.combine, choix = "freq", invisible = "ind")
 
 ```{r}
 # On va faire la classification sur l'un de ces tableaux de données
-res.afc.theta.1 <- FactoMineR::CA(theta_resume_unique,ncp=3)
+# ⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️  choix du nombre de dimensions conservées !!!!!!ne n donnera pas le même nombre de clusters à la CAH 
+res.afc.theta.1 <- FactoMineR::CA(theta_resume_unique, ncp = 3)
 barplot(res.afc.theta.1$eig[,2])
 
-res.hcpc.combine <- HCPC(res.afc.theta.1,nb.clust=-1)
+res.hcpc.combine <- HCPC(res.afc.theta.1,nb.clust=3)
 
 res.hcpc.combine$desc.var
+
+
 ```
 
 Nos clusters sont totalement cohérents avec les clusters précédemment formés avec la méthode "basique". 
@@ -939,6 +942,49 @@ res.hcpc.combine2$desc.var
 
 
 Illustration des clusters  : 
+```{r}
+# on va combiner theta_resume_unique avec df_clust_ill 
+
+load("data/df_textes.RData") #⚠️ ON CHANGE LES ROWNAMES AVANT LA JOINTURE SINON CE SERA PAS LES BONS PAT JOINTS 
+rownames(theta_resume_unique) <- gsub(x = df_textes$doc, pattern = "text", replacement = "")
+rm(df_textes)
+
+df_illus_freq_afc <-  left_join(data.frame(cbind(num = rownames(theta_resume_unique), theta_resume_unique)),
+                                data.frame(cbind(num = rownames(df_clust_ill), df_clust_ill)) , by = 'num')
+
+df_illus_freq_afc <- df_illus_freq_afc[,-1]
+
+
+# on refait ensuite l'AFC avec des variables illustratives supplémentaires
+
+# on doit supp certaines colonnes car valeurs manquantes dans variables quanti 
+# ⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️
+
+df_illus_freq_afc <- df_illus_freq_afc %>%
+  select(
+    -taux_de_pauvrete_du_territoire,
+    -emission_de_ges,
+    -nombre_de_captage_prioritaire_grenelle_dans_le_perimetre,
+    -evolution_de_lirrigation_depuis_5_ans
+  )
+
+# quali et quanti additionnel (voir bilan fin dec )
+quanti.sup <- which(sapply(df_illus_freq_afc, is.numeric))
+quanti.sup <- as.numeric(quanti.sup[-c(1:6)]) # on retire les colonnes 1 à 6 qui seront les colonnes actives
+quali.sup  <- as.numeric(which(sapply(df_illus_freq_afc, function(x) is.factor(x) || is.character(x))))
+
+
+res.afc.theta.1.illus <- FactoMineR::CA(df_illus_freq_afc,
+                                        quali.sup = quali.sup,
+                                        quanti.sup = quanti.sup
+                                          ) 
+
+# NOMBRE DE DIMENSIONS DE LA CA ? 
+
+res.hcpc.test <- HCPC(res.afc.theta.1.illus, nb.clust = -1)
+res.hcpc.test$desc.var$frequency
+
+```
 
 
 
