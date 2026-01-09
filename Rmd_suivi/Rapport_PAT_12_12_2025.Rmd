@@ -896,16 +896,37 @@ diff$sum_diff <- apply(X = diff, 1, function(x) sum(abs(x)) )
 
 ```
 
-
-Pour réaliser la typologie à partir de ces vecteurs de proportions en 6 topics fortifiés, on va utiliser ces deux approches méthodologiques et réaliser une AFM 
+On prépare notre premier tableau de composition de nos PAT en forme forte
 
 ```{r}
+load("data/df_resultat.final.RData")
+mfa_0 <- t(df_resultat.final)
+rownames(mfa_0) <- gsub(x=rownames(mfa_0),"text","")
+
+mfa_0 <- mfa_0 / rowSums(mfa_0)
+
+colnames(mfa_0) <- c("Gouvernance_0","Education_alim_0","Territoire_0","Environnement_0","Secteur_agri_0","Economie_alimentaire_0")
+colnames(theta_resume2) <- paste0(colnames(theta_resume_unique),"_2")
+
+mfa_0 <- as.data.frame(mfa_0)
+mfa_0 <- mfa_0[,c(6,2,4,1,5,3)]
+mfa_0 <- mfa_0 * 100
+mfa_0$num <- as.numeric(rownames(mfa_0))
+
+```
+Pour réaliser la typologie à partir de ces vecteurs de proportions en 6 topics fortifiés, on va utiliser ces deux approches méthodologiques et réaliser une AFM 
+```{r}
 theta_df_combine <- data.frame(cbind(theta_resume_unique, theta_resume2))
+theta_df_combine$num <- sort(mfa_0$num)
+
+theta_df_combine <- theta_df_combine %>%left_join(mfa_0)
+theta_df_combine <- theta_df_combine[,-13]
 
 res.mfa.combine <- FactoMineR::MFA(base = theta_df_combine, 
-                                   group = c(6,6),
-                                   type = c("f","f"))
+                                   group = c(6,6,6),
+                                   type = c("f","f","f"))
 
+# save(file=res.mfa.combine,"data/res.mfa.combine.RData")
 
 plot.MFA(x = res.mfa.combine, choix = "freq", invisible = "ind")
 ```
@@ -946,6 +967,7 @@ Illustration des clusters  :
 # on va combiner theta_resume_unique avec df_clust_ill 
 
 load("data/df_textes.RData") #⚠️ ON CHANGE LES ROWNAMES AVANT LA JOINTURE SINON CE SERA PAS LES BONS PAT JOINTS 
+load("data/df_clust_ill.RData")
 rownames(theta_resume_unique) <- gsub(x = df_textes$doc, pattern = "text", replacement = "")
 rm(df_textes)
 
