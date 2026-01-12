@@ -10,6 +10,10 @@
 # On va utiliser "annee_de_signature_de_la_convention", mais c'est une colonne avec bcp de NA
 # dans un premier temps
 
+load(file="data/pat2025.RData")
+load(file="data/theta_resume_unique.RData")
+
+
 annee_sign <- pat2025$annee_de_signature_de_la_convention  # annee signature => les 462 
 annee_sign <- annee_sign[as.numeric(rownames(theta_resume_unique))] # On ne garde que celles pour lesquelles on a les vecteurs de %
 
