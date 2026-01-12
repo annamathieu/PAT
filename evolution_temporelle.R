@@ -12,7 +12,8 @@
 
 load(file="data/pat2025.RData")
 load(file="data/theta_resume_unique.RData")
-
+load(file= "data/df_textes.RData")
+rownames(theta_resume_unique) <- gsub(x = df_textes$doc, pattern = "text", replacement = "")
 
 annee_sign <- pat2025$annee_de_signature_de_la_convention  # annee signature => les 462 
 annee_sign <- annee_sign[as.numeric(rownames(theta_resume_unique))] # On ne garde que celles pour lesquelles on a les vecteurs de %
