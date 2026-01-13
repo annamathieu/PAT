@@ -314,7 +314,7 @@ length(unique(res.lemmat$token[which(is.na(res.lemmat$lemma))]))
 Dans notre code nous avons initialement réalisé nos 3 lemmatisations et regarder
 les tokens pour lesquels aucune lemmatisation n'a été faite car les tokens
 n'étaient présents dans aucune des bases que nous avions. Nous avons donc créer
-une base de lemmatisation que nous avons fusionner avec lexique382 pour éviter
+une base de lemmatisation que nous avons fusionnée avec lexique382 pour éviter
 les problèmes de duplication de lignes.
 
 ```{r}
@@ -329,7 +329,7 @@ les problèmes de duplication de lignes.
 
 ### Code à lancer ###
 
-lexique382 <- mixr::get_lexicon(language = "fr")
+lexique <- mixr::get_lexicon(language = "fr")
 
 #Importation de notre base de lemmatisation
 
