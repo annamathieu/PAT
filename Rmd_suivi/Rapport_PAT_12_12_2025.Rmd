@@ -282,7 +282,7 @@ topic.extraction <- function(topic_model) {
   
   # créer liste_mots
   # liste_mots <- rbind(frex,beta)
-  colnames(frex) <- paste0("topic",seq(from=1,to=9))
+  colnames(frex) <- paste0("topic",seq(from=1,to=k))
   
   list <- sapply(frex, paste, collapse = " ")
   list <- str_split(list, pattern = " ")
@@ -561,7 +561,7 @@ res.mfa <- MFA(base = mfa.df.final,
 
 # on affiche le scree plot pour choisir le nombre de composantes à conserver
 
-barplot(res.mfa$eig[1:40,2])
+barplot(res.mfa$eig[,2])
 # on retient 5 composantes
 
 res.mfa <- MFA(base = mfa.df.final, 
