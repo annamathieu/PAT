@@ -347,80 +347,80 @@ topicIdentifieR <- function ( X,
   
 
 
-topicIdentifieR(X = textdata, 
-                nb.topics = 9, 
-                nb.iter = 10, 
-                taille_min_text = 20, 
-                api_key = "AIzaSyA1UCATqGqUpQuVRJBPEKTcilR9H-OF-g4", 
-                language = "fr"  )
-  
-
-
-# hyperparamètres pour le test 
-language = "fr"
-nb.iter = 10
-nb.topics = 9
-limit.inf = 1
-taille_min_text = 20
-X = textdata
-nb.frex = 20  
-frex.threshold = 0.5
-ncp = 5
+# topicIdentifieR(X = textdata, 
+#                 nb.topics = 9, 
+#                 nb.iter = 10, 
+#                 taille_min_text = 20, 
+#                 api_key = "AIzaSyA1UCATqGqUpQuVRJBPEKTcilR9H-OF-g4", 
+#                 language = "fr"  )
+#   
+# 
+# 
+# # hyperparamètres pour le test 
+# language = "fr"
+# nb.iter = 10
+# nb.topics = 9
+# limit.inf = 1
+# taille_min_text = 20
+# X = textdata
+# nb.frex = 20  
+# frex.threshold = 0.5
+# ncp = 5
 
 ###################################################################
 # test de topicIdentifieR sur une autre colonne du jeu de données 
-library(tidyr)
-library(tidyverse)
-load(file = "data/pat2025.RData")
-
-pat2025[,146:150][is.na(pat2025[,146:150])] <- ""
-
-text.objectifs <- as.data.frame(cbind(
-                              doc_id = pat2025$nom_administratif, 
-                              
-                              unite(data = pat2025[,c(146:150)], 
-                              col = "text", 
-                              sep = " ")))
-
-text.objectifs$text <- str_squish(text.objectifs$text)
-
-text.objectifs[text.objectifs==""] <- NA
-
-nb.iter = 10
-seeds = sample(1:9999, nb.iter, replace = F)
-
-res2 = topicIdentifieR(X = text.objectifs, 
-                       nb.topics = 10, 
-                       nb.iter = 10, 
-                       taille_min_text = 20,
-                       nb.frex = 20,
-                       api_key = "AIzaSyCT_RzdrUtkY5TdvPetzLvaVP5j-f6XbAA", 
-                       language = "fr"  )
-
-res3 = topicIdentifieR(X = text.objectifs, 
-                      nb.topics = 8, 
-                      nb.iter = 10, 
-                      taille_min_text = 20,
-                      nb.frex = 10,
-                      api_key = "AIzaSyCT_RzdrUtkY5TdvPetzLvaVP5j-f6XbAA", 
-                      language = "fr"  )
-
-res4 = topicIdentifieR(X = text.objectifs, 
-                       nb.topics = 8, 
-                       nb.iter = 10, 
-                       taille_min_text = 20,
-                       nb.frex = 10,
-                       freq.min.term = 2,
-                       api_key = "AIzaSyCT_RzdrUtkY5TdvPetzLvaVP5j-f6XbAA", 
-                       language = "fr"  )
-
-res5 <- topicIdentifieR(X = text.objectifs, 
-                               nb.topics = 6, 
-                               nb.iter = 10, 
-                               taille_min_text = 20,
-                               nb.frex = 10,
-                               freq.min.term = 2,
-                               api_key = "AIzaSyCT_RzdrUtkY5TdvPetzLvaVP5j-f6XbAA", 
-                               language = "fr"  )
-res5$words_topics_fortifies
-
+# library(tidyr)
+# library(tidyverse)
+# load(file = "data/pat2025.RData")
+# 
+# pat2025[,146:150][is.na(pat2025[,146:150])] <- ""
+# 
+# text.objectifs <- as.data.frame(cbind(
+#                               doc_id = pat2025$nom_administratif, 
+#                               
+#                               unite(data = pat2025[,c(146:150)], 
+#                               col = "text", 
+#                               sep = " ")))
+# 
+# text.objectifs$text <- str_squish(text.objectifs$text)
+# 
+# text.objectifs[text.objectifs==""] <- NA
+# 
+# nb.iter = 10
+# seeds = sample(1:9999, nb.iter, replace = F)
+# 
+# res2 = topicIdentifieR(X = text.objectifs, 
+#                        nb.topics = 10, 
+#                        nb.iter = 10, 
+#                        taille_min_text = 20,
+#                        nb.frex = 20,
+#                        api_key = "AIzaSyCT_RzdrUtkY5TdvPetzLvaVP5j-f6XbAA", 
+#                        language = "fr"  )
+# 
+# res3 = topicIdentifieR(X = text.objectifs, 
+#                       nb.topics = 8, 
+#                       nb.iter = 10, 
+#                       taille_min_text = 20,
+#                       nb.frex = 10,
+#                       api_key = "AIzaSyCT_RzdrUtkY5TdvPetzLvaVP5j-f6XbAA", 
+#                       language = "fr"  )
+# 
+# res4 = topicIdentifieR(X = text.objectifs, 
+#                        nb.topics = 8, 
+#                        nb.iter = 10, 
+#                        taille_min_text = 20,
+#                        nb.frex = 10,
+#                        freq.min.term = 2,
+#                        api_key = "AIzaSyCT_RzdrUtkY5TdvPetzLvaVP5j-f6XbAA", 
+#                        language = "fr"  )
+# 
+# res5 <- topicIdentifieR(X = text.objectifs, 
+#                                nb.topics = 6, 
+#                                nb.iter = 10, 
+#                                taille_min_text = 20,
+#                                nb.frex = 10,
+#                                freq.min.term = 2,
+#                                api_key = "AIzaSyCT_RzdrUtkY5TdvPetzLvaVP5j-f6XbAA", 
+#                                language = "fr"  )
+# res5$words_topics_fortifies
+# 
