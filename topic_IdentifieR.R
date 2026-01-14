@@ -74,6 +74,7 @@ topicIdentifieR <- function ( X,
                               nb.frex = 20, 
                               frex.threshold = 0.5, 
                               ncp = 5,
+                              freq.min.term = 3,
                               
                               introduction_llm = NULL
                               )
@@ -84,14 +85,14 @@ topicIdentifieR <- function ( X,
   library(mixr)       # get lexicon pour lemmatisation 
   library(NaileR)     # pour requetes LLM
   
-  #################
-  # Etape 0 : progra défensive et types 
+
+  # ==== Progra défensive ====
   
   
   
   
-  #################
-  # Gestion du type de tableau de données 
+
+  # ==== Gestion du type de tableau de données ==== 
   
   
     # format de base : deux colonnes avec 1) n°/nom du texte 2) texte
@@ -178,8 +179,8 @@ topicIdentifieR <- function ( X,
     print("Tokenization and lemmatization : Done")
     
     
-  #################
-  # Construction du vocabulaire 
+
+  # ==== Construction du vocabulaire ====
   vocab <- unique(df_X_long$word)
   unique_docs <- unique(df_X_long$id)
   
@@ -207,8 +208,8 @@ topicIdentifieR <- function ( X,
   vocab <- df_stm$vocab
   
   
-  #################
-  # Construction des modèles 
+
+  # ==== Construction des modèles ====
   
   lda.model <- function(k, seed) {
     topic_model<-stm(documents, 
@@ -242,11 +243,11 @@ topicIdentifieR <- function ( X,
     # récupération des frex uniques
   words_frex_unique <- unique(unlist(words_frex))
   
-  print("--------------------------------------------")
+  print(" \n--------------------------------------------")
   print("Topic modelling models : Done")
   
-    #################
-  # Fortification des topics 
+
+  # ==== Fortification des topics ====
   
     # on construit le jeu de données permettant la solidification des topics 
   df_mfa = data.frame(matrix(ncol = nb.topics * nb.iter, nrow = length(words_frex_unique), NA))
@@ -273,7 +274,7 @@ topicIdentifieR <- function ( X,
   
     # filtrage : supp les mots de faible fréquence 
     df_mfa$freq <- rowSums(df_mfa)
-    df_mfa <- df_mfa %>% filter(df_mfa$freq>=3) %>% select(-"freq")
+    df_mfa <- df_mfa %>% filter(df_mfa$freq>=freq.min.term) %>% select(-"freq")
     
 
     # MFA
@@ -313,8 +314,7 @@ topicIdentifieR <- function ( X,
     print("Fortification of strong forms topics : Done")
 
     
-  #################
-  # Identfication des topics automatiquement avec modele de langage 
+  # ==== Identfication des topics automatiquement avec modele de langage ====
     Sys.setenv(GEMINI_API_KEY = api_key)
     
     cat(gemini_generate(nail_textual(dataset = df_topics_clust[,1:2],num.text = 1, num.var = 2, 
@@ -327,7 +327,7 @@ topicIdentifieR <- function ( X,
         )
 
 
-  # Sortie de la fct
+  # ==== Sortie de la fct ====
     
     # voir tous les jeux de données que je peux sortir en output 
   
@@ -366,4 +366,61 @@ X = textdata
 nb.frex = 20  
 frex.threshold = 0.5
 ncp = 5
+
+###################################################################
+# test de topicIdentifieR sur une autre colonne du jeu de données 
+library(tidyr)
+library(tidyverse)
+load(file = "data/pat2025.RData")
+
+pat2025[,146:150][is.na(pat2025[,146:150])] <- ""
+
+text.objectifs <- as.data.frame(cbind(
+                              doc_id = pat2025$nom_administratif, 
+                              
+                              unite(data = pat2025[,c(146:150)], 
+                              col = "text", 
+                              sep = " ")))
+
+text.objectifs$text <- str_squish(text.objectifs$text)
+
+text.objectifs[text.objectifs==""] <- NA
+
+nb.iter = 10
+seeds = sample(1:9999, nb.iter, replace = F)
+
+res2 = topicIdentifieR(X = text.objectifs, 
+                       nb.topics = 10, 
+                       nb.iter = 10, 
+                       taille_min_text = 20,
+                       nb.frex = 20,
+                       api_key = "AIzaSyCT_RzdrUtkY5TdvPetzLvaVP5j-f6XbAA", 
+                       language = "fr"  )
+
+res3 = topicIdentifieR(X = text.objectifs, 
+                      nb.topics = 8, 
+                      nb.iter = 10, 
+                      taille_min_text = 20,
+                      nb.frex = 10,
+                      api_key = "AIzaSyCT_RzdrUtkY5TdvPetzLvaVP5j-f6XbAA", 
+                      language = "fr"  )
+
+res4 = topicIdentifieR(X = text.objectifs, 
+                       nb.topics = 8, 
+                       nb.iter = 10, 
+                       taille_min_text = 20,
+                       nb.frex = 10,
+                       freq.min.term = 2,
+                       api_key = "AIzaSyCT_RzdrUtkY5TdvPetzLvaVP5j-f6XbAA", 
+                       language = "fr"  )
+
+res5 <- topicIdentifieR(X = text.objectifs, 
+                               nb.topics = 6, 
+                               nb.iter = 10, 
+                               taille_min_text = 20,
+                               nb.frex = 10,
+                               freq.min.term = 2,
+                               api_key = "AIzaSyCT_RzdrUtkY5TdvPetzLvaVP5j-f6XbAA", 
+                               language = "fr"  )
+res5$words_topics_fortifies
 
