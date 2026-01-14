@@ -1,9 +1,9 @@
-plot_clust <- function(res.hcpc, res.mfa, mfa.df.final){
-  
-  clust <- data.frame(cbind(word = rownames(mfa.df.final),
-                            clust = res.hcpc$data.clust$clust, 
-                            dim1 = res.mfa$ind$coord[,1], 
-                            dim2 = res.mfa$ind$coord[,2]))
+plot_clust <- function(clust){
+  library(plotly)
+  # clust <- data.frame(cbind(word = rownames(mfa.df.final),
+  #                           clust = res.hcpc$data.clust$clust, 
+  #                           dim1 = res.mfa$ind$coord[,1], 
+  #                           dim2 = res.mfa$ind$coord[,2]))
   
   str(clust)
   clust$clust <- as.factor(clust$clust)
