@@ -5,6 +5,8 @@
 # on va utiliser la composition en topics fortifiés 
 # => theta_resume_unique ou theta_resume_2
 
+library(tidyverse)
+library(ggplot2)
 
 ###############################################################################################"
 # On va utiliser "annee_de_signature_de_la_convention", mais c'est une colonne avec bcp de NA
@@ -53,17 +55,43 @@ df_evol_temp$annee_sign <- as.factor(df_evol_temp$annee_sign)
     ggplot(aes(x = annee_n, y = valeur, color = topic, group = topic )) +
     geom_line(linewidth = 1.2) +
     geom_point(size = 1.5) +
-    scale_color_manual(values =c("gold1","tomato2","springgreen4","royalblue","chartreuse2","saddlebrown")) +
      
-    ggtitle("Evolution de la proportion moyennne du topic par année de signature de la convention ") +
+    ggtitle("Evolution de la proportion moyennne en thématiques abordées en 2025 par année de signature de la convention ", 
+            subtitle = "Nombre de PAT comptabilisés = 230 (175 PAT n'ont pas d'année de signature renseignée) ;\nLecture : les PAT les plus anciens sont à gauche du graphique, les PAT les plus récents à droite") +
      
     labs(
       x = "Année",
       y = "Valeur moyenne",
-      color = "Topic"
-    )
+      color = "Thématique fortifiée"
+    ) +
+     theme_bw() +
+     
    
-   
+     # changer le nom des éléments de la légende 
+     scale_color_manual(
+       values =c("gold1","tomato2","springgreen4","royalblue","chartreuse2","saddlebrown"),
+     labels = c("economie_alimentaire" = "Logistique et commercialisation",          
+                "education" = "Education et restauration collective",
+                "environnement" = "Environnement et santé",  
+                "gouvernance" = "Gouvernance", 
+                "secteur_agri"=  "Secteur agricole", 
+                "territoires"=  "Territoires",
+                name = "Noms des topics fortifiés" )) +
+     
+     
+     theme(plot.title = element_text(face = "bold", size = 15 ), 
+           plot.subtitle = element_text(face = "italic", size = 14 ),
+           axis.title.x = element_text(size = 14), 
+           axis.title.y = element_text(size = 14), 
+           axis.text.x = element_text(size = 12 ), 
+           axis.text.y = element_text(size = 12 ), 
+           legend.title =  element_text(size = 14),
+           legend.text =  element_text(size = 12 )
+           
+           ) +
+     
+     scale_x_discrete(expand = c(0.012, 0)) +
+     ylim(2, 50)   
    
   
   
