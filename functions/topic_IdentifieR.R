@@ -84,8 +84,10 @@ topicIdentifieR <- function ( X,
   library(FactoMineR) # Analyses factorielles et classification 
   library(mixr)       # get lexicon pour lemmatisation 
   library(NaileR)     # pour requetes LLM
+  library(stringr)    # str squich 
+  library(readr)      # read.table 
+  library(tidyverse)  # left_join 
   
-
   # ==== Progra défensive ====
   
   
@@ -101,7 +103,7 @@ topicIdentifieR <- function ( X,
   if (preprocessing ==TRUE)  {
     # nettoyage 
     X$text <- gsub("(?<=[a-z])(?=[A-Z])", " ", x =  X$text, perl = TRUE) # décole MAJ collées à  minuscules (précédées par des minuscules)
-    X$text <- tolower(str_squish(X$text)) # supp db espaces  + on passe en minuscules
+    X$text <- tolower(stringr::str_squish(X$text)) # supp db espaces  + on passe en minuscules
     X$text <- str_replace_all(X$text, c("l'"="","d'"="","l’" = "", "d’" = "")) #supp apostrophes 
     
     X$text <- gsub("\\.", " ", x = X$text, perl = TRUE) # mettre des espaces à la place des points
@@ -129,7 +131,7 @@ topicIdentifieR <- function ( X,
     
       # on retire les stop words
     filter <- paste0("\\b(", paste(stopwords, collapse = "|"), ")\\b")
-    X$text <- str_squish(str_replace_all(string=X$text, filter,"")) 
+    X$text <- stringr::str_squish(str_replace_all(string=X$text, filter,"")) 
     
     print("--------------------------------------------")
     print("Data cleaning : Done")
@@ -243,7 +245,8 @@ topicIdentifieR <- function ( X,
     # récupération des frex uniques
   words_frex_unique <- unique(unlist(words_frex))
   
-  print(" \n--------------------------------------------")
+  print(" ")
+  print("--------------------------------------------")
   print("Topic modelling models : Done")
   
 
@@ -319,7 +322,7 @@ topicIdentifieR <- function ( X,
     
     cat(gemini_generate(nail_textual(dataset = df_topics_clust[,1:2],num.text = 1, num.var = 2, 
 
-                      introduction = c(introduction_llm,"A study on a topic is achieved and we want to find the topics discussed in the given documents. We use structural topic modelling with variational Expectation Maximisation algorithms. We consolidate our topics by using multiple executions of the algorithm and perform MFA to find strong forms in our topics."),
+                      introduction = paste(introduction_llm,"A study on a topic is achieved and we want to find the topics discussed in the given documents. We use structural topic modelling with variational Expectation Maximisation algorithms. We consolidate our topics by using multiple executions of the algorithm and perform MFA to find strong forms in our topics."),
                       
                       request = "We want to automatically put the best name on each of those topics based on the words caracterising them. Please give a name to each topic suming up most of the words caracterising it. Do all of the explanations and name of topics in the language of the words. Only give the list of asigned topic and a short description of each.",
                       isolate.groups = F, drop.negative = T, generate = F)
@@ -328,8 +331,6 @@ topicIdentifieR <- function ( X,
 
 
   # ==== Sortie de la fct ====
-    
-    # voir tous les jeux de données que je peux sortir en output 
   
   output <- list(X = X, 
                  X_long_preprocessed = df_X_long, 
@@ -347,25 +348,32 @@ topicIdentifieR <- function ( X,
   
 
 
-# topicIdentifieR(X = textdata, 
-#                 nb.topics = 9, 
-#                 nb.iter = 10, 
-#                 taille_min_text = 20, 
-#                 api_key = "AIzaSyA1UCATqGqUpQuVRJBPEKTcilR9H-OF-g4", 
-#                 language = "fr"  )
-#   
-# 
-# 
-# # hyperparamètres pour le test 
-# language = "fr"
-# nb.iter = 10
-# nb.topics = 9
-# limit.inf = 1
-# taille_min_text = 20
-# X = textdata
-# nb.frex = 20  
-# frex.threshold = 0.5
-# ncp = 5
+res1 <- topicIdentifieR(X = textdata,
+                nb.topics = 9,
+                nb.iter = 10,
+                taille_min_text = 20,
+                nb.frex = 15, 
+                introduction_llm = "une base de données sur les projets alimentaires territoriaux est constituée en France à partir des 450 PAT recensées",
+                
+                api_key = "AIzaSyA1UCATqGqUpQuVRJBPEKTcilR9H-OF-g4",
+                freq.min.term = 2,
+                language = "fr"  )
+
+
+# hyperparamètres pour le test 
+language = "fr"
+nb.iter = 10
+nb.topics = 9
+limit.inf = 1
+taille_min_text = 20
+X = textdata
+nb.frex = 20
+frex.threshold = 0.5
+ncp = 5
+
+
+
+
 
 ###################################################################
 # test de topicIdentifieR sur une autre colonne du jeu de données 
