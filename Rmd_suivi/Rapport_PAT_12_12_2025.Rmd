@@ -128,8 +128,10 @@ out <- prepDocuments(documents, vocab,
 documents <- out$documents
 vocab <- out$vocab
 
-save(documents, file = "data/documents.RData")
-save(vocab, file = "data/vocab.RData")
+load("data/documents.RData")
+save(out,file="data/out.RData")
+# save(documents, file = "data/documents.RData")
+# save(vocab, file = "data/vocab.RData")
 
 ```
 
@@ -536,7 +538,7 @@ summary(colSums(mfa.df.final)) # on vérifie le nombre min, max, médian, moyen 
 dim(mfa.df)
 dim(mfa.df.final)
 
-save(mfa.df.final, file = "data/mfa.df.final.RData")
+# save(mfa.df.final, file = "data/mfa.df.final.RData")
 ```
 
 On va ensuite comparer deux méthodes pour l'obtention des formes fortes : un AFM
@@ -682,27 +684,27 @@ l'extraction de la variable latente (nom du topic)
 ```{r, eval = F}
 
 # récupération des mots de chaque clusters 
-# mots.clust <- tapply(
-#   clust$word,     # Le vecteur à appliquer la fonction (les Mots)
-#   clust$clust, # Le facteur de regroupement (les Clusters)
-#   paste,                # La fonction à appliquer
-#   collapse = ", ")       # L
+mots.clust <- tapply(
+  clust$word,     # Le vecteur à appliquer la fonction (les Mots)
+  clust$clust, # Le facteur de regroupement (les Clusters)
+  paste,                # La fonction à appliquer
+  collapse = ", ")       # L
 
 # interprétation avec naileR (à faire plus tard)
 
-# cat(gemini_generate(nail_textual(dataset = clust[,1:2], num.var = 2, num.text = 1,
-#                   
-#                   introduction = "A study on Territorial food systems is done and we want to find the topics discussed in the description of each Territorial food system, we use topic modelling and latent dirichlet allocation. We consolidate our topics by using multiple executions of the algorithm and perform MFA to find strong forms in our topics.",
-#                   request = "We want to automatically put a name on those topics based on the words caracterising them. Please give a name to each topic suming up most of the words caracterising it. Do it in French. Only give la Liste des Noms de Groupe Attribués",, 
-#                   isolate.groups = F, drop.negative = T, generate = F)
-#                   )
-#     )
-# 
-# #res
-# 
-# descr.topic <- gemini_generate(res)
-# 
-# cat(descr.topic)
+cat(gemini_generate(nail_textual(dataset = clust[,1:2], num.var = 2, num.text = 1,
+
+                  introduction = "A study on Territorial food systems is done and we want to find the topics discussed in the description of each Territorial food system, we use topic modelling and latent dirichlet allocation. We consolidate our topics by using multiple executions of the algorithm and perform MFA to find strong forms in our topics.",
+                  request = "We want to automatically put a name on those topics based on the words caracterising them. Please give a name to each topic suming up most of the words caracterising it. Do it in French. Only give la Liste des Noms de Groupe Attribués. Is there a topic who is closer than other for talking about social justice, inequality those kind of things ?",,
+                  isolate.groups = F, drop.negative = T, generate = F)
+                  )
+    )
+
+#res
+
+descr.topic <- gemini_generate(res)
+
+cat(descr.topic)
 
 ```
 
@@ -753,7 +755,7 @@ clusters_topics_df <- clusters_topics_df %>%
   mutate(clust = fct_recode(clust,
     secteur_agri        = "4",
     territoires         = "5",
-    environnement       = "2",
+    environnement_sante       = "2",
     economie_alimentaire= "1",
     gouvernance         = "6",
     education           = "3"
@@ -852,16 +854,16 @@ centre <- centre[,c(2:6,1)]
 
 #On fusionne les 2 tableaux, on calcule les distances entre toutes nos lignes
 combined <- rbind(freq[,-6], centre[,-6])
-d <- as.matrix(dist(combined))
+distance <- as.matrix(dist(combined))
 
 nA <- nrow(freq)
 nB <- nrow(centre)
 
-D <- d[1:nA, (nA + 1):(nA + nB)]
-colnames(D) <- c("Gouvernance","Education alim","Territoires","Environnement","Secteur agricole","Economie alimentaire")
+distance_centre_topic <- distance[1:nA, (nA + 1):(nA + nB)]
+colnames(distance_centre_topic) <- c("Gouvernance","Education alim","Territoires","Environnement","Secteur agricole","Economie alimentaire")
 
 
-class <- apply(D,1, which.min)
+class <- apply(distance_centre_topic,1, which.min)
 freq$clust <- as.factor(class)
 
 freq <- freq %>%
@@ -905,7 +907,7 @@ rownames(mfa_0) <- gsub(x=rownames(mfa_0),"text","")
 
 mfa_0 <- mfa_0 / rowSums(mfa_0)
 
-colnames(mfa_0) <- c("Gouvernance_0","Education_alim_0","Territoire_0","Environnement_0","Secteur_agri_0","Economie_alimentaire_0")
+colnames(mfa_0) <- c("Gouvernance_3","Education_alim_3","Territoire_3","Environnement_3","Secteur_agri_3","Economie_alimentaire_3")
 colnames(theta_resume2) <- paste0(colnames(theta_resume_unique),"_2")
 
 mfa_0 <- as.data.frame(mfa_0)
@@ -935,10 +937,10 @@ plot.MFA(x = res.mfa.combine, choix = "freq", invisible = "ind")
 ```{r}
 # On va faire la classification sur l'un de ces tableaux de données
 # ⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️  choix du nombre de dimensions conservées !!!!!!ne n donnera pas le même nombre de clusters à la CAH 
-res.afc.theta.1 <- FactoMineR::CA(theta_resume_unique, ncp = 3)
+res.afc.theta.1 <- FactoMineR::CA(theta_resume_unique)
 barplot(res.afc.theta.1$eig[,2])
 
-res.hcpc.combine <- HCPC(res.afc.theta.1,nb.clust=3)
+res.hcpc.combine <- HCPC(res.afc.theta.1,nb.clust=-1)
 
 res.hcpc.combine$desc.var
 
@@ -953,6 +955,14 @@ On va faire la classification avec l'autre méthode utilisant les centroides.
 ```{r}
 # On va faire la classification sur l'un de ces tableaux de données
 res.afc.theta.2 <- FactoMineR::CA(theta_resume2, ncp = 3)
+barplot(res.afc.theta.2$eig[,2])
+
+res.hcpc.combine2 <- HCPC(res.afc.theta.2,nb.clust=-1)
+
+res.hcpc.combine2$desc.var
+
+
+res.afc.theta.2 <- FactoMineR::CA(mfa_0[,-7])
 barplot(res.afc.theta.2$eig[,2])
 
 res.hcpc.combine2 <- HCPC(res.afc.theta.2,nb.clust=-1)
