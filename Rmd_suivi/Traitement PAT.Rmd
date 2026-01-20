@@ -1,0 +1,550 @@
+---
+title: "Processus de traitement PAT"
+output: html_document
+date: "2026-01-12"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
+```
+
+# Ajout des descriptions de Luc Bodiguel en individus supplémentaires
+
+```{r packages, include=F}
+library(topicmodels)
+library(tidytext)
+library(stringr)
+library(quanteda)
+library(udpipe)
+library(tidyverse)
+library(dplyr)
+library(remotes)
+library(readxl)
+library(stm)
+library(FactoMineR)
+
+# Ces 2 packages sont obtenus en les téléchargeant depuis GitHub
+
+# remotes::install_github("lvaudor/mixr")
+library(mixr)
+# remotes::install_github("trinker/lemmar")
+library(lemmar)
+```
+
+
+## Importation des données
+
+```{r}
+#Importation des descriptions purs 
+pat2025 <- read.csv("data/pat_pur_luc.csv",header = T,sep=";",fileEncoding = "UTF-8")
+colnames(pat2025) <- c("nom_administratif","descriptions_libre_des_enjeux_du_territoire_par_le_porteur")
+```
+
+
+```{r}
+pat2025$descriptions_libre_des_enjeux_du_territoire_par_le_porteur <- gsub("’", "'", pat2025$descriptions_libre_des_enjeux_du_territoire_par_le_porteur, fixed = TRUE)
+```
+
+
+```{r}
+#On retire les URL
+pat2025$descriptions_libre_des_enjeux_du_territoire_par_le_porteur <- gsub("https?://\\S+", "", pat2025$descriptions_libre_des_enjeux_du_territoire_par_le_porteur)
+pat2025$descriptions_libre_des_enjeux_du_territoire_par_le_porteur <- gsub("www.\\S+", "", pat2025$descriptions_libre_des_enjeux_du_territoire_par_le_porteur)
+
+# df pour desc 
+textdata <- as.data.frame(cbind(doc_id = pat2025$nom_administratif, text = pat2025$descriptions_libre_des_enjeux_du_territoire_par_le_porteur))
+
+```
+
+### Saut de lignes
+
+Comme dit dans l'introduction certains textes ont des problèmes de retour à la
+ligne ce qui revient à fusionner des mots. On suppose que c'est dû à la mise en
+forme des descriptions dans les cellules d'Excel. On réduit ensuite les espaces
+multiples en 1 seul espace grâce à la fonction str_squish.
+
+```{r}
+# gérer le pb des sauts de lignes non pris en compte
+textdata$text <- gsub("(?<=[a-z])(?=[A-Z])", " ", x =  textdata$text, perl = TRUE) # décole les MAJ collées à des minuscules (précédées par des minuscules)
+
+# supp db espace doubles ou +
+textdata$text <- str_squish(textdata$text)
+txt <- textdata$text
+```
+
+### Noms des communes
+
+
+```{r}
+escape_regex <- function(x) {
+  str_replace_all(x, "([\\.\\+\\*\\?\\^\\$\\(\\)\\[\\]\\{\\}\\|\\\\])", "\\\\\\1")
+}
+
+
+# villes <- unlist(strsplit(pat2025$communes_nom, split = ", ")) #On récupère les noms des villes tels que donnés 
+villes <- "Paris"
+
+
+villes_maj <- gsub(pattern = "-",, replacement = " ", x = villes, fixed = TRUE) 
+villes_maj <- unlist(strsplit(villes_maj, split = " "))
+villes_maj <- grep("^[A-Z]", villes_maj, value = TRUE) #On récupère les mots en majuscules dans les noms des villes 
+
+villes_filtre <- c(villes,villes_maj)
+
+villes_filtre <- escape_regex(villes_filtre) #Pour permettre d'appliquer le filtre avec les charactères spéciaux
+villes_filtre <- paste0("\\b(", paste(villes_filtre, collapse = "|"), ")\\b") #Empêcher de reconnaitres des noms de ville en début de phrase "Port" --> "Portrait"
+
+##### Application du filtre #####
+
+txt_clean <- str_replace_all(string=txt, villes_filtre,"")  # application du villes des filtres des villes: retire les noms de villes
+
+txt <- tolower(txt_clean)  # passe le texte en minuscules pour la suite
+```
+
+### Apostrophes
+
+```{r}
+#Filtre apostrophes
+txt <- str_replace_all(txt, c("l'"="","d'"="","l’" = "", "d’" = "")) # suppression des apostrophes
+
+```
+
+### Filtres des gentilés
+
+```{r,eval=FALSE}
+#On récupère le nom des gentilés des communes
+gentile <- read.csv("data/gentile.csv",sep=";",header=TRUE)
+gentile <- unlist(tolower(gentile$GENTILE))
+
+#On crée notre filtre pour qu'il soit reconnu par str_replace_all
+gentile <- paste0("\\b(", paste(gentile, collapse = "|"), ")\\b")
+
+#On applique le filtre
+txt <- str_replace_all(string=txt,gentile,"")
+
+#On récupère le nom des gentilés des départements
+
+gentile <- read.delim("data/gentiles_departements.txt",sep=";",header=FALSE)
+gentile <- unlist(str_squish(tolower(gentile[,2])))
+gentile <- paste0("\\b(", paste(gentile, collapse = "|"), ")\\b")
+
+txt <- str_replace_all(string=txt,gentile,"")
+
+```
+
+### Chiffres, tirets et points
+
+```{r}
+
+gestion_nombres <- function(text) {
+  text <- gsub("\\.", " ", x =  text, perl = TRUE)                   # mettre des espaces à la place des points
+  text <- gsub("(?<=[0-9])(?=[[\\p{L}])|(?<=[[\\p{L}])(?=[0-9])", " ", x =  text, perl = TRUE)   # mettre des espaces s'il y a un chiffre avant une lettre minuscule (ex : 2007menaces) ou si il y a un chiffre après une lettre minuscule (ex : covid19)
+  text <- gsub("(?<=[0-9])-(?=[[\\p{L}])|(?<=[[\\p{L}])-(?=[0-9])|(?<=[0-9])-(?=[0-9])", " ", text, perl = TRUE) # chiffre'-'lettre ou lettre'-'chiffre ou chiffre'-'chiffre
+  text <- gsub(" -", " ", x = text)                                 # supprimer les tirets en début de mots
+  text <- gsub("•","", x = text)
+  return(text)
+}
+
+txt <- gestion_nombres(txt)
+```
+
+### Stopwords
+
+```{r}
+#Premier filtre
+
+fr_stopwords <- read.table("data/stopwords-fr.txt")
+# from : https://github.com/stopwords-iso/stopwords-fr/blob/master/stopwords-fr.txtas.character(chartr(                        # on retire les accents 
+fr_stopwords <- as.character(fr_stopwords$V1)
+filter1 <- paste0("\\b(", paste(fr_stopwords, collapse = "|"), ")\\b")
+txt_filter1 <- str_replace_all(string=txt, filter1,"")
+```
+
+```{r}
+#Second filtre
+
+fr_stopwords_2 <- unlist(str_extract_all("territoire territoires plus à ai aie aient aies ait as au aura aurai auraient aurais aurait auras aurez auriez aurions aurons auront aux avaient avais avait avec avez aviez avions avons ayant ayez ayons c ce ceci cela celà ces cet cette d dans de des du elle en es est et étaient étais était étant été étée étées êtes étés étiez étions eu eue eues eûmes eurent eus eusse eussent eusses eussiez eussions eut eût eûtes eux fûmes furent fus fusse fussent fusses fussiez fussions fut fût fûtes ici il ils j je l la le les leur leurs lui m ma mais me même mes moi mon n ne nos notre nous on ont ou par pas pour qu que quel quelle quelles quels qui s sa sans se sera serai seraient serais serait seras serez seriez serions serons seront ses soi soient sois soit sommes son sont soyez soyons suis sur t ta te tes toi ton tu un une vos votre vous y plusieurs d’accord hélas peut-être donc pourtant autour derrière dessous dessus
+devant parmi vers durant pendant depuis afin malgré sauf dès lorsque parce pendant pourquoi dedans loin partout aujourhui aussitôt autrefois avant-hier bientôt d'abord déjà demain en ce moment hier enfin longtemps maintenant quelquefois soudain souvent assez aussi autant davantage presque debout mieux sinon brusquement exactement doucement facilement heureusement lentement sagement seulement tranquillement st où paatfin er ème eme ha km nd aa lys hem peu fort forts très grand petit auprès basque faveur", boundary("word")))
+
+filter2 <- paste0("\\b(", paste(fr_stopwords_2, collapse = "|"), ")\\b")
+txt_filter2 <- str_replace_all(string=txt_filter1, filter2,"") 
+
+txt_final <- str_squish(txt_filter2)
+```
+
+Une fois tous ces filtres réalisés, nous pouvons passer à la tokenisation
+
+## Tokenisation
+
+```{r}
+toks <- tokens(txt_final,
+               what = "word",
+               remove_punct = TRUE,
+               remove_symbols = TRUE,
+               remove_numbers = TRUE)
+```
+
+Nous mettons en suite en forme nos tokens en colonne en les associant aux
+descriptions des PAT dont ils proviennent.
+
+```{r}
+tokens_df <- data.frame(
+  doc = rep(names(toks), lengths(toks)),
+  token = unlist(toks)
+)
+
+# save(tokens_df, file = "data/tokens_df.RData" )
+```
+
+## Lemmatisation
+
+Pour finir la préparation de notre jeu de données, nous lemmatisons nos tokens.
+Pour cela nous nous basons comme pour les stopwords sur différentes bases de
+lemmatisation : - hash_lemmar_fr qui provient du package lemmar - lexique382 qui
+provient du package mixr - une liste obtenue sur un le GitHub de l'utilisateur
+michmech : <https://github.com/michmech/lemmatization-lists/tree/master>
+
+Nous allons associer chaque mot à sa version lemmatisé dans chacune des bases,
+puis nous allons superposer les bases pour avoir un maximum de mots lémmatisés.
+
+```{r}
+# Lemmatisation par hash_lemma_fr
+
+hash_lemma_fr$token <- tolower(hash_lemma_fr$token)
+hash_lemma_fr$lemma <- tolower(hash_lemma_fr$lemma)
+res.lemmat <- left_join(x=tokens_df, y = hash_lemma_fr, by = join_by(x$token==y$token))
+
+# Performance de la première lemmatisation
+length(unique(res.lemmat$token[which(is.na(res.lemmat$lemma))]))
+# dim : 62063 * 2 => n'ajoute pas de doublons 
+
+```
+
+Dans notre code nous avons initialement réalisé nos 3 lemmatisations et regarder
+les tokens pour lesquels aucune lemmatisation n'a été faite car les tokens
+n'étaient présents dans aucune des bases que nous avions. Nous avons donc créer
+une base de lemmatisation que nous avons fusionner avec lexique382 pour éviter
+les problèmes de duplication de lignes.
+
+```{r}
+### Code illustratif à ne pas lancer ###
+
+# Tous les tokens qui n'ont pas été lémmatisés
+#res.lemmat.NA <- res.lemmat %>% filter_at(vars(lemma.x,lemma.y,lemma),all_vars(is.na(.)))
+
+# On enregistre que la colonne token
+#res.lemmat.NAB <- data.frame(x=unique(res.lemmat.NA$token))  
+# write.csv2(x=res.lemmat.NAB,"data/lemma_complet.csv",fileEncoding = "latin1") # exportation en CSV 
+
+### Code à lancer ###
+
+lexique382 <- mixr::get_lexicon(language = "fr")
+
+#Importation de notre base de lemmatisation
+
+lemma_complet <- read.csv(file = "data/lemma_complet.csv", fileEncoding = "latin1", header = T, sep = ";")
+lemma_complet[lemma_complet== ""] <- NA
+
+#Fusion des 2 bases
+lexique382 <- rbind(lexique382, lemma_complet)
+lexique382_unique <- lexique382[!duplicated(lexique382$word), ] #supp des doublons : champ, recul, recréer, chalonnais en doubles
+
+#Lemmatisation avec lexique382 + notre base
+res.lemmat <- left_join(x=res.lemmat, y = lexique382_unique, by = join_by(x$token==y$word), keep = F, 
+                        relationship = "many-to-one")
+
+```
+
+On répète la même chose avec notre dernière base de lemmatisation.
+
+```{r}
+lemma3 <- read.delim("data/lemmatization-fr.txt", header = TRUE, stringsAsFactors = FALSE)
+colnames(lemma3) <- c("lemma","token")
+lemma3_unique <- lemma3[!duplicated(lemma3$token), ]
+
+res.lemmat <- left_join(x= res.lemmat, y = lemma3_unique, by = join_by(x$token==y$token), 
+                        keep = F, relationship = "many-to-one")
+```
+
+Après cela on obtient un tableau de données avec 6 colonnes. - lemma.x
+correspond à hash_lemma_fr - lemma.y à lexique382 - lemma à notre base de github
+
+```{r}
+head(res.lemmat)
+
+```
+
+En regardant les lemmatisation proposées, nous avons conclus que lexique382
+était la meilleure base que nous avions, puis hash_lemma_fr et enfin la base
+trouvée sur GitHub. Nous avons donc réalisé une fonction pour fusionner en
+prenant en compte cet ordre de priorité.
+
+```{r}
+
+tri.reslemmat <- function(base) {
+  
+  # créer une nouvelle colonne lem.f contenant le lemma disponible 
+  # d'abord on regarde si il y a qqch dans lemma y : prio n°1
+  base$lem.f <- ifelse(test = !is.na(base$lemma.y), yes = base$lemma.y,
+                       
+                       # sinon : on va prendre le lemma de lemma x 
+                       no = ifelse(test = !is.na(base$lemma.x), yes = base$lemma.x,
+                                   
+                                   # sinon : on va prendre le lemma de lemma 
+                                   no = ifelse(test = !is.na(base$lemma), yes = base$lemma,
+                                               
+                                               # sinon on met un na    
+                                               NA)))
+  
+  base = base[,c(1,7)]  # on conserve les colonnes : doc et lem final 
+  base = drop_na(base) # on retire les lignes avec NA
+  
+  return(base)
+}
+
+
+res.lemmat <- tri.reslemmat(base = res.lemmat)
+```
+
+```{r}
+# Préparation des documents
+
+# Importation de res lemmat (voir Rapport du 04-12-25)
+# load("data/res.lemmat.RData")
+
+# step 1 : Create the Vocabulary
+vocab <- unique(res.lemmat$lem.f) # => liste unique de mots 
+head(vocab)
+
+# step 2 :  Create a Word-to-Index Mapping
+# on va associer les numéros des mots dans le vocabulaire  (chaque mot prend un numero)
+word_to_idx <- setNames(seq_along(vocab), vocab)
+head(word_to_idx)
+
+# Step 3: Count Word Occurrences per Document
+# Group by document and count occurrences of each word
+doc_word_counts <- res.lemmat %>%
+  group_by(doc, lem.f) %>%
+  summarise(count = n(), .groups = 'drop')
+# we count the frequency of each word in each document 
+head(doc_word_counts)
+
+# step4 4 : create document list 
+# Get unique documents in order => liste des documents 
+unique_docs <- unique(res.lemmat$doc)
+head(unique_docs)  # correspondent aux lignes de la BDD qui ont une description (ex : la n°3 n'en a pas)
+
+# Create the documents list
+documents <- lapply(unique_docs, function(current_doc) {
+  # Filter words for this document
+  words_in_doc <- doc_word_counts %>%
+    filter(doc == current_doc)
+  
+  # Convert words to indices
+  indices <- as.integer(word_to_idx[words_in_doc$lem.f])
+  counts <- as.integer(words_in_doc$count)
+  
+  # Create 2-row matrix: row 1 = indices, row 2 = counts
+  matrix(c(indices, counts), nrow = 2, byrow = TRUE)
+})
+# on va créer une liste qui contient autant d'éléménts qu'il n'y a de textes, dans chaque élément, il y a les identifiants des mots qui sont cités dans le vocabulaire (le n° du mot ) et sa fréquence d'apparition dans ce texte
+
+# Name the documents (optional but recommended)
+names(documents) <- unique_docs
+
+documents[[1]][1,1] # le premier mot du text 1 (par ordre alphabetique) est le numéro 135
+vocab[135]
+documents[[1]][2,1] # il apparait une seule fois dans ce doc 
+
+
+# Step 5 : prep with prep documents
+out <- prepDocuments(documents, vocab, 
+                     lower.thresh = 1,  # remove words appearing in only 1 doc
+                     upper.thresh = Inf)
+
+documents <- out$documents
+vocab <- out$vocab
+
+# load("data/documents.RData")
+# save(documents, file = "data/documents.RData")
+# save(vocab, file = "data/vocab.RData")
+
+#On remet dans la même base de mot que nos description de PAT
+load("data/mfa.df.final.RData")
+list_mot <- rownames(mfa.df.final)
+
+# doc_word_counts <- doc_word_counts %>% 
+#   filter(lem.f %in% list_mot)
+# 
+# description_luc <- doc_word_counts %>% 
+#   pivot_wider("names_")
+
+
+```
+
+
+```{r}
+load(file = "data/modeles.RData")
+load(file = "data/out.RData")
+load(file = "data/theta_resume_unique.RData")
+load(file = "data/theta_all.RData")
+load(file = "data/clusters_topics_df.RData")
+```
+
+```{r}
+desc_luc <- doc_word_counts %>%
+  group_by(doc) %>%
+  summarise(texte = paste(lem.f, collapse = " "))
+
+temp <- textProcessor(documents= desc_luc$texte,metadata = desc_luc)
+#### On fit les descriptions données par Luc sur les 10 lda ####
+
+# 1
+newdocs1 <- alignCorpus(new = temp, old.vocab = model1$vocab)
+fit1 <- fitNewDocuments(model = model1, documents = newdocs1$documents, newData = newdocs1$meta,
+                        origData = out$meta)
+# 2
+newdocs2 <- alignCorpus(new = temp, old.vocab = model2$vocab)
+fit2 <- fitNewDocuments(model = model2, documents = newdocs2$documents, newData = newdocs2$meta,
+                        origData = out$meta)
+# 3
+newdocs3 <- alignCorpus(new = temp, old.vocab = model3$vocab)
+fit3 <- fitNewDocuments(model = model3, documents = newdocs3$documents, newData = newdocs3$meta,
+                        origData = out$meta)
+# 4
+newdocs4 <- alignCorpus(new = temp, old.vocab = model4$vocab)
+fit4 <- fitNewDocuments(model = model4, documents = newdocs4$documents, newData = newdocs4$meta,
+                        origData = out$meta)
+# 5
+newdocs5 <- alignCorpus(new = temp, old.vocab = model5$vocab)
+fit5 <- fitNewDocuments(model = model5, documents = newdocs5$documents, newData = newdocs5$meta,
+                        origData = out$meta)
+# 6
+newdocs6 <- alignCorpus(new = temp, old.vocab = model6$vocab)
+fit6 <- fitNewDocuments(model = model6, documents = newdocs6$documents, newData = newdocs6$meta,
+                        origData = out$meta)
+# 7
+newdocs7 <- alignCorpus(new = temp, old.vocab = model7$vocab)
+fit7 <- fitNewDocuments(model = model7, documents = newdocs7$documents, newData = newdocs7$meta,
+                        origData = out$meta)
+# 8
+newdocs8 <- alignCorpus(new = temp, old.vocab = model8$vocab)
+fit8 <- fitNewDocuments(model = model8, documents = newdocs8$documents, newData = newdocs8$meta,
+                        origData = out$meta)
+# 9
+newdocs9 <- alignCorpus(new = temp, old.vocab = model9$vocab)
+fit9 <- fitNewDocuments(model = model9, documents = newdocs9$documents, newData = newdocs9$meta,
+                        origData = out$meta)
+# 10
+newdocs10 <- alignCorpus(new = temp, old.vocab = model10$vocab)
+fit10 <- fitNewDocuments(model = model10, documents = newdocs10$documents, newData = newdocs10$meta,
+                         origData = out$meta)
+
+fit <- cbind(fit1$theta,fit2$theta,fit3$theta,fit4$theta,fit5$theta,fit6$theta,fit7$theta,fit8$theta,fit9$theta,fit10$theta)
+fit <- 10 * fit
+
+rm(fit1,fit2,fit3,fit4,fit5,fit6,fit7,fit8,fit9,fit10)
+rm(newdocs1,newdocs2,newdocs3,newdocs4,newdocs5,newdocs6,newdocs7,newdocs8,newdocs9,newdocs10)
+
+#On renome les lignes pour les identifier, on renomme les colonnes pour avoir l'association des topics de lda avec nos formes fortes
+rownames(fit) <- paste0("luc_",pat2025$nom_administratif[1:9])
+colnames(fit) <- colnames(theta_all)
+
+#On met à la même échelle
+fit_all <- rbind(fit,theta_all/10)
+
+#On regroupe par forme forte
+fit_all_comp <- as.data.frame(
+  t(rowsum(
+      t(fit_all),
+      group = colnames(fit_all)
+    )))
+
+#On réalise à nouveau l'AFC avec les descriptions de Luc en supplémentaire
+ca.luc <- CA(fit_all_comp,row.sup = 1:9)
+ca.luc$row.sup$coord
+plot.CA(ca.luc, choix = "CA", invisible = c("row"))
+
+plot <- as.data.frame(rbind(ca.luc$row.sup$coord,ca.luc$col$coord))
+plot$groupe <- c(rownames(plot)[1:9],rep("a",6))
+plot$nom <- rownames(plot)
+
+ggplot(data = plot[1:9,], aes(x = `Dim 1`, y = `Dim 2`, col = groupe)) +
+  geom_text(
+    data = plot[1:9,],
+    aes(label = nom),
+    position = position_dodge(width = 0.3)
+  ) +
+  geom_point(data=plot[10:15,],aes(x = `Dim 1`, y = `Dim 2`),col = "black")+
+  geom_text(data=plot[10:15,],aes(label = nom),position = position_dodge(width = 0.3),col="black")+
+  theme_bw()
+
+luc <- plot[1:9,1:5]
+save(luc,file="data/luc_AFC.RData")
+
+```
+
+#Représentation de l'évolution temporelle des compositions des descriptions abordées par les PAT
+```{r}
+load("data/df_textes.RData")
+
+#On représente l'évolution temporelle des descriptions des PAT
+
+res.ca <- CA(theta_resume_unique)
+
+pat2025 <- read.csv("data/pats-20250710-win1252.csv", header = T, sep = ";", fileEncoding = "CP1252", dec = ".") # CP1252 permet de gérer les apostrophes non détectées 
+coord.PAT <- res.ca$row$coord
+coord.PAT <- as.data.frame(coord.PAT)
+rownames(coord.PAT) <- gsub("text","",df_textes$doc)
+
+graph <- coord.PAT%>%
+  rownames_to_column("Numero") %>%
+  left_join(
+    pat2025 %>%
+      rownames_to_column("Numero") %>%
+      select(Numero,annee_de_signature_de_la_convention),
+    by = "Numero"
+  ) %>%
+  column_to_rownames("Numero")
+
+
+graph <- graph %>% 
+  na.omit() %>% 
+  group_by(annee_de_signature_de_la_convention) %>% 
+  mutate(n = n(),
+         annee_de_signature_de_la_convention = paste0(annee_de_signature_de_la_convention, " (n = ", n,")"))
+
+rownames(plot)[10:15] <- c("Logistique-Commercialisation","Education et restauration collective","Environnement-Santé","Gouvernance","Secteur agri","Territoires")
+
+graph %>% 
+  na.omit() %>% 
+  group_by(annee_de_signature_de_la_convention) %>% 
+  summarise(Dim.1 = mean(`Dim 1`),
+            Dim.2 = mean(`Dim 2`),
+            Dim.3 = mean(`Dim 3`),
+            Dim.4 = mean(`Dim 4`),
+            Dim.5 = mean(`Dim 5`)) %>% 
+  mutate(alpha = c(rep(1,8),0.1)) %>% 
+  ggplot(aes(x=Dim.1,y=Dim.2,col=as.factor(annee_de_signature_de_la_convention))) +
+  geom_hline(yintercept = 0,col="black") +
+  geom_vline(xintercept = 0,col="black") +
+  geom_point(size = 2.8, alpha = alpha)+
+  geom_path(
+    aes(group = 1),
+    arrow =  arrow(type = "open", angle = 30, length = unit(0.12, "inches")),
+    linewidth = 1
+  ) +
+  theme_bw() +
+  guides(col=guide_legend(title="Année de signature de la convention"))+
+  geom_point(data = plot[10:15,], aes(x = `Dim 1`, y = `Dim 2`),col="black") +
+  geom_text(data = plot[10:15,], aes(x = `Dim 1`-0.1, y = `Dim 2`-0.05,label=nom),col="black",size=4.9)+
+  ggtitle("Evolution temporelle du profil moyen des PAT (2017-2025)",subtitle = "Les points noirs représententent les centroides de nos formes fortes dans un même espace latent") +
+  theme(legend.title = element_text(size= 15,face="bold"),
+        plot.title = element_text(size = 16,face="bold"),
+        plot.subtitle = element_text(size=14, face= "italic"),
+        axis.title = element_text(size = 14),
+        legend.text = element_text(size = 13),
+        axis.text = element_text(size=11))+
+  coord_equal(xlim = c(-1, 1), ylim = c(-1, 1))
+
+```
