@@ -275,6 +275,7 @@ plus nos topics extraits.
 =\> il faut donc choisir les métriques qui nous intéressent :
 
 ```{r}
+
 topic.extraction <- function(topic_model) {
   
   # récupérer les mots avec les indices FREX (Fréquence exclusivité) les plus forts 
@@ -290,6 +291,26 @@ topic.extraction <- function(topic_model) {
   list <- str_split(list, pattern = " ")
   
   return (list)
+}
+
+
+topic.extraction2 <- function(models, nb.frex, frex.threshold = 0.5) {
+      # récupération des FREX 
+  words_frex <- list()
+  
+  for (model in seq_along(models)){
+    frex_mat <- t(stm::labelTopics(models[[model]], n = nb.frex, frexweight = frex.threshold)$frex)
+    # n: choix du nombre de frex , frexweight : optimisation frequence / exclusivité
+    
+    words_frex[[model]] <- vector("list", ncol(frex_mat))
+    
+    for ( topic in seq_len(ncol(frex_mat))  ) {
+      words_frex[[model]][[topic]] <- frex_mat[,topic]
+    }
+  }
+   return(words_frex)
+  
+  
 }
 ```
 
@@ -427,19 +448,19 @@ load("data/modeles.RData")
 ## Extraction des termes
 
 ```{r}
-words1  <- topic.extraction(model1)
-words2  <- topic.extraction(model2)
-words3  <- topic.extraction(model3)
-words4  <- topic.extraction(model4)
-words5  <- topic.extraction(model5)
-words6  <- topic.extraction(model6)
-words7  <- topic.extraction(model7)
-words8  <- topic.extraction(model8)
-words9  <- topic.extraction(model9)
-words10 <- topic.extraction(model10)
+# words1  <- topic.extraction(model1)
+# words2  <- topic.extraction(model2)
+# words3  <- topic.extraction(model3)
+# words4  <- topic.extraction(model4)
+# words5  <- topic.extraction(model5)
+# words6  <- topic.extraction(model6)
+# words7  <- topic.extraction(model7)
+# words8  <- topic.extraction(model8)
+# words9  <- topic.extraction(model9)
+# words10 <- topic.extraction(model10)
 
-head(words1)
-
+# head(words1)
+# 
 # rm(model1)
 # rm(model2)
 # rm(model3)
@@ -450,27 +471,31 @@ head(words1)
 # rm(model8)
 # rm(model9)
 # rm(model10)
+
+# ⚠️⚠️⚠️⚠️avec la nouvelle fonctipn topic.extraction2 🐲 : 
+modeles = list(model1,model2,model3,model4,model5,model6,model7,model8,model9,model10)
+lda_list = topic.extraction2(modeles, nb.frex = 7)
 ```
 
 on va ensuite mettre tous les mots ensemble :
 
 ```{r}
-lda_list <- list(words1,words2,words3,words4,words5,words6,words7,words8,words9,words10)
+# lda_list <- list(words1,words2,words3,words4,words5,words6,words7,words8,words9,words10)
 # on créé la liste avec les mots de chaque lda : n objets, contenant chacun k éléments (9 ici)
 
 words <- unique(unlist(lda_list))# récupére la liste unique des mots de toutes les lda
 # ajouter toutes les listes de mots 
 
-rm(words1)
-rm(words2)
-rm(words3)
-rm(words4)
-rm(words5)
-rm(words6)
-rm(words7)
-rm(words8)
-rm(words9)
-rm(words10)
+# rm(words1)
+# rm(words2)
+# rm(words3)
+# rm(words4)
+# rm(words5)
+# rm(words6)
+# rm(words7)
+# rm(words8)
+# rm(words9)
+# rm(words10)
 
 save(lda_list, file = "data/lda_list.RData")
 ```
@@ -774,6 +799,7 @@ On va reprendre le dataframe avec les theta, on va tous les combiner avec l'ense
 ### Obtention des vecteurs de composition FORTIFIES 
 ```{r}
 # theta_all contient 90 colonnes : 9 topics * 10 LDA 
+load("data/modeles.RData")
 
 theta_all <- data.frame(cbind(model1$theta, model2$theta, model3$theta, model4$theta, model5$theta, 
                               model6$theta, model7$theta, model8$theta, model9$theta , model10$theta))
@@ -828,7 +854,7 @@ head(theta_resume_unique)
 
 
 
-###Vecteur de composition en se basant sur les formes fortes
+### Vecteur de composition en se basant sur les formes fortes
 
 Une autre approche pour obtenir les compositions des PAT avec les formes fortes et d'assigner chaque topic de lda à une forme forte en calculant la distance avec les centroides et d'assigner chaque topic de lda à la forme forte avec laquelle il a la plus petite distance.
 
@@ -862,7 +888,6 @@ nB <- nrow(centre)
 distance_centre_topic <- distance[1:nA, (nA + 1):(nA + nB)]
 colnames(distance_centre_topic) <- c("Gouvernance","Education alim","Territoires","Environnement","Secteur agricole","Economie alimentaire")
 
-
 class <- apply(distance_centre_topic,1, which.min)
 freq$clust <- as.factor(class)
 
@@ -873,7 +898,7 @@ freq <- freq %>%
                             territoires       = "3",
                             environnement= "4",
                             secteur_agri         = "5",
-                            economie           = "6"
+                            economie_alimentaire           = "6"
   ))
 
 library(tidyverse)
@@ -889,16 +914,17 @@ colnames(theta_resume2) <- freq$clust
 theta_resume2 <- t(rowsum(t(as.matrix(theta_resume2)), group = colnames(theta_resume2), na.rm = T))
 theta_resume2 <- theta_resume2/10
 
+# save(theta_resume2, file = "data/theta_resume2.RData")
+
 colnames(theta_resume2) <- paste0(colnames(theta_resume_unique),"_2")
 
 diff <- theta_resume_unique-theta_resume2
-
 
 diff$sum_diff <- apply(X = diff, 1, function(x) sum(abs(x)) )  
 
 ```
 
-On prépare notre premier tableau de composition de nos PAT en forme forte
+On prépare notre premier tableau de composition (fréquence sur le comptage simple des termes forts) de nos PAT en forme forte
 
 ```{r}
 load("data/df_resultat.final.RData")
@@ -916,6 +942,7 @@ mfa_0 <- mfa_0 * 100
 mfa_0$num <- as.numeric(rownames(mfa_0))
 
 ```
+
 Pour réaliser la typologie à partir de ces vecteurs de proportions en 6 topics fortifiés, on va utiliser ces deux approches méthodologiques et réaliser une AFM 
 ```{r}
 theta_df_combine <- data.frame(cbind(theta_resume_unique, theta_resume2))
@@ -934,13 +961,16 @@ plot.MFA(x = res.mfa.combine, choix = "freq", invisible = "ind")
 ```
 
 
+
+### Typologie de PAT sur vecteurs fortifiés 
+
 ```{r}
 # On va faire la classification sur l'un de ces tableaux de données
 # ⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️  choix du nombre de dimensions conservées !!!!!!ne n donnera pas le même nombre de clusters à la CAH 
-res.afc.theta.1 <- FactoMineR::CA(theta_resume_unique)
-barplot(res.afc.theta.1$eig[,2])
+res.afc.theta <- FactoMineR::CA(theta_resume2, ncp = 5)
+barplot(res.afc.theta$eig[,2])
 
-res.hcpc.combine <- HCPC(res.afc.theta.1,nb.clust=-1)
+res.hcpc.combine <- HCPC(res.afc.theta,nb.clust=3)
 
 res.hcpc.combine$desc.var
 
@@ -966,7 +996,6 @@ res.afc.theta.2 <- FactoMineR::CA(mfa_0[,-7])
 barplot(res.afc.theta.2$eig[,2])
 
 res.hcpc.combine2 <- HCPC(res.afc.theta.2,nb.clust=-1)
-
 res.hcpc.combine2$desc.var
 
 ```
@@ -978,10 +1007,11 @@ Illustration des clusters  :
 
 load("data/df_textes.RData") #⚠️ ON CHANGE LES ROWNAMES AVANT LA JOINTURE SINON CE SERA PAS LES BONS PAT JOINTS 
 load("data/df_clust_ill.RData")
-rownames(theta_resume_unique) <- gsub(x = df_textes$doc, pattern = "text", replacement = "")
+rownames(theta_resume2) <- gsub(x = df_textes$doc, pattern = "text", replacement = "")
 rm(df_textes)
 
-df_illus_freq_afc <-  left_join(data.frame(cbind(num = rownames(theta_resume_unique), theta_resume_unique)),
+theta_resume2 = as.data.frame(theta_resume2)
+df_illus_freq_afc <- left_join(data.frame(cbind(num = rownames(theta_resume2), theta_resume2)),
                                 data.frame(cbind(num = rownames(df_clust_ill), df_clust_ill)) , by = 'num')
 
 df_illus_freq_afc <- df_illus_freq_afc[,-1]
@@ -1006,16 +1036,72 @@ quanti.sup <- as.numeric(quanti.sup[-c(1:6)]) # on retire les colonnes 1 à 6 qu
 quali.sup  <- as.numeric(which(sapply(df_illus_freq_afc, function(x) is.factor(x) || is.character(x))))
 
 
-res.afc.theta.1.illus <- FactoMineR::CA(df_illus_freq_afc,
-                                        quali.sup = quali.sup,
-                                        quanti.sup = quanti.sup
+test_illus <- df_illus_freq_afc[,-quali.sup]
+
+res.afc.theta.2.illus <- FactoMineR::CA(test_illus,
+                                        quanti.sup = 7:47, ncp = 3
+
                                           ) 
 
 # NOMBRE DE DIMENSIONS DE LA CA ? 
 
-res.hcpc.test <- HCPC(res.afc.theta.1.illus, nb.clust = -1)
+res.hcpc.test <- HCPC(res.afc.theta.2.illus, nb.clust = -1)
 res.hcpc.test$desc.var$frequency
+```
 
+
+Graphique des clusters amélioré : 
+
+```{r}
+##############################
+# création du dataframe
+# ⚠️ etre sur de bien join sur les bons individus !!! ⚠️
+
+df_hcpc <- data.frame(clust = res.hcpc.test$data.clust$clust)
+rownames(df_hcpc) = rownames(res.hcpc.test$data.clust)
+df_hcpc <- df_hcpc %>% arrange(as.numeric(rownames(df_hcpc))) # on retrie par nom de lignes
+
+# et on combine avec les coordonnées sur les axes 1 et 2
+df_hcpc <- data.frame(cbind(df_hcpc, res.afc.theta.2.illus$row$coord[,1:2]))
+
+# on passe clust en factor 
+df_hcpc$clust = as.factor(df_hcpc$clust)
+
+
+##########################
+# graphique
+df_hcpc %>% ggplot() +
+  aes(x = Dim.1, y = Dim.2, col = clust) +
+  geom_point(size = 1.5) +
+  
+  theme_bw() +
+  
+  ggtitle ("Typologie des PAT construite sur leur proportion en topics fortifiés dans leur description", 
+           subtitle = "349 PAT sont utilisés pour construire cette typologie") +
+  
+  theme(plot.title = element_text(size = 13, face= "bold", hjust = 0.5), 
+        plot.subtitle = element_text(size = 10), 
+        axis.title.x = element_text(size = 12), 
+        axis.title.y = element_text(size = 12), 
+        legend.title =  element_text(size = 12),
+        legend.text =  element_text(size = 10 )
+        
+        ) +
+  
+  scale_color_manual(
+    # nom des groupes 
+    label = c("Groupe1", "Groupe2", "Groupe3"), 
+    values = c("royalblue", "limegreen", "darkorange"))+ 
+  
+  labs(
+      x = "Dim 1",
+      y = "Dim 2",
+      color = "Cluster"
+    ) +
+
+  coord_equal(xlim = c(-1.50, 1.50), ylim = c(-1.50,1.50))
+
+  
 ```
 
 
