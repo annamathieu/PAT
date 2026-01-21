@@ -7,6 +7,7 @@
 
 library(tidyverse)
 library(ggplot2)
+library(fmsb)
 
 ###############################################################################################"
 # On va utiliser "annee_de_signature_de_la_convention", mais c'est une colonne avec bcp de NA
@@ -135,4 +136,133 @@ boxplot <- df_evol_temp_lab %>%
 
 
 boxplot + facet_grid(. ~ topic  )
-   
+
+
+#Passage en spyder graph 
+
+
+spider <- df_evol_temp %>%
+  pivot_longer(
+    cols = -annee_sign,
+    names_to = "topic",
+    values_to = "valeur"
+  ) %>%
+  
+  # on calcule le nombre de PAT par année de signature pour pouvoir l'afficher sur le graph 
+  group_by(annee_sign) %>%
+  mutate(
+    n = n()/6,
+    annee_n = paste0(annee_sign, "\n(n=", n, ")")
+  ) %>% 
+  ungroup() %>% 
+  
+  # on calcule les % de composition moyens par année et par topic 
+  group_by(annee_n, topic) %>%
+  summarise(
+    valeur = mean(valeur, na.rm = TRUE),
+    .groups = "drop"
+  ) %>% 
+  pivot_wider(names_from = topic , values_from = valeur) 
+
+
+row <- spider$annee_n
+spider <- spider[,-1]
+rownames(spider) <- row
+
+spider <- rbind("Max." = rep(100,9),"Min." = rep(0,9),spider)
+
+
+
+
+
+##############
+# TOUTES LES ANNEES
+##############
+
+point <- c(rgb(0.1, 0.1, 0.1, 1),
+           rgb(1, 0, 0, 1),
+           rgb(0, 1, 0, 1),
+           rgb(0, 0, 1, 1),
+           rgb(1, 0, 1, 1),
+           rgb(0, 1, 1, 1),
+           rgb(1, 1, 0.4, 1),
+           rgb(0.4, 1, 1, 1),
+           rgb(1, 0.4, 1, 1))
+
+areas <- c(rgb(0.1, 0.1, 0.1, 0.25),
+           rgb(1, 0, 0, 0.25),
+           rgb(0, 1, 0, 0.25),
+           rgb(0, 0, 1, 0.25),
+           rgb(1, 0, 1, 0.25),
+           rgb(0, 1, 1, 0.25),
+           rgb(1, 1, 0.4, 0.25),
+           rgb(0.4, 1, 1, 0.25),
+           rgb(1, 0.4, 1, 0.25))
+
+colnames(spider) <- c("Logistique commercialisation",
+                 "Education-Restauration collective",
+                 "Environnement-Santé",
+                 "Gouvernance",
+                 "Secteur agricole",
+                 "Territoires")
+
+radarchart(spider,
+           plwd = 1,
+           cglty = 1,
+           pcol=point,
+           plty = 1,
+           cglcol = "black",
+           pfcol = areas,
+           axistype = 1,
+           caxislabels = c("0", "25", "50", "75", "100"))
+
+
+legend(x=1.5,
+       y=1.75,
+       y.intersp = 0.1,
+       legend = rownames(spider)[c(-1,-2)],
+       bty = "n",
+       pch = 19,
+       col = areas,
+       text.col = "black",
+       cex = 1.2,
+       pt.cex = 2,
+       xjust = 0,
+       xpd = T)
+
+title(main = "Comparaison des profils moyen par année")
+
+#####
+# 2017 - 2021 - 2024
+#####
+
+radarchart(spider[c(1,2,3,7,10),],
+           plwd = 2,
+           cglty = 1,
+           cglcol = "black",
+           pcol=point,
+           plty = 1,
+           pfcol = areas,
+           axistype = 1,
+           caxislabels = c("0", "25", "50", "75", "100"),
+           axislabcol = "darkblue")
+
+legend(x=1.5,
+       y=0.8,
+       y.intersp = 0.1,
+       legend = rownames(spider)[c(3,7,10)],
+       bty = "n",
+       pch = 19,
+       col = areas,
+       text.col = "black",
+       cex = 1.2,
+       pt.cex = 2,
+       xjust = 0,
+       xpd = T)
+
+title(main = "Comparaison des profils moyen par année")
+mtext("Années représentées : 2017 - 2021 - 2024",
+      side = 3,
+      line = 0.5,
+      cex = 1,
+      col = "black")
