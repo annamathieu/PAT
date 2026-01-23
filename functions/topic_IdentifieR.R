@@ -347,12 +347,13 @@ topicIdentifieR <- function ( X,
 }
   
 
+seeds = c(3644,491,1509,3734,4753,9597,7323,9369,659,4999)
 
 res1 <- topicIdentifieR(X = textdata,
                 nb.topics = 9,
                 nb.iter = 10,
                 taille_min_text = 20,
-                nb.frex = 15, 
+                nb.frex = 10, 
                 introduction_llm = "une base de données sur les projets alimentaires territoriaux est constituée en France à partir des 450 PAT recensées",
                 
                 api_key = "AIzaSyA1UCATqGqUpQuVRJBPEKTcilR9H-OF-g4",
