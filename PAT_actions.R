@@ -47,7 +47,7 @@ urbanisme_q <- urbanisme[ , grepl( "etat_davancement" , names( urbanisme ) ) ]
 #On fusionne les tableau
 synthese <- cbind(culture_q,economie_q,education_q,environnement_q,gouvernance_q,justice_soc_q,nutrition_q,restauration_q,urbanisme_q)
 synthese[synthese==""] <- NA
-synthese$total <- rowSums(!is.na(synthese[,1:225]))
+synthese$total <- rowSums(!is.na(synthese[,1:225])) #VRAI NOMBRE D'ACTIONS
 dim(synthese)
 
 #On compte le nombre d'action programmée/en cours/réalisée pour chaque PAT
@@ -86,15 +86,15 @@ calcul_stats_actions <- function(df,axes) {
 
 #On isole chacun des sous jeu de données
 axes <- list(
-  culture = synthese[,grepl("culture_", names(synthese))],
-  economie = synthese[,grepl("economie_", names(synthese))],
-  education = synthese[,grepl("education_", names(synthese))],
-  environnement = synthese[,grepl("environnement_", names(synthese))],
-  gouvernance = synthese[,grepl("gouvernance_", names(synthese))],
-  justice_soc = synthese[,grepl("justice_soc_", names(synthese))],
-  nutrition = synthese[,grepl("nutrition_", names(synthese))],
-  restauration = synthese[,grepl("restauration_", names(synthese))],
-  urbanisme = synthese[,grepl("urbanisme_", names(synthese))]
+  culture       = synthese %>% select(starts_with("culture_")),
+  economie      = synthese %>% select(starts_with("economie_")),
+  education     = synthese %>% select(starts_with("education_")),
+  environnement = synthese %>% select(starts_with("environnement_")),
+  gouvernance   = synthese %>% select(starts_with("gouvernance_")),
+  justice_soc   = synthese %>% select(starts_with("justice_soc_")),
+  nutrition     = synthese %>% select(starts_with("nutrition_")),
+  restauration  = synthese %>% select(starts_with("restauration_")),
+  urbanisme     = synthese %>% select(starts_with("urbanisme_"))
 )
 
 NA_to_0 <- function(df) {
@@ -147,18 +147,18 @@ MFA_actions <- cbind(
   urbanisme_axes[, 1:3]
 )
 
-# MFA_actions2 <- cbind(
-#   id,
-#   culture_axes[, 5:7],
-#   economie_axes[, 5:7],
-#   education_axes[, 5:7],
-#   environnement_axes[, 5:7],
-#   gouvernance_axes[, 5:7],
-#   justice_soc_axes[, 5:7],
-#   nutrition_axes[, 5:7],
-#   restauration_axes[, 5:7],
-#   urbanisme_axes[, 5:7]
-# )
+MFA_actions2 <- cbind(
+  id,
+  culture_axes[, 5:7],
+  economie_axes[, 5:7],
+  education_axes[, 5:7],
+  environnement_axes[, 5:7],
+  gouvernance_axes[, 5:7],
+  justice_soc_axes[, 5:7],
+  nutrition_axes[, 5:7],
+  restauration_axes[, 5:7],
+  urbanisme_axes[, 5:7]
+)
 
 ##### Analyse facto #####
 library(Factoshiny)
@@ -188,8 +188,8 @@ quali.sup  <- as.numeric(which(sapply(df_clust_ill[,-nvarsup], function(x) is.fa
 quali.sup <- c(1,quali.sup)
 
 #On aligne bien les PAT avec les var supplmentaires qui n'ont pas de NA
-MFA_actions <- MFA_actions %>% 
-  left_join(df_clust_ill,join_by(id==id))
+# MFA_actions <- MFA_actions %>%
+#   left_join(df_clust_ill,join_by(id==id))
 
 #On garde les lignes avec au moins une action enregistrée pour que la CA fonctionne correctement
 MFA_actions <- MFA_actions[rowSums(MFA_actions[, 2:28], na.rm = TRUE) != 0, ]
@@ -213,8 +213,11 @@ frequence <- sapply(mots, function(mot) {
   round(100 * ifelse(rowSums(!is.na(A)) == 0, 0 , rowSums(!is.na(A[,cols]))/rowSums(!is.na(A))),2) #si on a 0 action dans le projet référencé on force à 0
 })
 
+
 frequence <- as.data.frame(frequence)
 frequence$id <- as.character(id)
+
+colnames(frequence)[1:9] <- gsub("_","",colnames(frequence)[1:9])
 
 MFA_actions <- MFA_actions %>% 
   left_join(frequence, join_by(id==id))
