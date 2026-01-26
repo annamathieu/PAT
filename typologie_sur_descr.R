@@ -195,24 +195,27 @@ df_illus_freq_afc[,c(1:6,24)] %>%
   
   labs(x = "Année signature convention", y = "Proportion moyenne") +
   
-  scale_x_discrete(labels = c("2017","2018","2019","2020","2021","2022","2023","2024","2025")) +
+  scale_x_discrete(labels = c("2017 \n(n=14)","2018 \n(n=5)","2019 \n(n=12)","2020 \n(n=12)","2021 \n(n=94)","2022 \n(n=22)","2023 \n(n=17)","2024 \n(n=26)","2025 \n(n=4)")) +
   
   ggtitle("Composition moyenne des PAT en thématiques fortifiés \npar année de signature de la convention") +
   
   theme(plot.title = element_text(size = 18, face = "bold", hjust = 0.5), 
         legend.title = element_text(size = 14),
         legend.text = element_text(size = 12),
-        axis.title.x = element_text(size = 14),
-        axis.text.x = element_text(size = 18, angle = 45, face = "bold", vjust = 0.9),
-        axis.title.y = element_text(size = 14))
+        axis.title.x = element_text(size = 14, face = "bold", vjust = 0),
+        axis.text.x = element_text(size = 16, face = "bold", vjust = 1),
+        axis.title.y = element_text(size = 14), 
+        axis.text.y = element_text(size = 14)) +
+  
+  scale_y_continuous(expand=c(0,0))
 
 
 ##########################################
-#  PAR CLUSTER 
+#  PAR CLUSTER (et au global)
 
-data.frame(cbind(df_illus_freq_afc[,c(1:6)],clust = df_hcpc$clust)) %>% 
+df.clust <- data.frame(cbind(df_illus_freq_afc[,c(1:6)],clust = df_hcpc$clust)) %>% 
   group_by(clust) %>% 
-  summarize(across(1:6, mean, .names = "mean_{.col}"))  %>% 
+  summarize(across(1:6, mean, .names = "mean_{.col}")) %>% 
   
   pivot_longer(
     cols = -clust,
@@ -221,9 +224,16 @@ data.frame(cbind(df_illus_freq_afc[,c(1:6)],clust = df_hcpc$clust)) %>%
     values_to = "proportion"
   ) %>% 
   
-  select(-mean) %>% 
+  select(-mean) 
   
-  ggplot() +
+  moyennes_glob <- data.frame(clust = "Global", 
+                              topic = gsub(x = names(df_illus_freq_afc)[1:6], pattern = " ", replacement = "."), 
+                              proportion = colMeans(df_illus_freq_afc[,c(1:6)]))
+  
+  
+  df.clust <- data.frame(rbind(df.clust, moyennes_glob))
+  
+  df.clust %>% ggplot() +
   aes(x = clust, y = proportion) +
   geom_col(aes(fill = topic), position = position_stack()) +
   scale_fill_manual(values = c("tomato2","springgreen4","royalblue","gold1","chartreuse2","saddlebrown"),
@@ -238,11 +248,12 @@ data.frame(cbind(df_illus_freq_afc[,c(1:6)],clust = df_hcpc$clust)) %>%
   
   ggtitle("Composition moyenne des PAT en thématiques fortifiés par cluster") +
   
-  theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.2), 
-        legend.title = element_text(size = 14), 
-        legend.text = element_text(size = 12), 
+  theme(plot.title = element_text(size = 18, face = "bold", hjust = 0.2), 
+        legend.title = element_text(size = 16, face = "bold"), 
+        legend.text = element_text(size = 14), 
         axis.title.x = element_text(size = 14), 
-        axis.title.y = element_text(size = 14))
+        axis.title.y = element_text(size = 14), 
+        axis.text.x = element_text(size = 16))
 
 
 
