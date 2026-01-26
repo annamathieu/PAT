@@ -187,7 +187,24 @@ df_illus_freq_afc[,c(1:6,24)] %>%
   aes(x = annee_de_signature_de_la_convention, y = proportion) +
   geom_col(aes(fill = topic), position = position_stack()) +
   scale_fill_manual(values = c("tomato2","springgreen4","royalblue","gold1","chartreuse2","saddlebrown"),
-                    name = "Noms des topics fortifiés" )
+                    name = "Topics fortifiés", 
+                    labels = c("Education - Restauration collective", "Environnement - Santé", "Gouvernance", 
+                               "Logistique Commercialisation" , "Secteur Agricole", "Territoires")) +
+  
+  theme_bw() +
+  
+  labs(x = "Année signature convention", y = "Proportion moyenne") +
+  
+  scale_x_discrete(labels = c("2017","2018","2019","2020","2021","2022","2023","2024","2025")) +
+  
+  ggtitle("Composition moyenne des PAT en thématiques fortifiés \npar année de signature de la convention") +
+  
+  theme(plot.title = element_text(size = 18, face = "bold", hjust = 0.5), 
+        legend.title = element_text(size = 14),
+        legend.text = element_text(size = 12),
+        axis.title.x = element_text(size = 14),
+        axis.text.x = element_text(size = 18, angle = 45, face = "bold", vjust = 0.9),
+        axis.title.y = element_text(size = 14))
 
 
 ##########################################
@@ -210,7 +227,23 @@ data.frame(cbind(df_illus_freq_afc[,c(1:6)],clust = df_hcpc$clust)) %>%
   aes(x = clust, y = proportion) +
   geom_col(aes(fill = topic), position = position_stack()) +
   scale_fill_manual(values = c("tomato2","springgreen4","royalblue","gold1","chartreuse2","saddlebrown"),
-                    name = "Noms des topics fortifiés" )
+                    name = "Topics fortifiés", 
+                    labels = c("Education - Restauration collective", "Environnement - Santé", "Gouvernance", 
+                               "Logistique Commercialisation" , "Secteur Agricole", "Territoires")) +
+  
+  theme_bw() +
+  
+  labs(x = "Cluster", y = "Proportion moyenne") +
+  
+  
+  ggtitle("Composition moyenne des PAT en thématiques fortifiés par cluster") +
+  
+  theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.2), 
+        legend.title = element_text(size = 14), 
+        legend.text = element_text(size = 12), 
+        axis.title.x = element_text(size = 14), 
+        axis.title.y = element_text(size = 14))
+
 
 
 ##########################################
@@ -235,7 +268,26 @@ df_illus_freq_afc[,c(1:6,23)] %>%
   aes(x = niveaux_de_labelisation, y = proportion) +
   geom_col(aes(fill = topic), position = position_stack()) +
   scale_fill_manual(values = c("tomato2","springgreen4","royalblue","gold1","chartreuse2","saddlebrown"),
-                    name = "Noms des topics fortifiés")
+                    name = "Topics fortifiés", 
+                    
+                    labels = c("Education - Restauration collective", "Environnement - Santé", "Gouvernance", 
+                               "Logistique Commercialisation" , "Secteur Agricole", "Territoires")) +
+  
+  theme_bw() +
+  
+  labs(x = "Niveau de labellisation", y = "Proportion moyenne") +
+  
+  scale_x_discrete(labels = c("Niveau 1", "Niveau 2")) +
+  
+  ggtitle("Composition moyenne des PAT en thématiques fortifiés \npar niveau de labellisation") +
+  
+  theme(plot.title = element_text(size = 18, face = "bold", hjust = 0.5), 
+        # legend.title = element_text(size = 14), 
+        # legend.text = element_text(size = 12), 
+        legend.position = "none",
+        axis.title.x = element_text(size = 14),
+        axis.text.x = element_text(size = 14),
+        axis.title.y = element_text(size = 14))
 
 
 
