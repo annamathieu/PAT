@@ -96,12 +96,19 @@ rownames(df_illus_freq_afc) = num
 df_coord_var <- data.frame(res.afc.f$col$coord[,1:2])
 
 
+rownames(luc) <- gsub("luc_","",rownames(luc))
+
+df_coord_text <- df_coord_var
+df_coord_text["Logistique commercialisation",]$Dim.1 <- df_coord_text["Logistique commercialisation",]$Dim.1 + 0.5
+# df_coord_text["Logistique commercialisation",]$Dim.2 <- df_coord_text["Logistique commercialisation",]$Dim.2 - 0.25
+df_coord_text["Education Restauration Collective",]$Dim.1 <- df_coord_text["Education Restauration Collective",]$Dim.1 - 0.2
+
 ##########################
 # graphique
 
 df_hcpc %>% ggplot() +
   aes(x = Dim.1, y = Dim.2, col = clust) +
-  geom_point(size = 2) +
+  geom_point(size = 2,alpha = 0.3) +
   stat_ellipse() +
   
   theme_bw() +
@@ -113,7 +120,7 @@ df_hcpc %>% ggplot() +
         plot.subtitle = element_text(size = 13, , hjust = 0.5), 
         axis.title.x = element_text(size = 14), 
         axis.title.y = element_text(size = 14), 
-        legend.title =  element_text(size = 16),
+        legend.title =  element_text(face="bold",size = 16),
         legend.text =  element_text(size = 15 )
         
   ) +
@@ -129,28 +136,28 @@ df_hcpc %>% ggplot() +
     color = "Cluster"
   ) +
   
-  coord_equal(xlim = c(-1.50, 1.50), ylim = c(-1.50,1.50)) +
+  coord_equal(xlim = c(-1.50, 1.50), ylim = c(-1.50,1.50),clip = "off") +
 
   
   # POINTS DES DESC DE PAT DE LUC
   # à mettre en commentaire pour ne pas afficher
-  geom_point(data = luc,
-             aes(x = Dim1, y = Dim2),
-             size = 1, color = "black") +
-  geom_text_repel(data = luc, aes(x = Dim1, y = Dim2),
-                  label = rownames(luc), colour = "black",
-                  alpha = 0.8,
-                  size = 5) +
 
   
   # POINTS DES VARIABLES 
   
   geom_point(data  = df_coord_var, aes(x=Dim.1, y = Dim.2), col = "black",
-            size = 3, shape = 15 ) +
-  geom_text(data  = df_coord_var, aes(x=Dim.1, y = Dim.2+0.1), 
-            label = rownames(df_coord_var), col = "black", fontface = "bold", 
-            size = 6)
-
+            size = 3, shape = 15) +
+  geom_text(data  = df_coord_text, aes(x=Dim.1, y = Dim.2+0.1), 
+            label = rownames(df_coord_var), col = "black", fontface = "bold", alpha = 1,
+            size = 6) +
+  geom_point(data = luc,
+             aes(x = Dim1, y = Dim2,),
+             size = 2.2, color = "red", shape = 15) +
+  geom_text_repel(data = luc, aes(x = Dim1, y = Dim2),
+                  label = rownames(luc), colour = "brown3",
+                  alpha = 0.8,
+                  size = 6)
+  
 
 
 ###########################################
