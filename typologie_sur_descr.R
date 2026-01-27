@@ -31,7 +31,6 @@ df_clust_ill$id <- pat2025$id
 
 rownames(theta_resume2) <- gsub(x = df_textes$doc, pattern = "text", replacement = "")
 theta_resume2 = as.data.frame(theta_resume2)
-df_clust_ill <- data.frame(cbind(id = pat2025$id, df_clust_ill))
 
 df_illus_freq_afc <- left_join(data.frame(cbind(num = rownames(theta_resume2), theta_resume2)),
                                data.frame(cbind(num = rownames(df_clust_ill), df_clust_ill)) , by = 'num')
@@ -44,12 +43,13 @@ df_illus_freq_afc <- left_join(df_illus_freq_afc, freq_sup, by = "id") # on ajou
 
 rm(df_textes)
 rm(df_clust_ill)
+rm(pat2025)
+rm(theta_resume2)
 
 num = as.numeric(as.character(df_illus_freq_afc$num))#on sauve le num des PAT sélectionnés 
 
 df_illus_freq_afc <- df_illus_freq_afc %>%
   select(
-    -id,
     -num,
     -taux_de_pauvrete_du_territoire,
     -emission_de_ges,
@@ -157,6 +157,13 @@ df_hcpc %>% ggplot() +
   
   # POINTS DES DESC DE PAT DE LUC
   # à mettre en commentaire pour ne pas afficher
+  geom_point(data = luc,
+             aes(x = Dim1, y = Dim2,),
+             size = 2.2, color = "red", shape = 15) +
+  geom_text_repel(data = luc, aes(x = Dim1, y = Dim2),
+                  label = rownames(luc), colour = "brown3",
+                  alpha = 0.8,
+                  size = 6) +
 
   
   # POINTS DES VARIABLES 
@@ -165,15 +172,10 @@ df_hcpc %>% ggplot() +
             size = 3, shape = 15) +
   geom_text(data  = df_coord_text, aes(x=Dim.1, y = Dim.2+0.1), 
             label = rownames(df_coord_var), col = "black", fontface = "bold", alpha = 1,
-            size = 6) +
-  geom_point(data = luc,
-             aes(x = Dim1, y = Dim2,),
-             size = 2.2, color = "red", shape = 15) +
-  geom_text_repel(data = luc, aes(x = Dim1, y = Dim2),
-                  label = rownames(luc), colour = "brown3",
-                  alpha = 0.8,
-                  size = 6)
-  
+            size = 6) 
+
+
+
 
 
 ###########################################
