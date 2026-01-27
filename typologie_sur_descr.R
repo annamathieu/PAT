@@ -27,29 +27,30 @@ load("data/df_textes.RData") #⚠️ ON CHANGE LES ROWNAMES AVANT LA JOINTURE SI
 load("data/luc_AFC.RData")   # PAT de lucs prétraités 
 load("data/freq_sup.RData")  # variables supplémentaires issues des actions des PAT (fréquence de planifié, réalisé, en cours)
 
+#On ajout l'identifiant du PAT pour s'y retrouver
 df_clust_ill$id <- pat2025$id
 
+#On renome les lignes de theta_resume2
 rownames(theta_resume2) <- gsub(x = df_textes$doc, pattern = "text", replacement = "")
 theta_resume2 = as.data.frame(theta_resume2)
-df_clust_ill <- data.frame(cbind(id = pat2025$id, df_clust_ill))
 
+#On fusionne illustratif et nos données de composition
 df_illus_freq_afc <- left_join(data.frame(cbind(num = rownames(theta_resume2), theta_resume2)),
                                data.frame(cbind(num = rownames(df_clust_ill), df_clust_ill)) , by = 'num')
 
 colnames(freq_sup)[6:14] <- paste0("freq_",colnames(freq_sup)[6:14] ) # renommage nom colonnes jdd
 
+#On ajoute les fréquences pour être utilisé en variable sup
 df_illus_freq_afc <- left_join(df_illus_freq_afc, freq_sup, by = "id") # on ajoute les colonnes de fréquence des actions
-
-
 
 rm(df_textes)
 rm(df_clust_ill)
 
+#On garde le numéro de ligne
 num = as.numeric(as.character(df_illus_freq_afc$num))#on sauve le num des PAT sélectionnés 
 
 df_illus_freq_afc <- df_illus_freq_afc %>%
   select(
-    -id,
     -num,
     -taux_de_pauvrete_du_territoire,
     -emission_de_ges,
@@ -69,7 +70,7 @@ colnames(luc) = paste0("Dim",seq(1,5))
 
 ##############################
 # AFC 
-
+rownames(df_illus_freq_afc) <- df_illus_freq_afc$id
 # identification des variables supp
 quanti.sup <- which(sapply(df_illus_freq_afc, is.numeric))
 quanti.sup <- as.numeric(quanti.sup[-c(1:6)]) # on retire les colonnes 1 à 6 qui seront les colonnes actives
@@ -96,7 +97,7 @@ res.hcpc.f$desc.ind$dist
 # création du dataframe
 # ⚠️ etre sur de bien join sur les bons individus !!! ⚠️
 
-df_hcpc <- data.frame(clust = res.hcpc.f$data.clust$clust)
+df_hcpc <- data.frame(clust = res.hcpc.f$data.clust$clust,id = res.hcpc.f$desc.var$call$X$id)
 rownames(df_hcpc) = rownames(res.hcpc.f$data.clust)
 df_hcpc <- df_hcpc %>% arrange(as.numeric(rownames(df_hcpc))) # on retrie par nom de lignes
 
@@ -464,3 +465,39 @@ df_hcpc %>% ggplot() +
     geom_text_repel(data  = df_hcpc_norma, aes(x=Dim.1, y = Dim.2), 
             label = df_hcpc_norma$nom_administratif, col = "purple", fontface = "italic", alpha = 1,
             size = 4)
+
+#On veut trouver les individus les plus rpz du cluster
+res.hcpc.f$desc.ind$dist
+#Groupe 1
+pat2025 %>% 
+  filter(id %in% c("1666","1744","1454","1315","1452")) %>% 
+  select(id,nom_administratif)
+
+df_illus_freq_afc["1666",c(1:6)]
+df_illus_freq_afc["1744",c(1:6)]
+df_illus_freq_afc["1454",c(1:6)]
+df_illus_freq_afc["1315",c(1:6)]
+df_illus_freq_afc["1452",c(1:6)]
+
+# Groupe 2
+pat2025 %>% 
+  filter(id %in% c("1608","5563","1442","1531","1413")) %>% 
+  select(id, nom_administratif)
+
+df_illus_freq_afc["1608", c(1:6)]
+df_illus_freq_afc["5563", c(1:6)]
+df_illus_freq_afc["1442", c(1:6)]
+df_illus_freq_afc["1531", c(1:6)]
+df_illus_freq_afc["1413", c(1:6)]
+
+
+# Groupe 3
+pat2025 %>% 
+  filter(id %in% c("1565","88325","1304","1647","1348")) %>% 
+  select(id, nom_administratif)
+
+df_illus_freq_afc["1565", c(1:6)]
+df_illus_freq_afc["88325", c(1:6)]
+df_illus_freq_afc["1304", c(1:6)]
+df_illus_freq_afc["1647", c(1:6)]
+df_illus_freq_afc["1348", c(1:6)]
