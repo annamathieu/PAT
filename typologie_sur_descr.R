@@ -20,15 +20,24 @@ library(ggrepel)
 
 ##############################
 # préparation fichier
+load("data/pat2025.RData") # récupérer les id des PAT 
 load("data/theta_resume2.RData")
 load("data/df_clust_ill.RData") # PAT 2025 avec sel de variables illus
 load("data/df_textes.RData") #⚠️ ON CHANGE LES ROWNAMES AVANT LA JOINTURE SINON CE SERA PAS LES BONS PAT JOINTS 
 load("data/luc_AFC.RData")   # PAT de lucs prétraités 
+load("data/freq_sup.RData")  # variables supplémentaires issues des actions des PAT (fréquence de planifié, réalisé, en cours)
  
 rownames(theta_resume2) <- gsub(x = df_textes$doc, pattern = "text", replacement = "")
 theta_resume2 = as.data.frame(theta_resume2)
+df_clust_ill <- data.frame(cbind(id = pat2025$id, df_clust_ill))
+
 df_illus_freq_afc <- left_join(data.frame(cbind(num = rownames(theta_resume2), theta_resume2)),
                                data.frame(cbind(num = rownames(df_clust_ill), df_clust_ill)) , by = 'num')
+
+colnames(freq_sup)[6:14] <- paste0("freq_",colnames(freq_sup)[6:14] ) # renommage nom colonnes jdd
+
+df_illus_freq_afc <- left_join(df_illus_freq_afc, freq_sup, by = "id") # on ajoute les colonnes de fréquence des actions
+
 
 rm(df_textes)
 rm(df_clust_ill)
@@ -37,6 +46,7 @@ num = as.numeric(as.character(df_illus_freq_afc$num))#on sauve le num des PAT s�
 
 df_illus_freq_afc <- df_illus_freq_afc %>%
   select(
+    -id,
     -num,
     -taux_de_pauvrete_du_territoire,
     -emission_de_ges,
@@ -67,12 +77,15 @@ res.afc.f <- FactoMineR::CA(df_illus_freq_afc,
                             quali.sup = quali.sup, 
                             ncp = 3) 
 
+
+
 #############################
 # HCPC 
 
 res.hcpc.f <- HCPC(res.afc.f, nb.clust = -1)
 res.hcpc.f$desc.var$frequency
 
+res.hcpc.f$desc.ind$dist
 
 
 ##############################
