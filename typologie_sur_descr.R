@@ -26,7 +26,9 @@ load("data/df_clust_ill.RData") # PAT 2025 avec sel de variables illus
 load("data/df_textes.RData") #⚠️ ON CHANGE LES ROWNAMES AVANT LA JOINTURE SINON CE SERA PAS LES BONS PAT JOINTS 
 load("data/luc_AFC.RData")   # PAT de lucs prétraités 
 load("data/freq_sup.RData")  # variables supplémentaires issues des actions des PAT (fréquence de planifié, réalisé, en cours)
- 
+
+df_clust_ill$id <- pat2025$id
+
 rownames(theta_resume2) <- gsub(x = df_textes$doc, pattern = "text", replacement = "")
 theta_resume2 = as.data.frame(theta_resume2)
 df_clust_ill <- data.frame(cbind(id = pat2025$id, df_clust_ill))
@@ -37,6 +39,7 @@ df_illus_freq_afc <- left_join(data.frame(cbind(num = rownames(theta_resume2), t
 colnames(freq_sup)[6:14] <- paste0("freq_",colnames(freq_sup)[6:14] ) # renommage nom colonnes jdd
 
 df_illus_freq_afc <- left_join(df_illus_freq_afc, freq_sup, by = "id") # on ajoute les colonnes de fréquence des actions
+
 
 
 rm(df_textes)
@@ -87,7 +90,6 @@ res.hcpc.f$desc.var$frequency
 
 res.hcpc.f$desc.ind$dist
 
-
 ##############################
 # GRAPHIQUE DE LA TYPOLOGIE 
 ##############################
@@ -100,6 +102,7 @@ df_hcpc <- df_hcpc %>% arrange(as.numeric(rownames(df_hcpc))) # on retrie par no
 
 df_hcpc <- data.frame(cbind(df_hcpc, res.afc.f$row$coord[,1:2])) # et on combine avec les coordonnées sur les axes 1 et 2
 df_hcpc$clust = as.factor(df_hcpc$clust) # on passe clust en factor 
+df_hcpc$id <- df_illus_freq_afc$id
 
 # ROWNAMES
 rownames(df_hcpc) = num # on met les bons noms de numéro de pat REELS en rownames 
@@ -392,5 +395,72 @@ df_illus_freq_afc[,c(1:6,23)] %>%
 # 1	PAT de Gouvernance Territoriale
 # 2	PAT de Transition Alimentaire
 # 3	PAT Productifs Territorialisés
+  
+  
+  
+########################################
+##### Graph avec les PAT étudiés dans NormaPAT en avant #####
+PAT_liste_luc <- c("1306","1376","1420","1440","1503","1554","1582","1659","1763","2001","5553")
 
+pat2025_nom <- pat2025 %>% 
+  select(id,nom_administratif)
 
+df_hcpc_norma <- df_hcpc %>% 
+  left_join(pat2025_nom,join_by(id==id))
+
+df_hcpc_norma$normaPAT <- ifelse(df_hcpc_norma$id %in% PAT_liste_luc,"Oui","Non")
+df_hcpc_norma <- df_hcpc_norma %>% 
+  filter(normaPAT == "Oui")
+
+df_hcpc_norma$nom_administratif[7] <- "PAT Belle-Ile-en-Mer"
+
+df_hcpc %>% ggplot() +
+    
+    aes(x = Dim.1, y = Dim.2, col = clust) +
+  
+    geom_point(size = 2,alpha=0.1) +
+    stat_ellipse() +
+    
+    theme_bw() +
+    
+    ggtitle ("Typologie des PAT construite sur leur proportion \nen topics fortifiés dans leur description", 
+             subtitle = "349 PAT sont utilisés pour construire cette typologie") +
+    
+    theme(plot.title = element_text(size = 18, face= "bold", hjust = 0.4), 
+          plot.subtitle = element_text(size = 13, , hjust = 0.5), 
+          axis.title.x = element_text(size = 14), 
+          axis.title.y = element_text(size = 14), 
+          legend.title =  element_text(face="bold",size = 16),
+          legend.text =  element_text(size = 15 )
+          
+    ) +
+    
+    scale_color_manual(
+      # nom des groupes 
+      label = c("Groupe1", "Groupe2", "Groupe3"), 
+      values = c("royalblue", "limegreen", "darkorange"))+ 
+    
+    labs(
+      x = "Dim 1",
+      y = "Dim 2",
+      color = "Cluster"
+    ) +
+    
+    coord_equal(xlim = c(-1.50, 1.50), ylim = c(-1.50,1.50),clip = "off") +
+    
+    
+    # POINTS DES DESC DE PAT DE LUC
+    # à mettre en commentaire pour ne pas afficher
+    
+    
+    # POINTS DES VARIABLES 
+    
+    geom_point(data  = df_coord_var, aes(x=Dim.1, y = Dim.2), col = "black",
+               size = 2, shape = 15) +
+    geom_text(data  = df_coord_text, aes(x=Dim.1, y = Dim.2+0.1), 
+              label = rownames(df_coord_var), col = "black", fontface = "bold", alpha = 1,
+              size = 4) +
+    geom_point(data = df_hcpc_norma, aes(x=Dim.1, y = Dim.2), col = "purple",shape = 17, size = 2)+
+    geom_text_repel(data  = df_hcpc_norma, aes(x=Dim.1, y = Dim.2), 
+            label = df_hcpc_norma$nom_administratif, col = "purple", fontface = "italic", alpha = 1,
+            size = 4)
