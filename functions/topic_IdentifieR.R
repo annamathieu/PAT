@@ -356,7 +356,7 @@ res1 <- topicIdentifieR(X = textdata,
                 nb.frex = 10, 
                 introduction_llm = "une base de données sur les projets alimentaires territoriaux est constituée en France à partir des 450 PAT recensées",
                 
-                api_key = "AIzaSyA1UCATqGqUpQuVRJBPEKTcilR9H-OF-g4",
+                api_key = "",
                 freq.min.term = 2,
                 language = "fr"  )
 
@@ -398,38 +398,10 @@ ncp = 5
 # nb.iter = 10
 # seeds = sample(1:9999, nb.iter, replace = F)
 # 
-# res2 = topicIdentifieR(X = text.objectifs, 
+# res.test = topicIdentifieR(X = text.objectifs, 
 #                        nb.topics = 10, 
 #                        nb.iter = 10, 
 #                        taille_min_text = 20,
 #                        nb.frex = 20,
-#                        api_key = "AIzaSyCT_RzdrUtkY5TdvPetzLvaVP5j-f6XbAA", 
+#                        api_key = "", 
 #                        language = "fr"  )
-# 
-# res3 = topicIdentifieR(X = text.objectifs, 
-#                       nb.topics = 8, 
-#                       nb.iter = 10, 
-#                       taille_min_text = 20,
-#                       nb.frex = 10,
-#                       api_key = "AIzaSyCT_RzdrUtkY5TdvPetzLvaVP5j-f6XbAA", 
-#                       language = "fr"  )
-# 
-# res4 = topicIdentifieR(X = text.objectifs, 
-#                        nb.topics = 8, 
-#                        nb.iter = 10, 
-#                        taille_min_text = 20,
-#                        nb.frex = 10,
-#                        freq.min.term = 2,
-#                        api_key = "AIzaSyCT_RzdrUtkY5TdvPetzLvaVP5j-f6XbAA", 
-#                        language = "fr"  )
-# 
-# res5 <- topicIdentifieR(X = text.objectifs, 
-#                                nb.topics = 6, 
-#                                nb.iter = 10, 
-#                                taille_min_text = 20,
-#                                nb.frex = 10,
-#                                freq.min.term = 2,
-#                                api_key = "AIzaSyCT_RzdrUtkY5TdvPetzLvaVP5j-f6XbAA", 
-#                                language = "fr"  )
-# res5$words_topics_fortifies
-# 
