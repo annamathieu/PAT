@@ -715,7 +715,7 @@ clusters_topics_df <- data.frame(cbind(coord_topics,clust = clusters_topics$clus
 clusters_topics_df$clust <- as.factor(clusters_topics_df$clust)
 
 # save(clusters_topics_df, file = "data/clusters_topics_df.RData")
-# save(res.mfa, file = "data/res.mfa.RData")
+# save(res.mfa, file = "data/res.mfa.RData") 
 # load(file = "data/clusters_topics_df.RData")
 
 # On va renommer les noms des clusters de 1 à 6 avec le nom du clusters
