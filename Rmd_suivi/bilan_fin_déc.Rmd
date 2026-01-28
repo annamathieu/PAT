@@ -47,15 +47,14 @@ library(tidyr)
 ```{r}
 # chargement des données des autres RMD
 
-load(file = "data/clust.RData")     # coordonnéees des mots = formes fortes 
+load(file = "data/topics_fortifies_cluster.RData")     # coordonnéees des mots = formes fortes 
 load(file = "data/documents.RData") # comptage des lemmes dans les doc
 load(file = "data/vocab.RData")     # identification des mots 
 load(file = "data/mfa.df.final.RData")
 load(file = "data/res.lemmat.RData")
 load(file = "data/res.hcpc.RData")
-load(file = "data/clust.RData")
 load(file = "data/res.mfa.RData")
-load(file = "data/pat.df.RData")
+# load(file = "data/pat.df.RData")
 
 ```
 
@@ -70,13 +69,13 @@ Voici les formes fortes identifiées (voir doc 12.12) :
 ```{r}
 source(file = "functions/plot_clust.R")
 
-plot_clust(res.hcpc, res.mfa, mfa.df.final)
+plot_clust(topics_fortifies_cluster)
 ```
 
 Les formes fortes ne sont pas toutes composées du mêmes nombre de mots :
 
 ```{r}
-clust %>% 
+topics_fortifies_cluster %>% 
   group_by(clust) %>% 
   summarise(sum = n())
 ```
@@ -90,7 +89,7 @@ On prend note de cela mais pour l'instant on va conserver l'ensemble des termes 
 ## Association des formes fortes - axes thématiques
 ```{r}
 # à faire 
-# + description des PAT (à demander)
+# + description des PAT (à demander)=> cf Typologie_PAT_id_thematiques => partie Luc
 ```
 
 
@@ -123,7 +122,7 @@ df_textes <- imap_dfr(documents, function(mat, nom_doc) {
 
 df_textes
 
-# save(df_textes, file = "data/df_textes.RData")
+save(df_textes, file = "data/df_textes.RData")
 
 ```
 
@@ -149,9 +148,9 @@ rm(df_cross)
 rm(df_count)
 
 # on trie les mots (lignes) du doc clust par ordre alphabétique pour ensuite récupérer les clusters des mots 
-clust <- clust %>% arrange(by = word) # ⚠ important avant le merge de la colonnes clust !!
+topics_fortifies_cluster <- topics_fortifies_cluster %>% arrange(by = word) # ⚠ important avant le merge de la colonnes clust !!
   
-df_resultat$cluster <- clust$clust
+df_resultat$cluster <- topics_fortifies_cluster$clust
 
 df_resultat.final <- data.frame(df_resultat %>%
   group_by(cluster) %>%
@@ -694,12 +693,12 @@ On réalise la transformation par LRA, puis on réalise une PCA (en fait une AFC
 res.pca <- FactoMineR::PCA(res.alr$LR, ncp = 2)
 barplot(res.pca$eig[,2])
 
-res.hcpc <- HCPC(res.pca, nb.clust = -1)
+res.hcpc.greenacre <- HCPC(res.pca, nb.clust = -1)
 ```
 
 Description des clusters 
 ```{r}
-res.hcpc$desc.var
+res.hcpc.greenacre$desc.var
 # Variables => donc topic sous ou sur représentés dans le cluster
 
 # clust1 :   Gouvernance, démographie, env   
@@ -709,7 +708,7 @@ res.hcpc$desc.var
 
 Description des individus 
 ```{r}
-res.hcpc$desc.ind 
+res.hcpc.greenacre$desc.ind 
 # clust1 : 441        36       457       318       211 
 # clust2 : 443       122       341       323       269 
 # clust3 : 178       174       167       181       319 
@@ -877,9 +876,8 @@ et avec la transformation logarithmiques, les trois clusters surremprésentent l
 
 On va donc considérer que le cluster 2° du 1) = cluster 3 du 2) et vice versa.
 
-```{r}
+```{r, eval = FALSE}
 classif1 <- res.hcpc$data.clust$clust
-classif2 <- res.hcpc.ca$data.clust$clust
 
 classif1 <- classif1 %>% 
   str_replace(pattern = "2", replacement = "B" )
@@ -1202,48 +1200,38 @@ load(file = "data/df_clust_ill.RData")
 
 On refait l'AFC avec les variables illustratives 
 ```{r}
-# création du jeu de données combinant le df.ca et df_clust_ill 
-df.afc.bas.illus <- left_join(data.frame(cbind(df.ca, num = rownames(df.ca))), df_clust_ill  , by = "num")
-
-# afc avec variables supp quali et quanti 
-quanti.sup <- which(sapply(df.afc.bas.illus, is.numeric))
-quanti.sup <- as.numeric(quanti.sup[-c(1:6)]) # on retire les colonnes 1 à 6 qui seront les colonnes actives
-quali.sup  <- as.numeric(which(sapply(df.afc.bas.illus, function(x) is.factor(x) || is.character(x))))
-
-
-# PB NA ; on VA SUPPRIMER LES COLONNES AVEC DES NA 
-temp.df <- df.afc.bas.illus %>%
-  select(
-    -num, 
-    -taux_de_pauvrete_du_territoire,
-    -emission_de_ges,
-    -nombre_de_captage_prioritaire_grenelle_dans_le_perimetre,
-    -evolution_de_lirrigation_depuis_5_ans
-  )
-
-quanti.sup <- which(sapply(temp.df, is.numeric))
-quanti.sup <- as.numeric(quanti.sup[-c(1:6)]) # on retire les colonnes 1 à 6 qui seront les colonnes actives
-quali.sup  <- as.numeric(which(sapply(temp.df, function(x) is.factor(x) || is.character(x))))
-
-# quali.sup <- c(7,8,9,27,28)
-# quanti.sup <- seq(7,46)[!(seq(7,46)) %in% quali.sup]
-
-
-res.afc.ill <- FactoMineR::CA(temp.df, quanti.sup = quanti.sup , quali.sup =  quali.sup  )
-plot.CA(res.afc.ill)
-
-
-colSums(is.na(df.afc.bas.illus))
-
-```
-
-
-
-
-## UTILISATION DES VARIABLES ILLUSTRATIVES POUR ILLUSTRER LES CLUSTERS CONSTRUITS AVEC VECTEURS DE COMPOSITION DE LA LDA FORTIFIES (THETA)
-
-
-```{r}
+# # création du jeu de données combinant le df.ca et df_clust_ill 
+# df.afc.bas.illus <- left_join(data.frame(cbind(df.ca, num = rownames(df.ca))), df_clust_ill  , by = "num")
+# 
+# # afc avec variables supp quali et quanti 
+# quanti.sup <- which(sapply(df.afc.bas.illus, is.numeric))
+# quanti.sup <- as.numeric(quanti.sup[-c(1:6)]) # on retire les colonnes 1 à 6 qui seront les colonnes actives
+# quali.sup  <- as.numeric(which(sapply(df.afc.bas.illus, function(x) is.factor(x) || is.character(x))))
+# 
+# 
+# # PB NA ; on VA SUPPRIMER LES COLONNES AVEC DES NA 
+# temp.df <- df.afc.bas.illus %>%
+#   select(
+#     -num, 
+#     -taux_de_pauvrete_du_territoire,
+#     -emission_de_ges,
+#     -nombre_de_captage_prioritaire_grenelle_dans_le_perimetre,
+#     -evolution_de_lirrigation_depuis_5_ans
+#   )
+# 
+# quanti.sup <- which(sapply(temp.df, is.numeric))
+# quanti.sup <- as.numeric(quanti.sup[-c(1:6)]) # on retire les colonnes 1 à 6 qui seront les colonnes actives
+# quali.sup  <- as.numeric(which(sapply(temp.df, function(x) is.factor(x) || is.character(x))))
+# 
+# # quali.sup <- c(7,8,9,27,28)
+# # quanti.sup <- seq(7,46)[!(seq(7,46)) %in% quali.sup]
+# 
+# 
+# res.afc.ill <- FactoMineR::CA(temp.df, quanti.sup = quanti.sup , quali.sup =  quali.sup  )
+# plot.CA(res.afc.ill)
+# 
+# 
+# colSums(is.na(df.afc.bas.illus))
 
 ```
 
