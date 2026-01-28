@@ -128,11 +128,13 @@ out <- prepDocuments(documents, vocab,
 documents <- out$documents
 vocab <- out$vocab
 
-load("data/documents.RData")
-save(out,file="data/out.RData")
+# save(out,file="data/out.RData")
 # save(documents, file = "data/documents.RData")
 # save(vocab, file = "data/vocab.RData")
 
+load("data/documents.RData")
+load("data/out.RData")
+load("data/vocab.RData")
 ```
 
 # Modèle et métriques
@@ -156,7 +158,7 @@ Exemple de fonctionnement de la fonction et des sorties :
 ```{r, eval = F}
 modeltest <- lda.model(k = 9, seed = 1234)
 summary(modeltest)
-
+rm(modeltest)
 ```
 
 Une première méthode à laquelle nous avons pensé consistait à afficher un
@@ -209,7 +211,6 @@ Pour donner une définition plus générale d'un score de cohérence :
 # install.packages("topicdoc")
 library(topicdoc)
 library(tidyverse)
-load(file = 'data/stm.RData')
 
 #Fonction visant à produir un graph montrant la cohérence moyenne des topicss proposé à la sortie d'une LDA entre 2 valeurs du nombre de topics
 # nstart : nombre de topics minimum
@@ -275,7 +276,7 @@ plus nos topics extraits.
 =\> il faut donc choisir les métriques qui nous intéressent :
 
 ```{r}
-
+# on ne choisit pas le nombre de mots caractéristiques = 7 
 topic.extraction <- function(topic_model) {
   
   # récupérer les mots avec les indices FREX (Fréquence exclusivité) les plus forts 
@@ -293,7 +294,7 @@ topic.extraction <- function(topic_model) {
   return (list)
 }
 
-
+# ON CHOISIT LE NOMBRE DE MOTS CARACTERISTIQUE ET LE SEUIL DU PARAMETRE DE POIDS W 
 topic.extraction2 <- function(models, nb.frex, frex.threshold = 0.5) {
       # récupération des FREX 
   words_frex <- list()
@@ -429,18 +430,15 @@ nb_lda = length(seeds) # nb de lda
 ## Création des modèles
 
 ```{r}
-# model1 <- lda.model(k = k, seed = seeds[1])
-# model2 <- lda.model(k = k, seed = seeds[2])
-# model3 <- lda.model(k = k, seed = seeds[3])
-# model4 <- lda.model(k = k, seed = seeds[4])
-# model5 <- lda.model(k = k, seed = seeds[5])
-# model6 <- lda.model(k = k, seed = seeds[6])
-# model7 <- lda.model(k = k, seed = seeds[7])
-# model8 <- lda.model(k = k, seed = seeds[8])
-# model9 <- lda.model(k = k, seed = seeds[9])
-# model10 <- lda.model(k = k, seed = seeds[10])
+# construction des modèles
+modeles <- list()
 
-# save(model1,model2,model3,model4,model5,model6,model7,model8,model9,model10, file = "data/modeles.RData")
+# création des modèles 
+# for (i in 1:nb_lda){
+#   modeles[[i]] <-  lda.model(k = k, seeds[i])
+# }
+
+# save(modeles, file = "data/modeles.RData")
 load("data/modeles.RData")
 
 ```
@@ -448,57 +446,15 @@ load("data/modeles.RData")
 ## Extraction des termes
 
 ```{r}
-# words1  <- topic.extraction(model1)
-# words2  <- topic.extraction(model2)
-# words3  <- topic.extraction(model3)
-# words4  <- topic.extraction(model4)
-# words5  <- topic.extraction(model5)
-# words6  <- topic.extraction(model6)
-# words7  <- topic.extraction(model7)
-# words8  <- topic.extraction(model8)
-# words9  <- topic.extraction(model9)
-# words10 <- topic.extraction(model10)
-
-# head(words1)
-# 
-# rm(model1)
-# rm(model2)
-# rm(model3)
-# rm(model4)
-# rm(model5)
-# rm(model6)
-# rm(model7)
-# rm(model8)
-# rm(model9)
-# rm(model10)
-
 # ⚠️⚠️⚠️⚠️avec la nouvelle fonctipn topic.extraction2 🐲 : 
-modeles = list(model1,model2,model3,model4,model5,model6,model7,model8,model9,model10)
-lda_list = topic.extraction2(modeles, nb.frex = 7)
+liste_mots_modeles = topic.extraction2(modeles, nb.frex = 7) # on créé la liste avec les mots de chaque lda : n objets, contenant chacun k éléments (9 ici)
+
+words <- unique(unlist(liste_mots_modeles))# récupére la liste unique des mots de toutes les lda
+
+# save(liste_mots_modeles, file = "data/liste_mots_modeles.RData")
+
 ```
 
-on va ensuite mettre tous les mots ensemble :
-
-```{r}
-# lda_list <- list(words1,words2,words3,words4,words5,words6,words7,words8,words9,words10)
-# on créé la liste avec les mots de chaque lda : n objets, contenant chacun k éléments (9 ici)
-
-words <- unique(unlist(lda_list))# récupére la liste unique des mots de toutes les lda
-# ajouter toutes les listes de mots 
-
-# rm(words1)
-# rm(words2)
-# rm(words3)
-# rm(words4)
-# rm(words5)
-# rm(words6)
-# rm(words7)
-# rm(words8)
-# rm(words9)
-# rm(words10)
-
-save(lda_list, file = "data/lda_list.RData")
-```
 
 et on créé un tableau de données contenant en ligne les mots, en colonne chaque
 topic de chaque lda, et au croisement un "1" si le mot se retrouve dans les
@@ -529,7 +485,7 @@ for (i in 1:nb_lda) {
     col_name <- paste0("lda", i, "_topic", j)
     
     # récupération des mots du topic j de la lda i
-    words_in_topic <- lda_list[[i]][[j]]
+    words_in_topic <- liste_mots_modeles[[i]][[j]]
     # lda_list[[i]][[j]] retourne les mots du topic j de la lda i
     
     # pour chaque mot du dataframe
@@ -550,13 +506,13 @@ l'ensemble des topics Si cette fréquence est de 1, alors le mot (la ligne) est
 supprimée. On récupère ensuite le df final.
 
 ```{r}
-mfa.df.filtre <- mfa.df
-mfa.df.filtre$freq <- apply(mfa.df, 1, sum)
+mfa.df.final <- mfa.df
+mfa.df.final$freq <- apply(mfa.df, 1, sum)
 
 # avec freq >= 2
-mfa.df.filtre <- subset(mfa.df.filtre, freq>=2)
+mfa.df.final <- subset(mfa.df.final, freq>=2)
 
-mfa.df.final <- mfa.df.filtre[,-ncol(mfa.df.filtre)] # supprimer la colonne fréquence 
+mfa.df.final <- mfa.df.final[,-ncol(mfa.df.final)] # supprimer la colonne fréquence 
 
 summary(colSums(mfa.df.final)) # on vérifie le nombre min, max, médian, moyen de mots par thèmes pour voir l'impact du filtrage 
 
@@ -610,16 +566,8 @@ coord_topics <- as.matrix(res.mfa$freq$coord)
 On réalise ensuite une classification hierarchique de nos individus (mots).
 
 ```{r}
-clustopt <- HCPC(res = res.mfa, nb.clust = -1) # nb optimal de classes
+res.hcpc <- HCPC(res = res.mfa, nb.clust = -1) # nb optimal de classes
 # 6 = nb optimal de classes
-```
-
-On regarde le nombre optimal de clusters, les mots qui les composent et on
-essaye d'optimiser ce nombre de clusters.
-
-```{r}
-clust7<- HCPC(res = res.mfa, nb.clust = 7, graph = FALSE)
-clust8<- HCPC(res = res.mfa, nb.clust = 8, graph = F)
 ```
 
 Quel nombre de cluster a le plus de sens ?
@@ -671,36 +619,33 @@ plot_clust <- function(res.hcpc){
 
 ```{r}
 # nombre optimal 
-plot_clust(clustopt)
-plot_clust(clust7)
-plot_clust(clust8)
+plot_clust(res.hcpc)
 ```
 
 On choisit le nombre de clusters retenus :
 
 ```{r}
-res.hcpc <- HCPC(res = res.mfa, nb.clust = 6)
-save(res.hcpc, file = "data/res.hcpc.RData")
+# save(res.hcpc, file = "data/res.hcpc.RData")
 ```
 
 et on extrait les coordonnées des individus et leur appartenance à un cluster :
 
 ```{r}
 # création du jdd contenant les mots, leurs coordonnées sur les dimensions 1 et 2 ainsi que leur topic
-clust <- data.frame(cbind(word = rownames(mfa.df.final),
+topics_fortifies_cluster <- data.frame(cbind(word = rownames(mfa.df.final),
                            clust = res.hcpc$data.clust$clust, 
                            dim1 = res.mfa$ind$coord[,1], 
                            dim2 = res.mfa$ind$coord[,2]))
 
-str(clust)
-clust$clust <- as.factor(clust$clust)
-clust$word <- as.factor((clust$word))
-clust$dim1 <- as.numeric(clust$dim1)
-clust$dim2 <- as.numeric(clust$dim2)
+str(topics_fortifies_cluster)
+topics_fortifies_cluster$clust <- as.factor(topics_fortifies_cluster$clust)
+topics_fortifies_cluster$word <- as.factor((topics_fortifies_cluster$word))
+topics_fortifies_cluster$dim1 <- as.numeric(topics_fortifies_cluster$dim1)
+topics_fortifies_cluster$dim2 <- as.numeric(topics_fortifies_cluster$dim2)
 
-head(clust)
+head(topics_fortifies_cluster)
 
-save(clust, file = "data/clust.RData")
+# save(topics_fortifies_cluster, file = "data/topics_fortifies_cluster.RData")
 ```
 
 On récupère ensuite l'ensemble des mots de chaque clusters et on réalise
@@ -710,14 +655,14 @@ l'extraction de la variable latente (nom du topic)
 
 # récupération des mots de chaque clusters 
 mots.clust <- tapply(
-  clust$word,     # Le vecteur à appliquer la fonction (les Mots)
-  clust$clust, # Le facteur de regroupement (les Clusters)
+  topics_fortifies_cluster$word,     # Le vecteur à appliquer la fonction (les Mots)
+  topics_fortifies_cluster$clust, # Le facteur de regroupement (les Clusters)
   paste,                # La fonction à appliquer
   collapse = ", ")       # L
 
-# interprétation avec naileR (à faire plus tard)
+# interprétation avec naileR
 
-cat(gemini_generate(nail_textual(dataset = clust[,1:2], num.var = 2, num.text = 1,
+cat(gemini_generate(nail_textual(dataset = topics_fortifies_cluster[,1:2], num.var = 2, num.text = 1,
 
                   introduction = "A study on Territorial food systems is done and we want to find the topics discussed in the description of each Territorial food system, we use topic modelling and latent dirichlet allocation. We consolidate our topics by using multiple executions of the algorithm and perform MFA to find strong forms in our topics.",
                   request = "We want to automatically put a name on those topics based on the words caracterising them. Please give a name to each topic suming up most of the words caracterising it. Do it in French. Only give la Liste des Noms de Groupe Attribués. Is there a topic who is closer than other for talking about social justice, inequality those kind of things ?",,
@@ -771,7 +716,7 @@ clusters_topics_df$clust <- as.factor(clusters_topics_df$clust)
 
 # save(clusters_topics_df, file = "data/clusters_topics_df.RData")
 # save(res.mfa, file = "data/res.mfa.RData")
-load(file = "data/clusters_topics_df.RData")
+# load(file = "data/clusters_topics_df.RData")
 
 # On va renommer les noms des clusters de 1 à 6 avec le nom du clusters
 # On va ensuite extraire quels topics de quels lda ont permis de construire ce cluster 
@@ -801,19 +746,7 @@ On va reprendre le dataframe avec les theta, on va tous les combiner avec l'ense
 # theta_all contient 90 colonnes : 9 topics * 10 LDA 
 load("data/modeles.RData")
 
-theta_all <- data.frame(cbind(model1$theta, model2$theta, model3$theta, model4$theta, model5$theta, 
-                              model6$theta, model7$theta, model8$theta, model9$theta , model10$theta))
-
-rm(model1)
-rm(model2)
-rm(model3)
-rm(model4)
-rm(model5)
-rm(model6)
-rm(model7)
-rm(model8)
-rm(model9)
-rm(model10)
+theta_all <- data.frame(cbind(modeles[[1]]$theta, modeles[[2]]$theta, modeles[[3]]$theta, modeles[[4]]$theta, modeles[[5]]$theta, modeles[[6]]$theta, modeles[[7]]$theta, modeles[[8]]$theta, modeles[[9]]$theta , modeles[[10]]$theta))
 
 colnames(theta_all) <- colnames(mfa.df.final)
 
@@ -901,7 +834,6 @@ freq <- freq %>%
                             economie_alimentaire           = "6"
   ))
 
-library(tidyverse)
 
 freq %>% 
   ggplot(aes(x=Dim.1,y=Dim.2, col = clust)) +
@@ -980,126 +912,108 @@ res.hcpc.combine$desc.var
 Nos clusters sont totalement cohérents avec les clusters précédemment formés avec la méthode "basique". 
 Ils surreprésentent les mêmes thématiques et en opposition sous-représentent également les mêmes thématiques.
 
-On va faire la classification avec l'autre méthode utilisant les centroides. 
 
+
+Illustration des clusters  : voir le doc Typologie_PAT_id_thématiques 
+Code illustratif à ne pas 
 ```{r}
-# On va faire la classification sur l'un de ces tableaux de données
-res.afc.theta.2 <- FactoMineR::CA(theta_resume2, ncp = 3)
-barplot(res.afc.theta.2$eig[,2])
-
-res.hcpc.combine2 <- HCPC(res.afc.theta.2,nb.clust=-1)
-
-res.hcpc.combine2$desc.var
-
-
-res.afc.theta.2 <- FactoMineR::CA(mfa_0[,-7])
-barplot(res.afc.theta.2$eig[,2])
-
-res.hcpc.combine2 <- HCPC(res.afc.theta.2,nb.clust=-1)
-res.hcpc.combine2$desc.var
-
-```
-
-
-Illustration des clusters  : 
-```{r}
-# on va combiner theta_resume_unique avec df_clust_ill 
-
-load("data/df_textes.RData") #⚠️ ON CHANGE LES ROWNAMES AVANT LA JOINTURE SINON CE SERA PAS LES BONS PAT JOINTS 
-load("data/df_clust_ill.RData")
-rownames(theta_resume2) <- gsub(x = df_textes$doc, pattern = "text", replacement = "")
-rm(df_textes)
-
-theta_resume2 = as.data.frame(theta_resume2)
-df_illus_freq_afc <- left_join(data.frame(cbind(num = rownames(theta_resume2), theta_resume2)),
-                                data.frame(cbind(num = rownames(df_clust_ill), df_clust_ill)) , by = 'num')
-
-df_illus_freq_afc <- df_illus_freq_afc[,-1]
-
-
-# on refait ensuite l'AFC avec des variables illustratives supplémentaires
-
-# on doit supp certaines colonnes car valeurs manquantes dans variables quanti 
-# ⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️
-
-df_illus_freq_afc <- df_illus_freq_afc %>%
-  select(
-    -taux_de_pauvrete_du_territoire,
-    -emission_de_ges,
-    -nombre_de_captage_prioritaire_grenelle_dans_le_perimetre,
-    -evolution_de_lirrigation_depuis_5_ans
-  )
-
-# quali et quanti additionnel (voir bilan fin dec )
-quanti.sup <- which(sapply(df_illus_freq_afc, is.numeric))
-quanti.sup <- as.numeric(quanti.sup[-c(1:6)]) # on retire les colonnes 1 à 6 qui seront les colonnes actives
-quali.sup  <- as.numeric(which(sapply(df_illus_freq_afc, function(x) is.factor(x) || is.character(x))))
-
-
-test_illus <- df_illus_freq_afc[,-quali.sup]
-
-res.afc.theta.2.illus <- FactoMineR::CA(test_illus,
-                                        quanti.sup = 7:47, ncp = 3
-
-                                          ) 
-
-# NOMBRE DE DIMENSIONS DE LA CA ? 
-
-res.hcpc.test <- HCPC(res.afc.theta.2.illus, nb.clust = -1)
-res.hcpc.test$desc.var$frequency
-```
-
-
-Graphique des clusters amélioré : 
-
-```{r}
-##############################
-# création du dataframe
-# ⚠️ etre sur de bien join sur les bons individus !!! ⚠️
-
-df_hcpc <- data.frame(clust = res.hcpc.test$data.clust$clust)
-rownames(df_hcpc) = rownames(res.hcpc.test$data.clust)
-df_hcpc <- df_hcpc %>% arrange(as.numeric(rownames(df_hcpc))) # on retrie par nom de lignes
-
-# et on combine avec les coordonnées sur les axes 1 et 2
-df_hcpc <- data.frame(cbind(df_hcpc, res.afc.theta.2.illus$row$coord[,1:2]))
-
-# on passe clust en factor 
-df_hcpc$clust = as.factor(df_hcpc$clust)
-
-
-##########################
-# graphique
-df_hcpc %>% ggplot() +
-  aes(x = Dim.1, y = Dim.2, col = clust) +
-  geom_point(size = 1.5) +
-  
-  theme_bw() +
-  
-  ggtitle ("Typologie des PAT construite sur leur proportion en topics fortifiés dans leur description", 
-           subtitle = "349 PAT sont utilisés pour construire cette typologie") +
-  
-  theme(plot.title = element_text(size = 13, face= "bold", hjust = 0.5), 
-        plot.subtitle = element_text(size = 10), 
-        axis.title.x = element_text(size = 12), 
-        axis.title.y = element_text(size = 12), 
-        legend.title =  element_text(size = 12),
-        legend.text =  element_text(size = 10 )
-        
-        ) +
-  
-  scale_color_manual(
-    # nom des groupes 
-    label = c("Groupe1", "Groupe2", "Groupe3"), 
-    values = c("royalblue", "limegreen", "darkorange"))+ 
-  
-  labs(
-      x = "Dim 1",
-      y = "Dim 2",
-      color = "Cluster"
-    ) +
-
-  coord_equal(xlim = c(-1.50, 1.50), ylim = c(-1.50,1.50))
+# # on va combiner theta_resume_unique avec df_clust_ill 
+# 
+# load("data/df_textes.RData") #⚠️ ON CHANGE LES ROWNAMES AVANT LA JOINTURE SINON CE SERA PAS LES BONS PAT JOINTS 
+# load("data/df_clust_ill.RData")
+# rownames(theta_resume2) <- gsub(x = df_textes$doc, pattern = "text", replacement = "")
+# rm(df_textes)
+# 
+# theta_resume2 = as.data.frame(theta_resume2)
+# df_illus_freq_afc <- left_join(data.frame(cbind(num = rownames(theta_resume2), theta_resume2)),
+#                                 data.frame(cbind(num = rownames(df_clust_ill), df_clust_ill)) , by = 'num')
+# 
+# df_illus_freq_afc <- df_illus_freq_afc[,-1]
+# 
+# 
+# # on refait ensuite l'AFC avec des variables illustratives supplémentaires
+# 
+# # on doit supp certaines colonnes car valeurs manquantes dans variables quanti 
+# # ⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️
+# 
+# df_illus_freq_afc <- df_illus_freq_afc %>%
+#   select(
+#     -taux_de_pauvrete_du_territoire,
+#     -emission_de_ges,
+#     -nombre_de_captage_prioritaire_grenelle_dans_le_perimetre,
+#     -evolution_de_lirrigation_depuis_5_ans
+#   )
+# 
+# # quali et quanti additionnel (voir bilan fin dec )
+# quanti.sup <- which(sapply(df_illus_freq_afc, is.numeric))
+# quanti.sup <- as.numeric(quanti.sup[-c(1:6)]) # on retire les colonnes 1 à 6 qui seront les colonnes actives
+# quali.sup  <- as.numeric(which(sapply(df_illus_freq_afc, function(x) is.factor(x) || is.character(x))))
+# 
+# 
+# test_illus <- df_illus_freq_afc[,-quali.sup]
+# 
+# res.afc.theta.2.illus <- FactoMineR::CA(test_illus,
+#                                         quanti.sup = 7:47, ncp = 3
+# 
+#                                           ) 
+# 
+# # NOMBRE DE DIMENSIONS DE LA CA ? 
+# 
+# res.hcpc.test <- HCPC(res.afc.theta.2.illus, nb.clust = -1)
+# res.hcpc.test$desc.var$frequency
+# ```
+# 
+# 
+# Graphique des clusters amélioré : 
+# 
+# ```{r}
+# ##############################
+# # création du dataframe
+# # ⚠️ etre sur de bien join sur les bons individus !!! ⚠️
+# 
+# df_hcpc <- data.frame(clust = res.hcpc.test$data.clust$clust)
+# rownames(df_hcpc) = rownames(res.hcpc.test$data.clust)
+# df_hcpc <- df_hcpc %>% arrange(as.numeric(rownames(df_hcpc))) # on retrie par nom de lignes
+# 
+# # et on combine avec les coordonnées sur les axes 1 et 2
+# df_hcpc <- data.frame(cbind(df_hcpc, res.afc.theta.2.illus$row$coord[,1:2]))
+# 
+# # on passe clust en factor 
+# df_hcpc$clust = as.factor(df_hcpc$clust)
+# 
+# 
+# ##########################
+# # graphique
+# df_hcpc %>% ggplot() +
+#   aes(x = Dim.1, y = Dim.2, col = clust) +
+#   geom_point(size = 1.5) +
+#   
+#   theme_bw() +
+#   
+#   ggtitle ("Typologie des PAT construite sur leur proportion en topics fortifiés dans leur description", 
+#            subtitle = "349 PAT sont utilisés pour construire cette typologie") +
+#   
+#   theme(plot.title = element_text(size = 13, face= "bold", hjust = 0.5), 
+#         plot.subtitle = element_text(size = 10), 
+#         axis.title.x = element_text(size = 12), 
+#         axis.title.y = element_text(size = 12), 
+#         legend.title =  element_text(size = 12),
+#         legend.text =  element_text(size = 10 )
+#         
+#         ) +
+#   
+#   scale_color_manual(
+#     # nom des groupes 
+#     label = c("Groupe1", "Groupe2", "Groupe3"), 
+#     values = c("royalblue", "limegreen", "darkorange"))+ 
+#   
+#   labs(
+#       x = "Dim 1",
+#       y = "Dim 2",
+#       color = "Cluster"
+#     ) +
+# 
+#   coord_equal(xlim = c(-1.50, 1.50), ylim = c(-1.50,1.50))
 
   
 ```
