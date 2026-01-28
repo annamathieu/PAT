@@ -45,7 +45,6 @@ df_illus_freq_afc <- left_join(df_illus_freq_afc, freq_sup, by = "id") # on ajou
 
 rm(df_textes)
 rm(df_clust_ill)
-rm(pat2025)
 rm(theta_resume2)
 
 #On garde le numéro de ligne
@@ -65,8 +64,9 @@ df_illus_freq_afc <- df_illus_freq_afc %>%
 colnames(df_illus_freq_afc)[1:6] = c("Logistique commercialisation", "Education Restauration Collective", "Environnement Santé","Gouvernance", "Secteur agricole", "Territoires")
 
 
-# DOC LUC changer colnames
+# DOC LUC changer colnames et rownames
 colnames(luc) = paste0("Dim",seq(1,5))
+rownames(luc) <- gsub("luc_","",rownames(luc))
 
 
 
@@ -89,9 +89,78 @@ res.afc.f <- FactoMineR::CA(df_illus_freq_afc,
 # HCPC 
 
 res.hcpc.f <- HCPC(res.afc.f, nb.clust = -1)
+
+
+###########################
+# caractérisation des classes
+###########################
 res.hcpc.f$desc.var$frequency
 
+
+##############################
+ # INDIVIDUS CARACTERISTIQUES
+##############################
+
+#On veut trouver les individus les plus rpz du cluster
 res.hcpc.f$desc.ind$dist
+
+
+###########################################
+# Modèle de graphique pour profil de pat
+
+profil.plot <- function(array_profil, nom = NULL) {
+  array_profil %>%   
+    pivot_longer(
+      cols = colnames(array_profil),
+      names_to = "topic", 
+      values_to = "mean"
+    ) %>% 
+    
+    ggplot() +
+    geom_col(aes(x = "profil", y = mean, fill = topic), position = position_stack()) +
+    scale_fill_manual(values = c("tomato2","springgreen4","royalblue","gold1","chartreuse2","saddlebrown")) +
+    
+    ggtitle(label = nom) +
+                      
+    theme_bw() +
+    labs(x = "Profil", y = "Proportion moyenne") +
+    theme(axis.text.x = element_blank())
+  }
+
+########
+# groupe 1
+pat2025 %>% 
+  filter(id %in% c("1666","1744","1454","1315","1452")) %>% 
+  select(id,nom_administratif)
+
+profil.plot(df_illus_freq_afc["1666",c(1:6)], nom = "PAT des Monts du Lyonnais")
+profil.plot(df_illus_freq_afc["1744",c(1:6)], nom = "PAT de Mafate")
+profil.plot(df_illus_freq_afc["1454",c(1:6)], nom = "PAT de la commune de Saint-Paul")
+
+
+########
+# groupe 2 
+pat2025 %>% 
+  filter(id %in% c("1608","5563","1442","1531","1413")) %>% 
+  select(id, nom_administratif)
+
+profil.plot(df_illus_freq_afc["1608",c(1:6)], "PAT du PETR de la Plaine des Vosges")
+profil.plot(df_illus_freq_afc["5563",c(1:6)], "PAT de la commune de Fontenay-sous-Bois")
+profil.plot(df_illus_freq_afc["1442",c(1:6)], "PAT du PNR des Grands Causses et du PETR Lévézou")
+
+########
+# groupe 3
+pat2025 %>% 
+  filter(id %in% c("1565","88325","1304","1647","1348")) %>% 
+  select(id, nom_administratif)
+
+profil.plot(df_illus_freq_afc["1565",c(1:6)], "PAT de la Communauté d’agglomération du Puy-en-Velay")
+profil.plot(df_illus_freq_afc["88325",c(1:6)], "PAT de la Communauté de Communes du Clunisois")
+profil.plot(df_illus_freq_afc["1304",c(1:6)], "PAT du Département de Lozère")
+
+
+
+
 
 ##############################
 # GRAPHIQUE DE LA TYPOLOGIE 
@@ -105,17 +174,11 @@ df_hcpc <- df_hcpc %>% arrange(as.numeric(rownames(df_hcpc))) # on retrie par no
 
 df_hcpc <- data.frame(cbind(df_hcpc, res.afc.f$row$coord[,1:2])) # et on combine avec les coordonnées sur les axes 1 et 2
 df_hcpc$clust = as.factor(df_hcpc$clust) # on passe clust en factor 
-df_hcpc$id <- df_illus_freq_afc$id
 
-# ROWNAMES
-rownames(df_hcpc) = num # on met les bons noms de numéro de pat REELS en rownames 
-rownames(df_illus_freq_afc) = num
 
 # Points des variables à ajouter au graph 
 df_coord_var <- data.frame(res.afc.f$col$coord[,1:2])
 
-
-rownames(luc) <- gsub("luc_","",rownames(luc))
 
 df_coord_text <- df_coord_var
 df_coord_text["Logistique commercialisation",]$Dim.1 <- df_coord_text["Logistique commercialisation",]$Dim.1 + 0.5
@@ -470,38 +533,3 @@ df_hcpc %>% ggplot() +
             label = df_hcpc_norma$nom_administratif, col = "purple", fontface = "italic", alpha = 1,
             size = 4)
 
-#On veut trouver les individus les plus rpz du cluster
-res.hcpc.f$desc.ind$dist
-#Groupe 1
-pat2025 %>% 
-  filter(id %in% c("1666","1744","1454","1315","1452")) %>% 
-  select(id,nom_administratif)
-
-df_illus_freq_afc["1666",c(1:6)]
-df_illus_freq_afc["1744",c(1:6)]
-df_illus_freq_afc["1454",c(1:6)]
-df_illus_freq_afc["1315",c(1:6)]
-df_illus_freq_afc["1452",c(1:6)]
-
-# Groupe 2
-pat2025 %>% 
-  filter(id %in% c("1608","5563","1442","1531","1413")) %>% 
-  select(id, nom_administratif)
-
-df_illus_freq_afc["1608", c(1:6)]
-df_illus_freq_afc["5563", c(1:6)]
-df_illus_freq_afc["1442", c(1:6)]
-df_illus_freq_afc["1531", c(1:6)]
-df_illus_freq_afc["1413", c(1:6)]
-
-
-# Groupe 3
-pat2025 %>% 
-  filter(id %in% c("1565","88325","1304","1647","1348")) %>% 
-  select(id, nom_administratif)
-
-df_illus_freq_afc["1565", c(1:6)]
-df_illus_freq_afc["88325", c(1:6)]
-df_illus_freq_afc["1304", c(1:6)]
-df_illus_freq_afc["1647", c(1:6)]
-df_illus_freq_afc["1348", c(1:6)]
