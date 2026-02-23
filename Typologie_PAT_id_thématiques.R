@@ -159,7 +159,24 @@ profil.plot(df_illus_freq_afc["88325",c(1:6)], "PAT de la Communauté de Commune
 profil.plot(df_illus_freq_afc["1304",c(1:6)], "PAT du Département de Lozère")
 
 
+###########################################"
+# Graphiques supplémentaires 
+pat2025 %>% 
+  filter(id %in% c("1376","1440","2001","1554","1763","1582","1503","1306","5553","1395","1420","1659")) %>% 
+  select(id, nom_administratif)
 
+profil.plot(df_illus_freq_afc["1376",c(1:6)], "PAT du Syndicat Mixte du Pays des Chateaux")
+profil.plot(df_illus_freq_afc["1440",c(1:6)], "PAT du Département de Seine-Saint-Denis")
+profil.plot(df_illus_freq_afc["2001",c(1:6)], "PAT du Pays d’Epinal Cœur des Vosges")
+profil.plot(df_illus_freq_afc["1554",c(1:6)], "PAT de Montpellier Méditerranée Métropole")
+profil.plot(df_illus_freq_afc["1763",c(1:6)], "PAT Belle-Ile-en-Mer")
+profil.plot(df_illus_freq_afc["1582",c(1:6)], "PAT Communauté de Communes Erdre et Gesvres")
+profil.plot(df_illus_freq_afc["1503",c(1:6)], "PAT Coeur Entre-Deux-Mers")
+profil.plot(df_illus_freq_afc["1306",c(1:6)], "PAT du PETR Grand-Clermont/ Parc Livradois-Forez")
+profil.plot(df_illus_freq_afc["5553",c(1:6)], "PAT La Rochelle-Aunis-Ré")
+profil.plot(df_illus_freq_afc["1395",c(1:6)], "PAT Sud meurthe-et-mosellan")
+profil.plot(df_illus_freq_afc["1420",c(1:6)], "PAT de Douaisis Agglo")
+profil.plot(df_illus_freq_afc["1659",c(1:6)], "PAT de la Ville de Rennes")
 
 
 ##############################
